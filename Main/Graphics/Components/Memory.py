@@ -1,5 +1,7 @@
 from PyQt5.QtWidgets import QLabel, QWidget
 
+from Main.Tools.Tools import SCALE, SCALEH
+
 
 class Memory(QLabel):
     def __init__(self, mwt: QWidget):
@@ -8,8 +10,8 @@ class Memory(QLabel):
         self.setObjectName("Memory")
 
     def setConfigurations(self):
-        self.setFixedWidth(528)
-        self.setFixedHeight(508)
+        self.setFixedWidth(SCALE(528, self.parent().width()))
+        self.setFixedHeight(SCALEH(508, self.parent().height()))
 
 
 class MemoryOptions(QLabel):
@@ -19,6 +21,6 @@ class MemoryOptions(QLabel):
         self.setObjectName("Options")
 
     def setConfigurations(self):
-        self.setFixedWidth(528)
-        self.setFixedHeight(110)
+        self.setFixedWidth(SCALE(528, self.parent().width()))
+        self.setFixedHeight(SCALEH(110, self.parent().height()))
 

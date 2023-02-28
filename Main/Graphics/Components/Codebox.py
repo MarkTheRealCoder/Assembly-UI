@@ -3,7 +3,8 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QWidget, QTextEdit, QLabel
 
-from Tools.Languages.Languages import Lexer
+from Main.Tools.Languages.Languages import Lexer
+from Main.Tools.Tools import SCALE, SCALEH
 
 
 class Editor(QsciScintilla):
@@ -15,8 +16,9 @@ class Editor(QsciScintilla):
 
     def setConfigurations(self):
         # Widget
-        self.setFixedHeight(410)
-        self.setFixedWidth(670)
+
+        self.setFixedHeight(SCALEH(410, self.parent().height()))
+        self.setFixedWidth(SCALE(670, self.parent().width()))
         self.setContentsMargins(0, 0, 0, 0)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
@@ -55,8 +57,8 @@ class Input(QTextEdit):
         self.setObjectName("Input")
 
     def setConfigurations(self):
-        self.setFixedHeight(210)
-        self.setFixedWidth(335)
+        self.setFixedHeight(SCALEH(210, self.parent().height()))
+        self.setFixedWidth(SCALE(335, self.parent().width()))
         self.setContentsMargins(0, 0, 0, 0)
 
 
@@ -68,8 +70,8 @@ class Output(QLabel):
         self.setObjectName("Output")
 
     def setConfigurations(self):
-        self.setFixedHeight(210)
-        self.setFixedWidth(335)
+        self.setFixedHeight(SCALEH(210, self.parent().height()))
+        self.setFixedWidth(SCALE(335, self.parent().width()))
         self.setContentsMargins(0, 0, 0, 0)
 
 

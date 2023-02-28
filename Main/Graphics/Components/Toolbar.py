@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout, QPushButton, QMenu, QDesktopWidget, \
     QVBoxLayout, QAbstractItemView, QTreeView, QSizePolicy
 
-from Main.Tools.Tools import find_path as find_icon, find_path, ls, HandleJson
+from Main.Tools.Tools import find_path as find_icon, find_path, ls, HandleJson, SCALE, SCALEH
 from Main.Tools.Tools import openDir, Variable
 
 LABEL: Variable = Variable(os.getcwd())
@@ -24,7 +24,7 @@ class ToolBar(QWidget):
         # noinspection PyTypeChecker
         self.mw: QMainWindow = mwt.parent()
         self.size: QSize = self.mw.size()
-        self.size.setHeight(30)
+        self.size.setHeight(SCALE(30, self.size.width()))
         self.setFixedSize(self.size)
         self.addComponents()
         self.setObjectName("Toolbar")
@@ -117,11 +117,12 @@ class IconButton(QPushButton):
     def __init__(self, parent):
         super(IconButton, self).__init__(None)
         self.setParent(parent)
-        self.setFixedWidth(30)
+        self.setFixedWidth(parent.height())
         self.setFixedHeight(parent.height())
         iconSize: QSize = QSize()
-        iconSize.setHeight(20)
-        iconSize.setWidth(20)
+        size = SCALE(20, parent.width())
+        iconSize.setHeight(size)
+        iconSize.setWidth(size)
         icon = QIcon(find_icon("Logo.png"))
         self.setIcon(icon)
         self.setIconSize(iconSize)
@@ -132,7 +133,7 @@ class FileMenu(QPushButton):
     def __init__(self, parent):
         super(FileMenu, self).__init__(None)
         self.setParent(parent)
-        self.setFixedWidth(50)
+        self.setFixedWidth(SCALE(50, parent.width()))
         self.setFixedHeight(parent.height())
         self.setText("File")
         self.setObjectName("File")
@@ -142,7 +143,7 @@ class RunButton(QPushButton):
     def __init__(self, parent):
         super(RunButton, self).__init__(None)
         self.setParent(parent)
-        self.setFixedWidth(50)
+        self.setFixedWidth(SCALE(50, parent.width()))
         self.setFixedHeight(parent.height())
         self.setText("▶")
         self.setObjectName("Run")
@@ -152,7 +153,7 @@ class HelpMenu(QPushButton):
     def __init__(self, parent):
         super(HelpMenu, self).__init__(None)
         self.setParent(parent)
-        self.setFixedWidth(50)
+        self.setFixedWidth(SCALE(50, parent.width()))
         self.setFixedHeight(parent.height())
         self.setText("Help")
         self.setObjectName("Help")
@@ -181,11 +182,12 @@ class ApplicationLabel(QLabel):
         self.__mousePressPos = 0
         self.__mouseMovePos = 0
         self.setParent(parent)
-        self.setFixedWidth(620)
         self.setFixedHeight(parent.height())
+        self.setMinimumWidth(SCALE(620, parent.width()))
         self.setText(self.label)
         self.setObjectName("Title")
         self.setAlignment(Qt.AlignCenter)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.installEventFilter(self)
 
     def setLabel(self):
@@ -233,13 +235,15 @@ class UserModeButton(QPushButton):
     def __init__(self, parent):
         super(UserModeButton, self).__init__()
         self.setParent(parent)
-        self.setFixedWidth(340)
+        self.setFixedWidth(SCALE(340, parent.width()))
         self.setFixedHeight(parent.height())
         iconSize: QSize = QSize()
-        iconSize.setHeight(29)
-        iconSize.setWidth(340)
-        icon = QIcon(find_icon("mode.png"))
-        self.setIcon(icon)
+        iconSize.setHeight(SCALEH(30, parent.parent().height()))
+        iconSize.setWidth(SCALE(340, parent.parent().width()))
+        original_icon = QIcon(find_icon('mode.png'))
+        new_pixmap = original_icon.pixmap(iconSize).scaled(iconSize, Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
+        new_icon = QIcon(new_pixmap)
+        self.setIcon(new_icon)
         self.setIconSize(iconSize)
         self.setObjectName("Mode")
         self.installEventFilter(self)
@@ -256,7 +260,7 @@ class MinimizeButton(QPushButton):
         super(MinimizeButton, self).__init__(None)
         self.mainwindow = mw
         self.setParent(parent)
-        self.setFixedWidth(30)
+        self.setFixedWidth(SCALE(30, parent.width()))
         self.setFixedHeight(parent.height())
         self.setText("_")
         self.setObjectName("Minimize")
@@ -270,7 +274,7 @@ class CloseButton(QPushButton):
         super(CloseButton, self).__init__(None)
         self.mainwindow = mw
         self.setParent(parent)
-        self.setFixedWidth(30)
+        self.setFixedWidth(SCALE(30, parent.width()))
         self.setFixedHeight(parent.height())
         self.setText("x")
         self.setObjectName("Close")

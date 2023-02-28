@@ -6,7 +6,7 @@ import regex
 from PyQt5.Qsci import QsciLexerCustom
 from PyQt5.QtGui import QColor
 
-from Tools.Tools import find_path
+from Main.Tools.Tools import find_path
 
 """
 Questa classe ha il compito di:

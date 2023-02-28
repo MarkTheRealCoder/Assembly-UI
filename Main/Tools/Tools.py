@@ -1,9 +1,16 @@
 import json
 import os
+if os.name == "nt":
+    import win32api
+    import win32con
 from typing import Any, Literal
 
 from PyQt5.QtCore import QUrl, QObject, pyqtSignal
 from PyQt5.QtGui import QDesktopServices
+
+
+SCALE = lambda x, y: int(x/1200*y)
+SCALEH = lambda x, y: int(x/650*y)
 
 
 def find_path(file: str) -> str:
@@ -32,9 +39,6 @@ def openDir(path: str):
 
 def is_file_hidden(file: str, path: str) -> bool:
     if os.name == 'nt':
-
-        import win32api
-        import win32con
 
         try:
             attribute = win32api.GetFileAttributes(path)

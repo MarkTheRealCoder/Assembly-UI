@@ -1,4 +1,4 @@
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtWidgets import *
 
 from Main.Graphics.Components.Codebox import Editor, Input, Output
@@ -31,6 +31,7 @@ class Window(QMainWindow):
         self.defineWindow()
 
         mwt: QWidget = QWidget(self)
+        mwt.setFixedSize(self.size())
         mwt.setObjectName("MainWidget")
         layout = QGridLayout(mwt)
         layout.setSpacing(0)
@@ -52,7 +53,10 @@ class Window(QMainWindow):
 
     def defineWindow(self):
         self.setWindowTitle("Assembly Stdio")
-        self.setFixedSize(1200, 650)
+        size: QSize = QDesktopWidget().size()
+        size.setWidth(size.width() // 6 * 5)
+        size.setHeight(int(650/1200*size.width()))
+        self.setFixedSize(size)
         self.setWindowFlag(Qt.FramelessWindowHint)
         self.centerOnScreen()
 
