@@ -1,0 +1,14 @@
+{
+  "i": {
+    "HALT": "",
+    "BIPUSH": "",
+    "ILOAD": "",
+    "ISTORE": "",
+    "INVOKEVIRTUAL": "",
+    "LDC_W": "",
+    ".var": "",
+    ".end-var": "",
+    ".main": "",
+    ".end-main": ""
+  }
+}
