@@ -1,5 +1,3 @@
-from os import linesep
-
 from PyQt5.Qsci import QsciScintilla, QsciLexerCustom
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
@@ -76,18 +74,6 @@ class Output(QLabel):
 
 
 class IJVMLexer(QsciLexerCustom):
-    _keywords = {}
-
-    regexes = {
-        "i": lambda i: r"(?<!\w)(?<=\s)*" + i + r"(?=\s|$)",
-        "n": r"(0[Xx][0-9A-Fa-f]+|[0-9]+)(?=[\s,$\r]|$)",
-        "s": r"(?<=^\.method )\b\w+\b(?=\s*\((?:\s*\w+|\w+\s*),\s*\w+\s*\))",
-        "v": r"^(?<!\w)(?:\s*\w+)(?:^\s*|^$)",
-        "c": r"\b(?>\w+)(?=\s*(?:0[Xx][0-9A-Fa-f]+|[0-9]+))",
-        "l": r"(?:^|\s+)\w+:",
-        "u": r"\b\w+\b"
-    }
-
     def __init__(self, parent: QsciScintilla = None):
         super().__init__(parent)
         # noinspection PyTypeChecker
@@ -98,14 +84,10 @@ class IJVMLexer(QsciLexerCustom):
         self.lang.setColors(self)
 
     def styleText(self, start, end):
-        cursorPos = self._parent.getCursorPosition()
-        text: str = self._parent.text()
-        textList = text.split(linesep)
-        print(text)
-        self.lang.setText(text)
-        #generator = self.lang.getInfo()
-        #for i in next(generator):
-        #    self.defineStylingPosition(i)
+        self.lang.setText(self._parent.text())
+        self.lang.lookFor()
+        #for i in self.lang.getInfo():
+        #    self.defineStylingPosition(i[0], i[1], i[2])
 
     def defineStylingPosition(self, start: int, style: int, length: int):
         self.startStyling(start)
