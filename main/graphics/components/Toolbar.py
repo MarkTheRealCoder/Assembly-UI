@@ -6,8 +6,8 @@ from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout, QPushButton, QMenu, QDesktopWidget, \
     QVBoxLayout, QAbstractItemView, QTreeView, QSizePolicy
 
-from Main.Tools.Tools import find_path as find_icon, find_path, ls, HandleJson, SCALE, SCALEH
-from Main.Tools.Tools import openDir, Variable
+from main.tools.Tools import find_path as find_icon, find_path, ls, HandleJson, SCALE, SCALEH
+from main.tools.Tools import openDir, Variable
 
 LABEL: Variable = Variable(os.getcwd())
 OPEN_FILE: Variable("")
@@ -329,8 +329,8 @@ class TrashWindow(QMainWindow):
     def centerOnScreen(self):
         desktop = QDesktopWidget()
         screen_geometry = desktop.screenGeometry()
-        x = (screen_geometry.width() - self.width()) / 2
-        y = (screen_geometry.height() - self.height()) / 2
+        x = (screen_geometry.width() - self.width()) // 2
+        y = (screen_geometry.height() - self.height()) // 2
         self.move(x, y)
 
 

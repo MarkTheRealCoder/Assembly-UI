@@ -1,10 +1,10 @@
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtWidgets import *
 
-from Main.Graphics.Components.Codebox import Editor, Input, Output
-from Main.Graphics.Components.Memory import Memory, MemoryOptions
-from Main.Graphics.Components.Toolbar import ToolBar
-from Main.Tools.Tools import find_path as getSS
+from main.graphics.components.Codebox import Editor, Input, Output
+from main.graphics.components.Memory import Memory, MemoryOptions
+from main.graphics.components.Toolbar import ToolBar
+from main.tools.Tools import find_path as getSS
 
 BAHNSCHRIFT_12 = ("Bahnschrift", 12)
 
@@ -47,16 +47,16 @@ class Window(QMainWindow):
     def centerOnScreen(self):
         desktop = QDesktopWidget()
         screen_geometry = desktop.screenGeometry()
-        x = (screen_geometry.width() - self.width()) / 2
-        y = (screen_geometry.height() - self.height()) / 2
+        x = (screen_geometry.width() - self.width()) // 2
+        y = (screen_geometry.height() - self.height()) // 2
         self.move(x, y)
 
     def defineWindow(self):
         self.setWindowTitle("Assembly Stdio")
-        size: QSize = QDesktopWidget().size()
+        size: QSize = QDesktopWidget().screenGeometry()
         size.setWidth(size.width() // 6 * 5)
         size.setHeight(int(650/1200*size.width()))
-        self.setFixedSize(size)
+        self.setFixedSize(size.width(), size.height())
         self.setWindowFlag(Qt.FramelessWindowHint)
         self.centerOnScreen()
 

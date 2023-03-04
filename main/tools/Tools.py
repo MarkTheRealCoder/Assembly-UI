@@ -1,5 +1,6 @@
 import json
 import os
+
 if os.name == "nt":
     import win32api
     import win32con
@@ -140,8 +141,6 @@ class HandleJson:
 
     def get(self, section: literals):
         return self.data.get(section)
-
-
 
 
 

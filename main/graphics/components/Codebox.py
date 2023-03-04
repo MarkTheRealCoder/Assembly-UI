@@ -3,8 +3,8 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QWidget, QTextEdit, QLabel
 
-from Main.Tools.Languages.Languages import Lexer
-from Main.Tools.Tools import SCALE, SCALEH
+from main.tools.languages.Languages import Lexer
+from main.tools.Tools import SCALE, SCALEH
 
 
 class Editor(QsciScintilla):
@@ -87,9 +87,10 @@ class IJVMLexer(QsciLexerCustom):
 
     def styleText(self, start, end):
         self.lang.setText(self._parent.text())
-        self.lang.lookFor()
-        #for i in self.lang.getInfo():
-        #    self.defineStylingPosition(i[0], i[1], i[2])
+        info: list[tuple[int, int, int]] = self.lang.getInfo()
+        if info:
+            for i in info:
+                self.defineStylingPosition(i[0], i[1], i[2])
 
     def defineStylingPosition(self, start: int, style: int, length: int):
         self.startStyling(start)
