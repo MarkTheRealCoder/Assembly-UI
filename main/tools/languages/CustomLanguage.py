@@ -68,4 +68,4 @@ class Lang:
     def __recognize__(self, number: int, line: str) -> tuple[int, int, int]:
         tokens: list[str] = []
         for i in range(len(line)):
-
+            pass
