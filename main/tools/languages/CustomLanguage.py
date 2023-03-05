@@ -17,20 +17,17 @@ class AbstractType:
 
 class Region:
     def __init__(self, pos: int, length: int, style: int):
-        self.pos = pos
-        self.len = length
-        self.style = style
-        a = Literal["A"]
+        self.map: dict[str:int] = {
+            "p": pos,
+            "l": length,
+            "s": style
+        }
 
-    def extract(self, w: Literal["a", "p", "l", "s"]):
-        if w == "a":
-            return self.pos, self.len, self.style
-        elif w == "p":
-            return self.pos
-        elif w == "l":
-            return self.len
-        elif w == "s":
-            return self.style
+    def extract(self, w: Literal["a", "p", "l", "s"] = "a"):
+        if w != "a":
+            return self.map.get(w)
+        else:
+            return self.map.get("p"), self.map.get("l"), self.map.get("s")
 
 
 class Lang:
@@ -51,9 +48,6 @@ class Lang:
             Lang.LABEL: [],
             Lang.NONE: []
         }
-        self.calculator = lambda x: x
-
-        self.text = ""
 
     def bind(self, _type: str, _element: str or AbstractType):
         self.bindings.get(_type).append(_element)
@@ -65,7 +59,7 @@ class Lang:
             regions.append(Region(*self.__recognize__(n, l)))
         return regions
 
-    def __recognize__(self, number: int, line: str) -> tuple[int, int, int]:
+    def __recognize__(self, number: int, line: str) -> list[Region]:
         tokens: list[str] = []
         for i in range(len(line)):
-
+            pass
