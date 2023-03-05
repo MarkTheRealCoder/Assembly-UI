@@ -60,6 +60,124 @@ class Lang:
         return regions
 
     def __recognize__(self, number: int, line: str) -> list[Region]:
+        """
+        Questa funzione prende in input due parametri, rispettivamente: numero della riga e testo della stessa.
+        Successivamente analizza ogni elemento della riga separatamente, all'interno del for, andando a separare ogni
+        carattere.
+        Il singolo carattere deve essere passato a una seconda funzione che andrà a tenere traccia della compatibilità
+        tra il carattere fornito e il singolo TAG (per farlo dovrà scorrere i bindings). una volta trovata una corrispondenza
+        PERFETTA, la funzione ritornerà uno o più oggetti di tipo region che andranno inseriti dentro una lista.
+        Per un esempio del suo funzionamento vedere la fine della pagina ->
+        """
         tokens: list[str] = []
         for i in range(len(line)):
             pass
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""
+number: 0
+line: "    ILOAD 0x12   "
+
+Parametri esterni:
+Formati di compilazione disponibili:
+1: <none><instruction><none><constant><none>
+2: <none><instruction><none><value><none>
+3: <none><instruction><none><variable><none>
+4: <none><instruction><none>
+5: <none><instruction><none><method><none><parameter><none>
+
+Bindings per TAG:
+<none> -> " ", "\n", ""
+<instruction> -> "ILOAD", "ISUB", "IADD", ".method"...
+<value> -> AbstractType(name="Number", trace=self.regex.get("n"))
+<constant> -> "OBJREF"*, AbstractType(name="Constant", trace=self.regex.get("c"))
+<variable> -> AbstractType(name="Variable", trace=self.regex.get("v"))
+<method> -> AbstractType(name="Method", trace=self.regex.get("s"))
+<parameter> -> AbstractType(name="Variable", trace=self.regex.get("v"))
+
+*OBJREF è solo un esempio, ma serve per ricordare che le stringhe devono sempre trovarsi in posizioni precedenti agli 
+AbstractType, questo per evitare inutili duplicati quando si vanno a effettuare valutazioni sulle linee.
+
+Analisi:
+for i in line:
+0: i = " "
+0: i -> funz(char)
+0: funz(char) -> (" " in <none>) = True -> return True
+1: i = " "
+1: i -> funz(char)
+1: funz(char) -> (" " in <none>) = True -> return True
+2: i = " "
+2: i -> funz(char)
+2: funz(char) -> (" " in <none>) = True -> return True
+3: i = " "
+3: i -> funz(char)
+3: funz(char) -> (" " in <none>) = True -> return True
+4: i = "I"
+4: i -> funz(char)
+4: funz(char) -> ("I" in <none>) = False -> ("I" in <instruction>) = True -> return True
+5: i = "L"
+5: i -> funz(char)
+5: funz(char) -> ("L" in <instruction>) = True -> return True
+6: i = "O"
+6: i -> funz(char)
+6: funz(char) -> ("O" in <instruction>) = True -> return True
+7: i = "A"
+7: i -> funz(char)
+7: funz(char) -> ("A" in <instruction>) = True -> return True
+8: i = "D"
+8: i -> funz(char)
+8: funz(char) -> ("D" in <instruction>) = True -> return True
+9: i = " "
+9: i -> funz(char)
+9: funz(char) -> (" " in <instruction>) = False -> (" " in <none>) = True -> return True
+10: i = "0"
+10: i -> funz(char)
+10: funz(char) -> ("0" in <none>) = False -> ("0" in <constant>) = False -> switch format to 2 and set to last checkpoint:
+               -> format 2: <none><instruction><none><value><none> -> checkpoint search:
+                            -> <none>|<instruction><none><value><none>
+                            -> <none><instruction>|<none><value><none>
+                            -> <none><instruction><none>|<value><none>  <- checkpoint reached
+               -> ("0" in <value>) = True -> return True
+11: i = "x"
+11: i -> funz(char)
+11: funz(char) -> ("x" in <value>) = True -> return True
+12: i = "1"
+12: i -> funz(char)
+12: funz(char) -> ("1" in <value>) = True -> return True
+13: i = "2"
+13: i -> funz(char)
+13: funz(char) -> ("2" in <value>) = True -> return True
+14: i = " "
+14: i -> funz(char)
+14: funz(char) -> (" " in <value>) = False -> (" " in <none>) = True -> return True
+15: i = " "
+15: i -> funz(char)
+15: funz(char) -> (" " in <none>) = True -> return True
+16: i = " "
+16: i -> funz(char)
+16: funz(char) -> (" " in <none>) = True -> return True
+17: i = "\n"
+17: i -> funz(char)
+17: funz(char) -> ("\n" in <none>) = True -> return True
+18: i = None
+18: i -> funz(char)
+18: funz(char) -> return [Region(), Region()] <- (<instruction> region, <value> region)
+"""
