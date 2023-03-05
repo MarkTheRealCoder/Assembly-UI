@@ -178,6 +178,6 @@ for i in line:
 17: i -> funz(char)
 17: funz(char) -> ("\n" in <none>) = True -> return True
 18: i = None
-18: i -> funz(char)
+18: i -> funz(char) 
 18: funz(char) -> return [Region(), Region()] <- (<instruction> region, <value> region)
 """
