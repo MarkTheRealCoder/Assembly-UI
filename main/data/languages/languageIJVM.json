@@ -28,5 +28,16 @@
     "l": "(?:^|\\s+)\\w+:",
     "u": "\\.{0,1}[A-Za-z0-9_-]+",
     "cs": "//[ ]*.*"
+  },
+  "regexes":
+  {
+    "instructions": [],
+    "numbers": [],
+    "strings": [],
+    "variables": [],
+    "constants": [],
+    "labels": [],
+    "unknown": [],
+    "comments": []
   }
 }

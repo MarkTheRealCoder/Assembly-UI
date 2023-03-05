@@ -1,7 +1,6 @@
 import sys
 
 from PyQt5.QtWidgets import QApplication
-
 from main.graphics.Graphics import Window as MainWindow
 
 if __name__ == "__main__":
