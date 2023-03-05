@@ -65,8 +65,10 @@ class Lang:
         Successivamente analizza ogni elemento della riga separatamente, all'interno del for, andando a separare ogni
         carattere.
         Il singolo carattere deve essere passato a una seconda funzione che andrà a tenere traccia della compatibilità
-        tra il carattere fornito e il singolo TAG (per farlo dovrà scorrere i bindings). una volta trovata una corrispondenza
-        PERFETTA, la funzione ritornerà uno o più oggetti di tipo region che andranno inseriti dentro una lista.
+        tra il carattere fornito e il singolo TAG (per farlo dovrà scorrere i bindings).
+        Una volta trovata una corrispondenza "PERFETTA", la funzione ritornerà uno o più oggetti di tipo region che
+        andranno inseriti dentro una lista.
+
         Per un esempio del suo funzionamento vedere la fine della pagina ->
         """
         tokens: list[str] = []
