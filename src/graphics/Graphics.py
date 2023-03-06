@@ -1,10 +1,10 @@
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtWidgets import *
 
-from main.graphics.components.Codebox import Editor, Input, Output
-from main.graphics.components.Memory import Memory, MemoryOptions
-from main.graphics.components.Toolbar import ToolBar
-from main.tools.Tools import find_path as getSS
+from src.graphics.components.Codebox import Editor, Input, Output
+from src.graphics.components.Memory import Memory, MemoryOptions
+from src.graphics.components.Toolbar import ToolBar
+from src.tools.Tools import find_path as getSS
 
 BAHNSCHRIFT_12 = ("Bahnschrift", 12)
 
@@ -40,8 +40,10 @@ class Window(QMainWindow):
         layout.addWidget(self.add_first_column(mwt), 1, 0, Qt.AlignTop | Qt.AlignLeft)
         layout.addWidget(self.add_second_column(mwt), 1, 1, Qt.AlignLeft)
         self.setCentralWidget(mwt)
+
         with open(getSS("style.qss"), "r") as f:
             self.setStyleSheet(f.read())
+
         self.installEventFilter(self)
 
     def centerOnScreen(self):

@@ -1,14 +1,14 @@
 import json
 import os
 
-if os.name == "nt":
-    import win32api
-    import win32con
 from typing import Any, Literal
 
 from PyQt5.QtCore import QUrl, QObject, pyqtSignal
 from PyQt5.QtGui import QDesktopServices
 
+if os.name == "nt":
+    import win32api
+    import win32con
 
 SCALE = lambda x, y: int(x/1200*y)
 SCALEH = lambda x, y: int(x/650*y)
@@ -40,14 +40,12 @@ def openDir(path: str):
 
 def is_file_hidden(file: str, path: str) -> bool:
     if os.name == 'nt':
-
         try:
             attribute = win32api.GetFileAttributes(path)
             return attribute & (win32con.FILE_ATTRIBUTE_HIDDEN | win32con.FILE_ATTRIBUTE_SYSTEM)
         except Exception as e:
             del e
             return False
-
     return file.startswith(".")
 
 
@@ -82,12 +80,12 @@ def ls(path: str, ext: tuple = ()):
                 temp_path = path + file + separator
             else:
                 temp_path = path + separator + file + separator
-            hasDirs: bool = False
+            has_dirs: bool = False
             try:
-                hasDirs = filter_files(os.listdir(temp_path), temp_path, ext) != []
+                has_dirs = filter_files(os.listdir(temp_path), temp_path, ext) != []
             except Exception as e:
                 del e
-            results[file] = hasDirs
+            results[file] = has_dirs
 
     return tuple([path, results])
 
@@ -122,7 +120,7 @@ class HandleJson:
             return
         if section == "cwd":
             HandleJson.data[section] = _any
-        if section == "files":
+        elif section == "files":
             HandleJson.file_list.append(_any)
             HandleJson.data[section] = HandleJson.file_list
 

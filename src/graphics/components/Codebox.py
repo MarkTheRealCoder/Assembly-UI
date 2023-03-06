@@ -3,8 +3,8 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QWidget, QTextEdit, QLabel
 
-from main.tools.languages.Languages import Lexer
-from main.tools.Tools import SCALE, SCALEH
+from src.tools.languages.Languages import Lexer
+from src.tools.Tools import SCALE, SCALEH
 
 
 class Editor(QsciScintilla):
@@ -16,7 +16,6 @@ class Editor(QsciScintilla):
 
     def setConfigurations(self):
         # Widget
-
         self.setFixedHeight(SCALEH(410, self.parent().height()))
         self.setFixedWidth(SCALE(670, self.parent().width()))
         self.setContentsMargins(0, 0, 0, 0)

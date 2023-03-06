@@ -2,12 +2,10 @@ from json import loads as getJSON
 from os import linesep
 
 import regex
-from PyQt5.Qsci import QsciLexerCustom, QsciStyle
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QColor, QFont
-from PyQt5.QtWidgets import QStyle
+from PyQt5.Qsci import QsciLexerCustom
+from PyQt5.QtGui import QColor
 
-from main.tools.Tools import find_path
+from src.tools.Tools import find_path
 
 """
 Questa classe ha il compito di:
@@ -27,11 +25,11 @@ class Lexer:
         "u": 7
     }
 
-    def __init__(self, langfile: str):
+    def __init__(self, langFile: str):
         self.text: str = ""
         self.database = Data()
         self.regex = {}
-        with open(find_path(langfile), "r") as decoding:
+        with open(find_path(langFile), "r") as decoding:
             code = decoding.read()
             decoding.close()
             decoding = getJSON(code)
@@ -53,12 +51,12 @@ class Lexer:
     def setText(self, text: str):
         self.text = text
 
-    def getInfo(self) -> list[tuple[int, int, int]]: # O(2n)
+    def getInfo(self) -> list[tuple[int, int, int]]:
         ts = self.text.split(linesep)
-        self.findTokens(ts) # O(n)
+        self.findTokens(ts)
         informations: list[tuple[int, int, int]] = []
         csp = 0
-        for lineNum, line in enumerate(ts): # O(n)
+        for lineNum, line in enumerate(ts):
             csp = calculate(lineNum, ts)
             informations += self.analyzeLine(line, csp)
         return informations
@@ -68,12 +66,11 @@ class Lexer:
         unidentified: list[tuple[str, int]] = [(str(i.group(0)), i.start(0)) for i in uMatches]
         matches: dict[str:tuple[int, int]] = self.database.match(unidentified)
         result: list[tuple[int, int, int]] = []
-        errcolor = Lexer.colors.get("u")
+        err = Lexer.colors.get("u")
         for match in matches.keys():
             tmp = matches.get(match)
-            if tmp[1] == errcolor:
-                if regex.match(self.regex.get("n"), match) is not None:
-                    tmp = (tmp[0], Lexer.colors.get("n"))
+            if tmp[1] == err and regex.match(self.regex.get("n"), match) is not None:
+                tmp = (tmp[0], Lexer.colors.get("n"))
             result.append((csp + tmp[0], tmp[1], len(match)))
             print(f"RESULT: \n{result}")
         return result

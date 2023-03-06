@@ -1,6 +1,5 @@
 from PyQt5.QtWidgets import QLabel, QWidget
-
-from main.tools.Tools import SCALE, SCALEH
+from src.tools.Tools import SCALE, SCALEH
 
 
 class Memory(QLabel):

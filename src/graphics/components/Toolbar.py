@@ -2,12 +2,10 @@ import os
 
 from PyQt5.QtCore import QSize, Qt, QPoint, QEvent, QObject, QRect, QModelIndex
 from PyQt5.QtGui import QIcon, QMouseEvent, QStandardItem, QStandardItemModel, QClipboard
-from PyQt5.QtWidgets import QMainWindow
-from PyQt5.QtWidgets import QWidget, QLabel, QHBoxLayout, QPushButton, QMenu, QDesktopWidget, \
+from PyQt5.QtWidgets import QMainWindow, QWidget, QLabel, QHBoxLayout, QPushButton, QMenu, QDesktopWidget, \
     QVBoxLayout, QAbstractItemView, QTreeView, QSizePolicy
 
-from main.tools.Tools import find_path as find_icon, find_path, ls, HandleJson, SCALE, SCALEH
-from main.tools.Tools import openDir, Variable
+from src.tools.Tools import openDir, Variable, find_path as find_icon, find_path, ls, HandleJson, SCALE, SCALEH
 
 LABEL: Variable = Variable(os.getcwd())
 OPEN_FILE: Variable("")
@@ -119,13 +117,13 @@ class IconButton(QPushButton):
         self.setParent(parent)
         self.setFixedWidth(parent.height())
         self.setFixedHeight(parent.height())
-        iconSize: QSize = QSize()
+        icon_size: QSize = QSize()
         size = SCALE(20, parent.width())
-        iconSize.setHeight(size)
-        iconSize.setWidth(size)
+        icon_size.setHeight(size)
+        icon_size.setWidth(size)
         icon = QIcon(find_icon("Logo.png"))
         self.setIcon(icon)
-        self.setIconSize(iconSize)
+        self.setIconSize(icon_size)
         self.setObjectName("Icon")
 
 
@@ -172,6 +170,7 @@ class ApplicationLabel(QLabel):
         LABEL.change_content.connect(self.setLabel)
 
         self.currentDirectory: str = ApplicationLabel.handlejson.get("cwd")
+
         if self.currentDirectory is None:
             LABEL.setContent(os.getcwd())
         else:
@@ -197,18 +196,27 @@ class ApplicationLabel(QLabel):
         ApplicationLabel.handlejson.encodeAndSave("cwd", self.currentDirectory)
 
     def eventFilter(self, o: QObject, e: QEvent) -> bool:
-        if e.type() == QEvent.MouseButtonDblClick and e.button() == Qt.LeftButton:
-            self.clipboard.setText(self.currentDirectory, mode=self.clipboard.Clipboard)
-        elif e.type() == QEvent.MouseButtonPress and e.button() == Qt.LeftButton and e.modifiers() & Qt.ControlModifier:
-            openDir(self.currentDirectory)
-        elif e.type() == QEvent.MouseButtonPress and e.button() == Qt.LeftButton:
-            ApplicationLabel.movable = True
-            self.__mousePressPos = e.globalPos()
-            self.__mouseMovePos = e.globalPos()
-        elif e.type() == QEvent.MouseButtonRelease and e.button() == Qt.LeftButton:
-            ApplicationLabel.movable = False
-        elif e.type() == QEvent.MouseMove and ApplicationLabel.movable:
+
+        if e.type() == QEvent.MouseMove and ApplicationLabel.movable:
             self.moveWindow(e)
+
+        elif hasattr(e, "button") and e.button() == Qt.LeftButton:
+
+            if e.type() == QEvent.MouseButtonDblClick:
+                self.clipboard.setText(self.currentDirectory, mode=self.clipboard.Clipboard)
+
+            elif e.type() == QEvent.MouseButtonPress:
+
+                if e.modifiers() & Qt.ControlModifier:
+                    openDir(self.currentDirectory)
+                else:
+                    ApplicationLabel.movable = True
+                    self.__mousePressPos = e.globalPos()
+                    self.__mouseMovePos = e.globalPos()
+
+            elif e.type() == QEvent.MouseButtonRelease:
+                ApplicationLabel.movable = False
+
         return super().eventFilter(o, e)
 
     def moveWindow(self, e: QEvent):
@@ -216,9 +224,9 @@ class ApplicationLabel(QLabel):
         screen_rect: QRect = desk.availableGeometry()
         del desk
         bottom_right: QPoint = screen_rect.bottomRight()
-        globalPos = e.globalPos()
-        diff = globalPos - self.__mouseMovePos
-        self.__mouseMovePos = globalPos
+        global_pos = e.globalPos()
+        diff = global_pos - self.__mouseMovePos
+        self.__mouseMovePos = global_pos
         curr_pos: QPoint = self.mw.pos()
         if (curr_pos.y() + diff.y()) < bottom_right.y() - 15:
             self.mw.move(curr_pos + diff)
@@ -311,9 +319,10 @@ class TrashWindow(QMainWindow):
         self.setWindowFlag(Qt.Tool, True)
         self.setMinimumWidth(size[0])
         self.setMinimumHeight(size[1])
+        self.centerOnScreen()
+
         with open(find_path("trash.qss"), "r") as f:
             self.setStyleSheet(f.read())
-        self.centerOnScreen()
 
     def topBorder(self):
         widget: QWidget = QWidget(self.widget)
@@ -349,14 +358,16 @@ class TrashLabel(QLabel):
         self.installEventFilter(self)
 
     def eventFilter(self, o: QObject, e: QEvent) -> bool:
-        if e.type() == QEvent.MouseButtonPress and e.button() == Qt.LeftButton:
-            TrashLabel.movable = True
-            self.__mousePressPos = e.globalPos()
-            self.__mouseMovePos = e.globalPos()
-        elif e.type() == QEvent.MouseButtonRelease and e.button() == Qt.LeftButton:
-            TrashLabel.movable = False
+        if hasattr(e, "button") and e.button() == Qt.LeftButton:
+            if e.type() == QEvent.MouseButtonPress:
+                TrashLabel.movable = True
+                self.__mousePressPos = e.globalPos()
+                self.__mouseMovePos = e.globalPos()
+            elif e.type() == QEvent.MouseButtonRelease:
+                TrashLabel.movable = False
         elif e.type() == QEvent.MouseMove and TrashLabel.movable:
             self.moveWindow(e)
+
         return super().eventFilter(o, e)
 
     def moveWindow(self, e: QEvent):
@@ -395,8 +406,10 @@ class DisplayPath(QTreeView):
         DisplayPath.root = path
         self.path = path
         self.ext = ext
+
         with open(find_path("tree.qss")) as f:
             self.setStyleSheet(f.read())
+
         self.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.dirsIcon = self.setIconForDirs()
 
@@ -443,20 +456,26 @@ class DisplayPath(QTreeView):
             parent.appendRow(item)
 
     def setCurrPath(self, item):
-        tmp = item.text()
+        tmp: str = item.text()
+
         if tmp == DisplayPath.root:
             self.path = DisplayPath.root
             return
+
         tmp += DisplayPath.sep
         parent = item.parent()
+
         while True:
-            tmp2 = parent.text()
+            tmp2: str = parent.text()
+
             if tmp2 == DisplayPath.root:
                 tmp = tmp2 + tmp
                 break
             else:
                 tmp = tmp2 + DisplayPath.sep + tmp
+
             parent = parent.parent()
+
         self.path = tmp
 
     def addElements(self, index: QModelIndex):
@@ -466,14 +485,18 @@ class DisplayPath(QTreeView):
 
     def setPath(self, index: QModelIndex):
         item = self.model.itemFromIndex(index)
+
         if self.ext != ():
             if not any([item.text().endswith(i) for i in self.ext]):
                 return
+
         self.setCurrPath(item)
+
         if self.ext == ():
             global LABEL
             LABEL.setContent(self.path[0:len(self.path) - 1])
         else:
             global OPEN_FILE
             OPEN_FILE.setContent(self.path[0:len(self.path) - 1])
+
         self.parent().parent().close()
