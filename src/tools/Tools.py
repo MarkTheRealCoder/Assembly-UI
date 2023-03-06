@@ -34,7 +34,7 @@ def find_dir(directory: str) -> str:
     return result
 
 
-def openDir(path: str):
+def open_dir(path: str):
     QDesktopServices.openUrl(QUrl.fromLocalFile(path))
 
 
@@ -139,6 +139,3 @@ class HandleJson:
 
     def get(self, section: literals):
         return self.data.get(section)
-
-
-

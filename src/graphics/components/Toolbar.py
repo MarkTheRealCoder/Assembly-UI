@@ -5,7 +5,7 @@ from PyQt5.QtGui import QIcon, QMouseEvent, QStandardItem, QStandardItemModel, Q
 from PyQt5.QtWidgets import QMainWindow, QWidget, QLabel, QHBoxLayout, QPushButton, QMenu, QDesktopWidget, \
     QVBoxLayout, QAbstractItemView, QTreeView, QSizePolicy
 
-from src.tools.Tools import openDir, Variable, find_path as find_icon, find_path, ls, HandleJson, SCALE, SCALEH
+from src.tools.Tools import open_dir, Variable, find_path as find_icon, find_path, ls, HandleJson, SCALE, SCALEH
 
 LABEL: Variable = Variable(os.getcwd())
 OPEN_FILE: Variable("")
@@ -208,7 +208,7 @@ class ApplicationLabel(QLabel):
             elif e.type() == QEvent.MouseButtonPress:
 
                 if e.modifiers() & Qt.ControlModifier:
-                    openDir(self.currentDirectory)
+                    open_dir(self.currentDirectory)
                 else:
                     ApplicationLabel.movable = True
                     self.__mousePressPos = e.globalPos()
