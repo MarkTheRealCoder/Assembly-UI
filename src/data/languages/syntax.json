@@ -1,9 +1,0 @@
-{
-  "instruction": "<instruction>",
-  "variable": "<variable>",
-  "nothing": "<none>",
-  "method": "<method_name>",
-  "value": "<value>",
-  "constant": "<constant>",
-  "label": "<label>"
-}

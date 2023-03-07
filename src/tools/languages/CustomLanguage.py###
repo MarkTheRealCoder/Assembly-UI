@@ -82,18 +82,6 @@ class Lang:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 """
 number: 0
 line: "    ILOAD 0x12   "

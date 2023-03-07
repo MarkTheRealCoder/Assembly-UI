@@ -16,13 +16,15 @@ Salvare tutti i token del file utilizzato
 class Lexer:
 
     colors = {
-        "i": 1,
-        "n": 2,
-        "s": 3,
-        "v": 4,
-        "c": 5,
-        "l": 6,
-        "u": 7
+        "instructions": 1,
+        "numbers": 2,
+        "subroutines": 3,
+        "variables": 4,
+        "constants": 5,
+        "labels": 6,
+        "unidentified": 7,
+        "comments": 8,
+        "parameters": 4,
     }
 
     def __init__(self, langFile: str):
@@ -36,8 +38,8 @@ class Lexer:
             if decoding is not None:
                 self.database.setKeywords(decoding.get("i"))
                 self.regex = decoding.get("r")
-                _list = self.regex.get("i")
-                self.regex["i"] = lambda i: _list[0] + regex.escape(i) + _list[1]
+                _list = self.regex.get("instructions")
+                self.regex["instructions"] = lambda i: _list[0] + regex.escape(i) + _list[1]
 
     def setColors(self, lex: QsciLexerCustom):
         lex.setColor(QColor("#E48300"), 1)
@@ -53,7 +55,7 @@ class Lexer:
 
     def getInfo(self) -> list[tuple[int, int, int]]:
         ts = self.text.split(linesep)
-        self.findTokens(ts)
+        self.indexing(ts)
         informations: list[tuple[int, int, int]] = []
         csp = 0
         for lineNum, line in enumerate(ts):
@@ -62,76 +64,112 @@ class Lexer:
         return informations
 
     def analyzeLine(self, txt: str, csp: int) -> list[tuple[int, int, int]]:
-        uMatches = regex.finditer(self.regex.get("u"), txt, overlapped=False)
-        unidentified: list[tuple[str, int]] = [(str(i.group(0)), i.start(0)) for i in uMatches]
-        matches: dict[str:tuple[int, int]] = self.database.match(unidentified)
         result: list[tuple[int, int, int]] = []
-        err = Lexer.colors.get("u")
-        for match in matches.keys():
-            tmp = matches.get(match)
-            if tmp[1] == err and regex.match(self.regex.get("n"), match) is not None:
-                tmp = (tmp[0], Lexer.colors.get("n"))
-            result.append((csp + tmp[0], tmp[1], len(match)))
-            print(f"RESULT: \n{result}")
         return result
 
-    def findTokens(self, ts: list[str]):
-        for lineNum, line in enumerate(ts):
-            csp = calculate(lineNum, ts)
-            matches = {}
-            for i in self.regex.keys():
-                if i not in ["i", "u", "n"]:
-                    matches[i] = [(j.group(0), j.start(0)) for j in regex.finditer(self.regex.get(i), line)]
-            for match in matches.keys():
-                vals = matches.get(match)
-                print(match, vals)
-                if vals:
-                    pass
+    def indexing(self, ts: list[str]):
+        c = False
+        m = False
+        s = ""
+        v = False
+        for num, line in enumerate(ts):
+            match = regex.search(self.regex.get("comments"), line)
+            if match:
+                line = line[0:match.start()]
+            if line == "":
+                continue
+            uifd = regex.findall(self.regex.get("unidentified"), line)
+            if c:
+                self.findConstants(line, uifd)
+            elif s != "":
+                if v:
+                    self.findVariables(line, uifd, s)
+            c, m, v = self.findDeclarators(uifd, c, m, v)
+            if m:
+                s = self.findMethods(line, uifd)
+            else:
+                s = ""
+            self.findLabels(line, uifd, num)
 
+    def findConstants(self, txt: str, uifd: list[str]):
+        match = regex.match(self.regex.get("constants"), txt)
+        if match:
+            constant = match.group(0)
+            val = match.group(1)
+            if val:
+                uifd.remove(val)
+                uifd.remove(constant)
+            self.database.setConstants(constant)
 
+    def findVariables(self, txt: str, uifd: list[str], scope: str):
+        match = regex.match(self.regex.get("variables"), txt)
+        if match:
+            variable = match.group()
+            self.database.setVariables(variable, scope)
+            uifd.remove(variable)
+
+    def findDeclarators(self, uifd: list[str], constant: bool, method: bool, variable: bool):
+        words = uifd
+        if words:
+            constant = (words[0] == ".constant") if not constant else not words[0] == ".end-constant"
+            method = (words[0] in [".method", ".main"]) if not constant else words[0] not in [".end-method", ".end-main"]
+            variable = (words[0] == ".var") if not constant else not words[0] == ".end-var"
+        if words[0] in [".constant", ".end-constant", ".end-method", ".end-main", ".method", ".main", ".var", ".end-var"]:
+            uifd.remove(words[0])
+        return constant, method, variable
+
+    def findMethods(self, txt: str, uifd: list[str]):
+        search = regex.search(self.regex.get("subroutines"), txt)
+        method = search.group()
+        uifd.remove(method)
+        txt = txt[search.end():]
+        params = regex.findall(self.regex.get("parameters"), txt)
+        for i in params:
+            uifd.remove(i)
+            self.database.setVariables(i, method)
+        self.database.setSubroutines(method)
+        return method
+
+    def findLabels(self, txt: str, uifd: list[str], line: int):
+        search = regex.search(self.regex.get("labels"), txt)
+        if search:
+            label = search.group()
+            uifd.remove(label)
+            self.database.setLabels(label, line)
+
+"""
+C = TRUE IF W=s AND C=FALSE
+C = FALSE IF W=s2 AND C=TRUE
+"""
 class Data:
 
     def __init__(self):
-        self.__keywords = {}
-        self.__variables = {}
-        self.__constants = {}
-        self.__labels = {}
-        self.__subroutines = {}
+        # K: INSTRUCTION, V: DATA TYPE
+        self.__keywords: dict[str:str] = {}
+        # K: SCOPE, V: LIST OF VARIABLE's NAMES
+        self.__variables: dict[str:list[str]]
+        # K: None, V: LIST OF CONSTANT's NAMES
+        self.__constants: list[str] = []
+        # K: LABEL, V: LINE
+        self.__labels: dict[str:int] = {}
+        # K: SUBROUTINE, V: LIST OF PARAMETERS
+        self.__subroutines: list[str] = []
 
     def setKeywords(self, keywords: dict[str:str]):
         self.__keywords = keywords
 
-    def setSubroutines(self, val: str, ln: int, params: str):
-        if val not in self.__subroutines.keys():
-            self.__subroutines[val] = [ln, params]
-        else:
-            _ln, _params = self.__subroutines.get(val)
-            if _ln != ln or _params != params:
-                self.__subroutines[val] = [ln, params]
+    def setSubroutines(self, val: str):
+        if val in self.__subroutines:
+            pass
 
-    def setVariables(self, val: str, ln: int, scope: str):
-        if val not in self.__variables.keys():
-            self.__variables[val] = [ln, scope]
-        else:
-            _ln, _scope = self.__variables.get(val)
-            if _ln != ln or _scope != scope:
-                self.__variables[val] = [ln, scope]
+    def setVariables(self, val: str, scope: str):
+        pass
 
-    def setConstants(self, val: str, ln: int):
-        if val not in self.__constants.keys():
-            self.__constants[val] = ln
-        else:
-            _ln = self.__constants.get(val)
-            if _ln != ln:
-                self.__constants[val] = ln
+    def setConstants(self, val: str):
+        pass
 
     def setLabels(self, val: str, ln: int):
-        if val not in self.__labels.keys():
-            self.__labels[val] = ln
-        else:
-            _ln = self.__labels.get(val)
-            if _ln != ln:
-                self.__labels[val] = ln
+        pass
 
     def match(self, tokens: list[tuple[str, int]]) -> dict[str:tuple[int, int]]:
         matches: dict[str: tuple[int, int]] = {}
