@@ -137,10 +137,13 @@ class Lexer:
             uifd.remove(label)
             self.database.setLabels(label, line)
 
+
 """
 C = TRUE IF W=s AND C=FALSE
 C = FALSE IF W=s2 AND C=TRUE
 """
+
+
 class Data:
 
     def __init__(self):
