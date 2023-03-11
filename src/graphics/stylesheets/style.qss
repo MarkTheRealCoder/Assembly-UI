@@ -96,7 +96,7 @@ QPushButton#Help::menu-indicator{
 }
 
 #Toolbar *{
-    font-size: 13px;
+    font-size: 15px;
     font-family: "Calibri";
 }
 

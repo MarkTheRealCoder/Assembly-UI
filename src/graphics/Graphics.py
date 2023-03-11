@@ -1,10 +1,10 @@
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtWidgets import *
 
-from Main.Graphics.Components.Codebox import Editor, Input, Output
-from Main.Graphics.Components.Memory import Memory, MemoryOptions
-from Main.Graphics.Components.Toolbar import ToolBar
-from Main.Tools.Tools import find_path as getSS
+from src.graphics.components.Codebox import Editor, Input, Output
+from src.graphics.components.Memory import Memory, MemoryOptions
+from src.graphics.components.Toolbar import ToolBar
+from src.tools.Tools import find_path as getSS
 
 BAHNSCHRIFT_12 = ("Bahnschrift", 12)
 
@@ -31,6 +31,7 @@ class Window(QMainWindow):
         self.defineWindow()
 
         mwt: QWidget = QWidget(self)
+        mwt.setFixedSize(self.size())
         mwt.setObjectName("MainWidget")
         layout = QGridLayout(mwt)
         layout.setSpacing(0)
@@ -39,20 +40,25 @@ class Window(QMainWindow):
         layout.addWidget(self.add_first_column(mwt), 1, 0, Qt.AlignTop | Qt.AlignLeft)
         layout.addWidget(self.add_second_column(mwt), 1, 1, Qt.AlignLeft)
         self.setCentralWidget(mwt)
+
         with open(getSS("style.qss"), "r") as f:
             self.setStyleSheet(f.read())
+
         self.installEventFilter(self)
 
     def centerOnScreen(self):
         desktop = QDesktopWidget()
         screen_geometry = desktop.screenGeometry()
-        x = (screen_geometry.width() - self.width()) / 2
-        y = (screen_geometry.height() - self.height()) / 2
+        x = (screen_geometry.width() - self.width()) // 2
+        y = (screen_geometry.height() - self.height()) // 2
         self.move(x, y)
 
     def defineWindow(self):
         self.setWindowTitle("Assembly Stdio")
-        self.setFixedSize(1200, 650)
+        size: QSize = QDesktopWidget().screenGeometry()
+        size.setWidth(size.width() // 6 * 5)
+        size.setHeight(int(650/1200*size.width()))
+        self.setFixedSize(size.width(), size.height())
         self.setWindowFlag(Qt.FramelessWindowHint)
         self.centerOnScreen()
 
