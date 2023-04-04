@@ -28,17 +28,11 @@ class Lexer:
     }
 
     def __init__(self, lang_file: str):
-        self.database = Data()
         self.regex = {}
         with open(find_path(lang_file), "r") as decoding:
             code = decoding.read()
             decoding.close()
             decoding = getJSON(code)
-            if decoding is not None:
-                self.database.setKeywords(decoding.get("i"))
-                self.regex = decoding.get("r")
-                _list = self.regex.get("instructions")
-                self.regex["instructions"] = lambda i: _list[0] + regex.escape(i) + _list[1]
 
     def setColors(self, lex: QsciLexerCustom):
         lex.setColor(QColor("#E48300"), 1)
@@ -49,49 +43,9 @@ class Lexer:
         lex.setColor(QColor("#06AC17"), 6)
         lex.setColor(QColor("#FE1717"), 7)
 
-    def getInfo(self, text: str) -> list[tuple[int, int, int]]:
+    def getInfo(self, text: str):
         ts = text.split(linesep)
-        self.indexing(ts)
-        informations: list[tuple[int, int, int]] = []
-        for lineNum, line in enumerate(ts):
-            csp = calculate(lineNum, ts)
-            informations += self.analyzeLine(line, csp)
-        return informations
 
-    def analyzeLine(self, txt: str, csp: int) -> list[tuple[int, int, int]]:
-        result: list[tuple[int, int, int]] = []
-        return result
-
-    def indexing(self, ts: list[str]) -> dict[str: list[tuple[int, int, int, int] or tuple[int, int]]]:
-        declarators: dict[str: list[tuple[int, int, int, int] or tuple[int, int]]] = {}
-        for k in ["constants", "main", "variables", "methods", "comments", "labels"]:
-            declarators.setdefault(k, [])
-        for num, line in enumerate(ts):
-            if isEmpty(line):
-                continue
-            line, comment = self.removeComment(line, num)
-            ts[num - 1] = line
-            if comment:
-                declarators["comments"].append(comment)
-            line, label = self.removeLabel(line, num)
-            ts[num - 1] = line
-            if label:
-                declarators["labels"].append(label)
-            type_, elem, crd = self.findDeclarator(line, num)
-            new_dcl = self.update_temp_dcl(type_, elem, crd)
-
-    @staticmethod
-    def ___save_values(func):
-        def wrapper(*args, **kwargs):
-            pass
-        return wrapper()
-
-    @___save_values
-    def update_temp_dcl(self,
-                        type_: Literal["open", "close"],
-                        elem: Literal["constants", "variables", "methods", "main"],
-                        crd: int):
-        pass
 
 
 """
@@ -179,40 +133,29 @@ fine:
 """
 
 
-class Data:
+class Tokens:
 
     def __init__(self):
-        # K: INSTRUCTION, V: DATA TYPE
-        self.__keywords: dict[str:str] = {}
-        # K: SCOPE, V: LIST OF VARIABLE's NAMES
-        self.__variables: dict[str:list[str]]
-        # K: None, V: LIST OF CONSTANT's NAMES
-        self.__constants: list[str] = []
-        # K: LABEL, V: LINE
-        self.__labels: dict[str:int] = {}
-        # K: SUBROUTINE, V: LIST OF PARAMETERS
-        self.__subroutines: list[str] = []
-
-    def setKeywords(self, keywords: dict[str:str]):
-        self.__keywords = keywords
-
-    def setSubroutines(self, val: str):
-        if val in self.__subroutines:
-            pass
-
-    def setVariables(self, val: str, scope: str):
-        pass
-
-    def setConstants(self, val: str):
-        pass
-
-    def setLabels(self, val: str, ln: int):
-        pass
+        self.___map: dict[
+            str:                        # token name
+            dict[
+                str:                    # data's category
+                list[int]
+                or str
+                or int
+            ]
+        ]
 
 
-def calculate(ln: int, tl: list[str]):
-    pos: int = 0
-    for i in range(ln):
-        pos += len(tl[i])
-    pos += ln * 2
-    return pos
+"""
+Informazioni che ho:
+- Quali sono le parole chiave
+- Cosa richiedono come parametri
+- Dove esse possono essere utilizzate
+
+Informazioni che non ho:
+- Qual'è la posizione dei token nel testo
+- Quali parametri verranno dati 
+- Dove verranno utilizzate
+"""
+
