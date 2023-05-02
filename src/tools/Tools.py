@@ -139,3 +139,7 @@ class HandleJson:
 
     def get(self, section: literals):
         return self.data.get(section)
+
+
+def isEmpty(line: str):
+    return line == "" or line.isspace()
