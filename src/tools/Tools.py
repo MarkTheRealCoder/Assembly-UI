@@ -1,27 +1,33 @@
 import json
 import os
-
+import re
 from typing import Any, Literal
 
-from PyQt5.QtCore import QUrl, QObject, pyqtSignal
+import psutil
+from PyQt5.QtCore import QUrl
 from PyQt5.QtGui import QDesktopServices
+from PyQt5.QtWidgets import QWidget, QLayout
+from regex import regex
 
 if os.name == "nt":
     import win32api
     import win32con
 
-SCALE = lambda x, y: int(x/1200*y)
-SCALEH = lambda x, y: int(x/650*y)
-
 
 def find_path(file: str) -> str:
     location = os.getcwd()
     result: str = ""
-    for root, dir, files in os.walk(location):
+    for root, _dir, files in os.walk(location):
         if file in files:
             result = os.path.join(root, file)
             break
     return result
+
+
+def get_available_disks():
+    partitions = psutil.disk_partitions(all=False)
+    disks = [partition.device[:-1] for partition in partitions if "cdrom" not in partition.opts]
+    return disks
 
 
 def find_dir(directory: str) -> str:
@@ -39,70 +45,50 @@ def open_dir(path: str):
 
 
 def is_file_hidden(file: str, path: str) -> bool:
-    if os.name == 'nt':
+    if isWindows():
         try:
             attribute = win32api.GetFileAttributes(path)
-            return attribute & (win32con.FILE_ATTRIBUTE_HIDDEN | win32con.FILE_ATTRIBUTE_SYSTEM)
+            return attribute & (win32con.FILE_ATTRIBUTE_HIDDEN | win32con.FILE_ATTRIBUTE_SYSTEM) != 0
         except Exception as e:
             del e
             return False
     return file.startswith(".")
 
 
-def filter_files(file_list: list[str], path: str, ext: tuple = ()) -> list[str]:
-    returns: list[str] = []
-    for file in file_list:
-        if not file.startswith("$") and not is_file_hidden(file, path + file):
-            extension = ""
-            try:
-                extension: str = file.rsplit(".", 2)[1]
-            except Exception as e:
-                del e
-            if extension == "" and os.path.isdir(path + file) or (ext != () and extension in ext):
-                returns.append(file)
-    return returns
-
-
 def ls(path: str, ext: tuple = ()):
-    results: dict[str: bool] = {}
+    results: list[str] = []
     try:
-        path, dirnames, filenames = next(os.walk(path))
-    except Exception as e:
-        del e
-        return None
-    elements: list[str] = (dirnames + filenames) if ext != () else dirnames
-
-    separator = "\\" if os.name == "nt" else "/"
-
-    for file in filter_files(elements, path, ext):
-            temp_path = ""
-            if path.endswith(separator):
-                temp_path = path + file + separator
-            else:
-                temp_path = path + separator + file + separator
-            has_dirs: bool = False
-            try:
-                has_dirs = filter_files(os.listdir(temp_path), temp_path, ext) != []
-            except Exception as e:
-                del e
-            results[file] = has_dirs
-
-    return tuple([path, results])
+        dirs = os.listdir(path)
+        for i in dirs:
+            valid = ext != () and re.match(fr"\b\w+\.({'|'.join(ext)})\b", i) is not None
+            if not valid:
+                fp = os.path.join(path, i) # full path
+                valid = os.path.isdir(fp) and not is_file_hidden(i, fp)
+            if valid:
+                results.append(i)
+    except:
+        pass
+    return results
 
 
-class Variable(QObject):
-    change_content = pyqtSignal(str)
-
-    def __init__(self, content):
-        super(QObject, self).__init__()
-        self.content = content
-
-    def setContent(self, content: str):
-        self.content = content
-        self.change_content.emit(content)
-
-    def getContent(self):
-        return self.content
+def translateQSS(style: str):
+    variables: dict[str: str] = {}
+    index = style.find("variables")
+    last_index = style.find("}", index)
+    substring_variables = style[index:last_index]
+    substring_variables = substring_variables.replace("variables", "").replace("{", "")
+    raw = substring_variables.split(";") # comments_free.split(";")
+    for i in raw:
+        try:
+            k, v = i.split(":")
+            variables[k.strip()] = v.strip()
+        except Exception as e:
+            del e
+    style = style[last_index+1:]
+    matches: list[regex.Match] = regex.findall(r"(var\s*\((.*)\))", style)
+    for s, r in matches:
+        style = style.replace(s, variables.get(r))
+    return style
 
 
 class HandleJson:
@@ -141,5 +127,15 @@ class HandleJson:
         return self.data.get(section)
 
 
-def isEmpty(line: str):
-    return line == "" or line.isspace()
+def isWindows():
+    return os.name == "nt"
+
+
+def createLayout(l: type, parent: QWidget):
+    layout = l(parent)
+    layout.setContentsMargins(0, 0, 0, 0)
+    layout.setSpacing(0)
+    layout.setSizeConstraint(QLayout.SetNoConstraint)
+    return layout
+
+

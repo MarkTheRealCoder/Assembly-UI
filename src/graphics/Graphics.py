@@ -1,22 +1,16 @@
 from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtGui import QFontDatabase
 from PyQt5.QtWidgets import *
 
-from src.graphics.components.Codebox import Editor, Input, Output
+from src.events.ResizeEvent import ResizeEvent
 from src.graphics.components.Memory import Memory, MemoryOptions
 from src.graphics.components.Toolbar import ToolBar
-from src.tools.Tools import find_path as getSS
+from src.graphics.components.editorcomponents.EditorWrapper import TabEditorWrapper
+from src.graphics.components.editorcomponents.Input import Input
+from src.graphics.components.editorcomponents.Output import Output
+from src.tools.Tools import find_path as getSS, translateQSS, find_path, createLayout
 
-BAHNSCHRIFT_12 = ("Bahnschrift", 12)
-
-BLINK_BACKGROUND = "#787776"
-# INSTRUCTION AND GUI OPTIONS FOREGROUND
-IGO_FOREGROUND = "#E48300"
-SUBROUTINES_FOREGROUND = "#C1A402"
-VALUES_FOREGROUND = "#0EA0A9"
-# CURRENT LINE BACKGROUND
-CL_BACKGROUND = "#191919"
-# DEFAULT BACKGROUND
-DEFAULT_BACKGROUND = '#171717'
+INTEGER_MAX = 2147483647
 
 
 class Window(QMainWindow):
@@ -24,27 +18,30 @@ class Window(QMainWindow):
 
     def __init__(self, app: QApplication):
         super(QMainWindow, self).__init__(None)
+        QFontDatabase.addApplicationFont(find_path("AnonymousPro-Regular.ttf"))
+        self.defineWindowSize()
+        self.setWindowTitle("Assembly Stdio")
         Window.application = app
 
         self.lastState = Qt.WindowActive
 
-        self.defineWindow()
-
         mwt: QWidget = QWidget(self)
-        mwt.setFixedSize(self.size())
         mwt.setObjectName("MainWidget")
-        layout = QGridLayout(mwt)
-        layout.setSpacing(0)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.add_tool_bar(mwt), 0, 0, Qt.AlignTop | Qt.AlignLeft)
-        layout.addWidget(self.add_first_column(mwt), 1, 0, Qt.AlignTop | Qt.AlignLeft)
-        layout.addWidget(self.add_second_column(mwt), 1, 1, Qt.AlignLeft)
+        mwt.resize(self.size())
         self.setCentralWidget(mwt)
+        self.setMainLayout(mwt)
+        mwt.update()
 
         with open(getSS("style.qss"), "r") as f:
-            self.setStyleSheet(f.read())
+            self.setStyleSheet(translateQSS(f.read()))
 
-        self.installEventFilter(self)
+        self.resizeEventHandler = ResizeEvent(self)
+
+    def defineWindowSize(self):
+        size: QSize = QDesktopWidget().screenGeometry()
+        self.setMinimumSize(size.width() // 4 * 3, size.height() // 4 * 3)
+        self.setWindowFlag(Qt.FramelessWindowHint)
+        self.centerOnScreen()
 
     def centerOnScreen(self):
         desktop = QDesktopWidget()
@@ -53,60 +50,53 @@ class Window(QMainWindow):
         y = (screen_geometry.height() - self.height()) // 2
         self.move(x, y)
 
-    def defineWindow(self):
-        self.setWindowTitle("Assembly Stdio")
-        size: QSize = QDesktopWidget().screenGeometry()
-        size.setWidth(size.width() // 6 * 5)
-        size.setHeight(int(650/1200*size.width()))
-        self.setFixedSize(size.width(), size.height())
-        self.setWindowFlag(Qt.FramelessWindowHint)
-        self.centerOnScreen()
+    def setMainLayout(self, mwt: QWidget):
+        layout: QVBoxLayout = createLayout(QVBoxLayout, mwt)
+        layout.addWidget(ToolBar(mwt, Window.application.clipboard()), 0)
+        self.buildCoreComponents(mwt, layout)
+        mwt.setLayout(layout)
 
-    @staticmethod
-    def add_tool_bar(mwt: QWidget):
-        return ToolBar(mwt, Window.application.clipboard())
+    def buildCoreComponents(self, mwt: QWidget, layout: QVBoxLayout):
 
-    @staticmethod
-    def add_first_column(mwt: QWidget):
-        widget: QWidget = QWidget(mwt)
-        second_widget: QWidget = QWidget(widget)
+        layout.setAlignment(Qt.AlignTop | Qt.AlignCenter)
 
-        layout: QVBoxLayout = QVBoxLayout(widget)
-        layout.setSpacing(0)
-        layout.setContentsMargins(0, 0, 0, 0)
+        code_and_memory: QHBoxLayout = createLayout(QHBoxLayout, mwt) # Code and Memory
+        IO_and_options: QHBoxLayout = createLayout(QHBoxLayout, mwt) # Secondary
 
-        second_layout: QHBoxLayout = QHBoxLayout(second_widget)
-        second_layout.setSpacing(0)
-        second_layout.setContentsMargins(0, 0, 0, 0)
+        # Add to main layout
+        layout.addLayout(code_and_memory)
+        layout.addSpacerItem(QSpacerItem(0, 7, QSizePolicy.Expanding, QSizePolicy.Fixed)) # Horizontal
+        layout.addLayout(IO_and_options)
+        layout.addSpacerItem(QSpacerItem(0, 7, QSizePolicy.Expanding, QSizePolicy.Fixed)) # Horizontal
 
-        layout.addWidget(Editor(mwt), 0, Qt.AlignTop | Qt.AlignLeft)
-        second_layout.addWidget(Input(mwt), 0, Qt.AlignLeft)
-        second_layout.addWidget(Output(mwt), 0, Qt.AlignLeft)
-        second_widget.setLayout(second_layout)
-        layout.addWidget(second_widget, 0, Qt.AlignTop | Qt.AlignLeft)
-        widget.setLayout(layout)
-        return widget
+        layout.setStretchFactor(code_and_memory, 4)
+        layout.setStretchFactor(IO_and_options, 1)
 
-    @staticmethod
-    def add_second_column(mwt: QWidget):
-        widget: QWidget = QWidget(mwt)
+        # Add code and memory to their H layout
+        code_and_memory.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding)) # Vertical
+        code_and_memory.addWidget(self.setSplitter(mwt), 1)
+        code_and_memory.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding)) # Vertical
 
-        layout: QVBoxLayout = QVBoxLayout(widget)
-        layout.setSpacing(0)
-        layout.setContentsMargins(0, 0, 0, 0)
+        # Add input, output and memory options to their layout
+        IO_and_options.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding)) # Vertical
+        IO_and_options.addWidget(Input(mwt), 1)
+        IO_and_options.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding)) # Vertical
+        IO_and_options.addWidget(Output(mwt), 1)
+        IO_and_options.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding)) # Vertical
+        IO_and_options.addWidget(MemoryOptions(mwt), 1)
+        IO_and_options.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding)) # Vertical
+        return layout
 
-        layout.addWidget(Memory(mwt), 0, Qt.AlignTop | Qt.AlignLeft)
-        layout.addWidget(MemoryOptions(mwt), 0, Qt.AlignTop | Qt.AlignLeft)
-        widget.setLayout(layout)
-        return widget
-"""
-Creare una nuova struttura di layout con diverse tipologie incastrate tra loro.
-"""
+    def setSplitter(self, mwt: QWidget):
+        cmResizer: QSplitter = QSplitter(mwt)
+        cmResizer.setOrientation(Qt.Horizontal)
+        cmResizer.setObjectName("Mem-CodeSplitter")
+        cmResizer.setHandleWidth(7)
+        cmResizer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
-
-
-
-
-
-
-
+        cmResizer.addWidget(TabEditorWrapper(mwt))
+        cmResizer.addWidget(Memory(mwt, Window.application.clipboard()))
+        cmResizer.setSizes([INTEGER_MAX, INTEGER_MAX])
+        cmResizer.setStretchFactor(0, 1)
+        cmResizer.setStretchFactor(1, 1)
+        return cmResizer
