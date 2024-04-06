@@ -1,14 +1,16 @@
-from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFontDatabase
 from PyQt5.QtWidgets import *
 
 from src.events.ResizeEvent import ResizeEvent
 from src.graphics.components.Memory import Memory, MemoryOptions
 from src.graphics.components.Toolbar import ToolBar
-from src.graphics.components.editorcomponents.EditorWrapper import TabEditorWrapper
-from src.graphics.components.editorcomponents.Input import Input
-from src.graphics.components.editorcomponents.Output import Output
-from src.tools.Tools import find_path as getSS, translateQSS, find_path, createLayout
+from src.graphics.components.editor.editorwrapper.EditorWrapper import TabEditorWrapper
+from src.graphics.components.editor.Input import Input
+from src.graphics.components.editor.Output import Output
+from src.tools.Tools import find_path, translateQSS, createLayout, Desktop
+from src.tools.DataManager import HandleJson
+from src.tools.Variables import DataBase
 
 INTEGER_MAX = 2147483647
 
@@ -18,7 +20,7 @@ class Window(QMainWindow):
 
     def __init__(self, app: QApplication):
         super(QMainWindow, self).__init__(None)
-        QFontDatabase.addApplicationFont(find_path("AnonymousPro-Regular.ttf"))
+        self.add_fonts()
         self.defineWindowSize()
         self.setWindowTitle("Assembly Stdio")
         Window.application = app
@@ -32,20 +34,23 @@ class Window(QMainWindow):
         self.setMainLayout(mwt)
         mwt.update()
 
-        with open(getSS("style.qss"), "r") as f:
+        with open(find_path("style.qss"), "r") as f:
             self.setStyleSheet(translateQSS(f.read()))
 
         self.resizeEventHandler = ResizeEvent(self)
 
+    def showEvent(self, event):
+        HandleJson.get_instance()
+        super().showEvent(event)
+        DataBase.ON_MAIN_WINDOW_LOAD.setValue(True)
+
     def defineWindowSize(self):
-        size: QSize = QDesktopWidget().screenGeometry()
-        self.setMinimumSize(size.width() // 4 * 3, size.height() // 4 * 3)
+        self.setMinimumSize(Desktop.sizeHint(3 / 4, 3 / 4))
         self.setWindowFlag(Qt.FramelessWindowHint)
         self.centerOnScreen()
 
     def centerOnScreen(self):
-        desktop = QDesktopWidget()
-        screen_geometry = desktop.screenGeometry()
+        screen_geometry = Desktop.getDesktopSize()
         x = (screen_geometry.width() - self.width()) // 2
         y = (screen_geometry.height() - self.height()) // 2
         self.move(x, y)
@@ -60,31 +65,31 @@ class Window(QMainWindow):
 
         layout.setAlignment(Qt.AlignTop | Qt.AlignCenter)
 
-        code_and_memory: QHBoxLayout = createLayout(QHBoxLayout, mwt) # Code and Memory
-        IO_and_options: QHBoxLayout = createLayout(QHBoxLayout, mwt) # Secondary
+        code_and_memory: QHBoxLayout = createLayout(QHBoxLayout, mwt)   # Code and Memory
+        IO_and_options: QHBoxLayout = createLayout(QHBoxLayout, mwt)    # Secondary
 
         # Add to main layout
         layout.addLayout(code_and_memory)
-        layout.addSpacerItem(QSpacerItem(0, 7, QSizePolicy.Expanding, QSizePolicy.Fixed)) # Horizontal
+        layout.addSpacerItem(QSpacerItem(0, 7, QSizePolicy.Expanding, QSizePolicy.Fixed))   # Horizontal
         layout.addLayout(IO_and_options)
-        layout.addSpacerItem(QSpacerItem(0, 7, QSizePolicy.Expanding, QSizePolicy.Fixed)) # Horizontal
+        layout.addSpacerItem(QSpacerItem(0, 7, QSizePolicy.Expanding, QSizePolicy.Fixed))   # Horizontal
 
         layout.setStretchFactor(code_and_memory, 4)
         layout.setStretchFactor(IO_and_options, 1)
 
         # Add code and memory to their H layout
-        code_and_memory.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding)) # Vertical
+        code_and_memory.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding))  # Vertical
         code_and_memory.addWidget(self.setSplitter(mwt), 1)
-        code_and_memory.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding)) # Vertical
+        code_and_memory.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding))  # Vertical
 
         # Add input, output and memory options to their layout
-        IO_and_options.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding)) # Vertical
+        IO_and_options.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding))   # Vertical
         IO_and_options.addWidget(Input(mwt), 1)
-        IO_and_options.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding)) # Vertical
+        IO_and_options.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding))   # Vertical
         IO_and_options.addWidget(Output(mwt), 1)
-        IO_and_options.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding)) # Vertical
+        IO_and_options.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding))   # Vertical
         IO_and_options.addWidget(MemoryOptions(mwt), 1)
-        IO_and_options.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding)) # Vertical
+        IO_and_options.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding))   # Vertical
         return layout
 
     def setSplitter(self, mwt: QWidget):
@@ -100,3 +105,16 @@ class Window(QMainWindow):
         cmResizer.setStretchFactor(0, 1)
         cmResizer.setStretchFactor(1, 1)
         return cmResizer
+
+    def add_fonts(self):
+        QFontDatabase.addApplicationFont(find_path("AnonymousPro.ttf"))
+        QFontDatabase.addApplicationFont(find_path("FiraCode.ttf"))
+        QFontDatabase.addApplicationFont(find_path("Inconsolata.ttf"))
+        QFontDatabase.addApplicationFont(find_path("Bahnschrift.ttf"))
+        QFontDatabase.addApplicationFont(find_path("Monaco.ttf"))
+        QFontDatabase.addApplicationFont(find_path("Fixedsys.ttf"))
+        QFontDatabase.addApplicationFont(find_path("OCR-A.ttf"))
+        # QFontDatabase.addApplicationFont(find_path("AnonymousPro.ttf"))
+        # QFontDatabase.addApplicationFont(find_path("AnonymousPro.ttf"))
+        # QFontDatabase.addApplicationFont(find_path("AnonymousPro.ttf"))
+

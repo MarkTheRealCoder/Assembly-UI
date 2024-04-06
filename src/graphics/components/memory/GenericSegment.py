@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt, QObject
 from PyQt5.QtGui import QClipboard
 from PyQt5.QtWidgets import QScrollArea, QSizePolicy, QVBoxLayout, QLayout, QFrame
 
-from src.graphics.components.memorycomponents.MemoryFragment import MemoryFragment
+from src.graphics.components.memory.MemoryFragment import MemoryFragment
 
 
 class ScrollWidget(QScrollArea):
@@ -82,7 +82,7 @@ class FragmentContainer(QFrame):
         def delete(child: QObject):
             nonlocal layout
             layout.removeWidget(child)
-            child.destroy(True, True)
+            child.deleteLater()
 
         map(delete, children)
         self.setLayout(layout)

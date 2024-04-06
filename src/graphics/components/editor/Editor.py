@@ -1,9 +1,10 @@
 from PyQt5.Qsci import QsciScintilla
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QColor, QFont
 from PyQt5.QtWidgets import QWidget, QSizePolicy
 
-from src.graphics.components.editorcomponents.Lexer import Lexer
+from src.graphics.components.editor.Lexer import Lexer
+from src.tools.Variables import DataBase
 
 
 class Editor(QsciScintilla):
@@ -12,6 +13,7 @@ class Editor(QsciScintilla):
         self.setConfigurations()
         self.setObjectName("Editor")
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        DataBase.FONT.connect(self.set_font)
 
     def setConfigurations(self):
         # Widget
@@ -44,5 +46,8 @@ class Editor(QsciScintilla):
         self.setMarginSensitivity(0, True)
         self.setMarginsBackgroundColor(QColor("#0B0C10"))
         self.setMarginsForegroundColor(QColor("#00AAFF"))
+
+    def set_font(self):
+        self.setFont(QFont(DataBase.FONT.getValue()))
 
 

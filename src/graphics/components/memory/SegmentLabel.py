@@ -11,4 +11,4 @@ class MemoryLabel(QLabel):
         self.setConfigurations()
 
     def setConfigurations(self):
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.MinimumExpanding)

@@ -37,8 +37,16 @@ class Variable(QObject):
 
 
 class DataBase:
-    METHOD: Variable = Variable(str)
-    FOLDER: Variable = Variable(str)
-    OPEN_FILE: Variable = Variable(str)
-    DOCTYPE: Variable = Variable(int)
-    NEW_WIDGET: Variable = Variable(tuple)
+
+    # Decorations
+    METHOD: Variable = Variable(str)                        # ON METHOD CHANGE IJVM ONLY
+    DOCTYPE: Variable = Variable(int)                       # ON DOCTYPE CHANGE
+
+    # Services
+    FONT: Variable = Variable(str)                          # ON FONT CHANGE
+    ON_MAIN_WINDOW_LOAD: Variable = Variable(bool)          # ON MAIN WINDOW LOAD
+    FOLDER: Variable = Variable(str)                        # ON MAIN FOLDER CHANGE
+    OPEN_FILE: Variable = Variable(str)                     # ON FILE OPENING
+    TOOL_WINDOW_CLOSED: Variable = Variable(bool)           # ON TOOL PRESENCE LOCK ELSE MAKE AVAILABLE CREATING ONE
+    CLOSING_MAIN_WINDOW: Variable = Variable(bool)          # ON WINDOW CLOSE STOP EVERY SEPARATED THREAD
+

@@ -12,6 +12,9 @@ variables {
     ---generic-highlightable-text: #258FF9;
     ---generic-highlight-text-color: #A4FFFC;
     ---generic-extras-color: #268AAA;
+    ---generic-light-tab-border-color: #72569f;
+    ---generic-tab-color: #191b27;
+    ---generic-light-tab-color: #222434;
 }
 
 QWidget#MainWidget {
@@ -19,7 +22,11 @@ QWidget#MainWidget {
 }
 
 QSplitter#Mem-CodeSplitter::handle {
-    background-color: var(---generic-background-color)
+    background-color: var(---generic-background-color);
+}
+
+QSplitter#Mem-CodeSplitter {
+    border-top: 7px solid var(---generic-background-color);
 }
 
 /* Code section costumization */
@@ -61,6 +68,42 @@ QScrollBar#VScrollCode::add-page:vertical, QScrollBar#VScrollCode::sub-page:vert
     background-color: var(---generic-light-background-color);
     image: none;
 }
+
+QTabWidget::pane {
+    background-color: #1F2833;
+    border: none;
+}
+
+QTabBar::tab {
+    background-color: var(---generic-tab-color);
+    color: var(---generic-extras-color);
+    width: 150px;
+    min-height: 29px;
+    border-bottom: 1px solid transparent;
+}
+
+QTabBar::tab:selected {
+    color: var(---generic-text-color);
+    background-color: var(---generic-light-tab-color);
+    border-bottom: 1px solid var(---generic-light-tab-border-color);
+}
+
+QTabBar::close-button {
+    image: url("./graphics/icons/icons8-close-10-fix.png"); /* THE MAIN PATH IS THE CWD AT RUNTIME, CARE!!!!!!! */
+    border-radius: 10px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: transparent;
+}
+
+QTabBar::close-button:hover {
+    background-color: var(---generic-light-tab-border-color);
+}
+
+QTabBar::scroller {
+    width: 0px;
+}
+
 /* </> */
 
 /* Memory section costumization */
@@ -151,7 +194,7 @@ QPushButton#Run {
     font-size: 30px;
 }
 
-QLabel#Title{
+QLabel#TopFrame{
     background-color: var(---generic-background-color);
     color: var(---generic-highlightable-text);
 }
@@ -167,7 +210,7 @@ QLabel#Title{
         background-color: var(---generic-highlight-background-color);
     }
 
-    QLabel#Title:hover {
+    QLabel#TopFrame:hover {
         color: var(---generic-highlight-text-color);
     }
 

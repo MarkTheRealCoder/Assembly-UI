@@ -1,7 +1,4 @@
 class Filetypes:
-    FFOLD = None
-    FIJVM = None
-    F8088 = None
 
     def __init__(self, v0: int, v1: str):
         self.___numeric: int = v0
@@ -30,4 +27,11 @@ class FT(Filetypes):
     FFOLD: Filetypes = Filetypes(0, "")
     FIJVM: Filetypes = Filetypes(1, "ijvm")
     F8088: Filetypes = Filetypes(2, "a8088")
+
+    @staticmethod
+    def findByExt(ext: str) -> Filetypes:
+        for i in [ft for ft in dir(FT) if ft.startswith("F")]:
+            attr = getattr(FT, i)
+            if attr == ext:
+                return attr
 

@@ -1,13 +1,13 @@
-import threading
-import time
 from typing import Type, Literal
 
 from PyQt5.QtGui import QClipboard
 from PyQt5.QtWidgets import QGridLayout
 from PyQt5.QtWidgets import QLabel, QWidget, QVBoxLayout, QSizePolicy, QLayout
 
-from src.graphics.components.memorycomponents.GenericSegment import ScrollWidget
-from src.graphics.components.memorycomponents.SegmentLabel import MemoryLabel
+from src.graphics.components.memory.GenericSegment import ScrollWidget
+from src.graphics.components.memory.segments import ConstantsSegment, StackSegment, RegistersSegment, VariablesSegment
+
+from src.graphics.components.memory.SegmentLabel import MemoryLabel
 from src.tools.ClassMapping import getClass
 from src.tools.Variables import DataBase as db
 from src.tools.documents.FileTypes import FT
@@ -32,8 +32,8 @@ class Segment(QLabel):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         layout.setSizeConstraint(QLayout.SetNoConstraint)
-        layout.addWidget(self.___label, 0)
-        layout.addWidget(self.___memseg, 3)
+        layout.addWidget(self.___label, 1)
+        layout.addWidget(self.___memseg, 5)
         self.setLayout(layout)
         self.update()
 
@@ -63,10 +63,6 @@ class Memory(QLabel):
         self.___clipboard = clipboard
 
         db.DOCTYPE.connect(self.load_scopes)
-        db.NEW_WIDGET.connect(self.temp)
-
-        timer = threading.Timer(5, test)
-        timer.start()
 
     def load_scopes(self):
         doctype = db.DOCTYPE.getValue()
@@ -104,13 +100,10 @@ class Memory(QLabel):
             oldwidget: QWidget = self.___widgets.get(i) # noqas
             if oldwidget is not None:
                 layout.removeWidget(oldwidget)
-                oldwidget.destroy(True, True)
+                oldwidget.deleteLater()
                 self.___widgets[i] = None
         for i in segments:
             self.___widgets[i] = Segment(self, getClass(i), self.___clipboard)
-
-    def temp(self):
-        self.addFragment(*(db.NEW_WIDGET.getValue()))
 
     def addFragment(self, trgt: Literal["CONSTANTS", "VARIABLES", "STACK", "REGISTERS"], _k: str, *args, _sk: str = None):
         m: Segment = self.___widgets.get(trgt)  # noqas
@@ -118,53 +111,6 @@ class Memory(QLabel):
             v = m.getMemseg()
             v.addFragment(_k, *args, _sk=_sk)
             self.update()
-
-
-def test():
-    """
-    db.DOCTYPE.setValue(FT.F8088)
-    time.sleep(0.5)
-    db.DOCTYPE.setValue(FT.FIJVM)
-    time.sleep(0.5)
-    db.DOCTYPE.setValue(FT.F8088)
-    time.sleep(0.5)
-    db.DOCTYPE.setValue(FT.FIJVM)
-    time.sleep(0.5)
-    db.DOCTYPE.setValue(FT.F8088)
-    time.sleep(0.5)
-    db.DOCTYPE.setValue(FT.FIJVM)
-    time.sleep(0.5)
-    db.DOCTYPE.setValue(FT.F8088)
-    time.sleep(0.5)
-    db.DOCTYPE.setValue(FT.FIJVM)
-    time.sleep(0.5)
-    db.DOCTYPE.setValue(FT.F8088)
-    time.sleep(0.5)
-    db.DOCTYPE.setValue(FT.FIJVM)
-    time.sleep(0.5)
-    db.DOCTYPE.setValue(FT.F8088)
-    time.sleep(0.5)
-    db.DOCTYPE.setValue(FT.FIJVM)
-    time.sleep(0.5)
-    db.DOCTYPE.setValue(FT.F8088)
-    time.sleep(0.5)
-    db.DOCTYPE.setValue(FT.FIJVM)
-    time.sleep(0.5)
-    """
-
-    for i in range(5):
-        time.sleep(0.5)
-        db.NEW_WIDGET.setValue(("OBJREF", "0xFFFFF"))
-        time.sleep(0.5)
-        db.NEW_WIDGET.setValue(("SAVE", "0x65983"))
-        time.sleep(0.5)
-        db.NEW_WIDGET.setValue(("DOES", "0xAFFB1"))
-        time.sleep(0.5)
-        db.NEW_WIDGET.setValue(("TOEF", "0x9898"))
-
-
-# TODO: Una volta creati i segmenti trovare un metodo rapido e ottimizzato di fornire la giusta istanza in base alla
-#  chiave passata
 
 
 """
@@ -176,3 +122,5 @@ AND
 CHANGECONTEXT name (IJVM only)
 ROLLBACK (HIDDEN)
 """
+
+

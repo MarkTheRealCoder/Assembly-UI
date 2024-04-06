@@ -1,41 +1,59 @@
+variables {
+    ---old-generic-text-color: #E48300;
+    ---old-generic-text-color: #E49920;
+    ---old-generic-background-color: #1E1E1E;
+    ---old-generic-gray-background-color: #2F2C2C;
+    ---old-high-contrast-text-highlight: #00AAFF;
+    
+    ---generic-background-color: #0B0C10;
+    ---generic-light-background-color: #0F2235;
+    ---generic-highlight-background-color: #2D223D;
+    ---generic-text-color: #E48300;
+    ---generic-highlightable-text: #258FF9;
+    ---generic-highlight-text-color: #A4FFFC;
+    ---generic-extras-color: #268AAA;
+}
+
 QTreeView {
     border-left-width: 2px;
-    border-left-color: #1E1E1E;
+    border-left-color: var(---generic-background-color);
     border-left-style: solid;
     border-right-width: 2px;
-    border-right-color: #1E1E1E;
+    border-right-color: var(---generic-background-color);
     border-right-style: solid;
     border-bottom-width: 2px;
-    border-bottom-color: #1E1E1E;
+    border-bottom-color: var(---generic-background-color);
     border-bottom-style: solid;
     border-top: none;
     padding-top: 0px;
     margin: 0px;
     color: #E48300;
-    background-color: #2F2C2C;
+    background-color: var(---generic-highlight-background-color);
 }
 
 QTreeView::item:open {
-    color: #00AAFF;
+    color: var(---old-high-contrast-text-highlight);
 }
 
 QTreeView::item:selected {
-    background-color: darkslategray;
+    background-color: var(---generic-light-background-color);
+    border: none;
+    color: var(---old-high-contrast-text-highlight);
 }
 
 QScrollBar:vertical {
-    background-color: #2F2C2C;
+    background-color: var(---generic-light-background-color);
     width: 5px;
     margin: 0px 0px 0px 0px;
 }
 
 QScrollBar::handle:vertical {
-    background-color: #00AAFF;
+    background-color: var(---generic-extras-color);
     border-radius: 2px;
 }
 
 QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
-    background-color: #2F2C2C;
+    background-color: var(---generic-light-background-color);
     image: none;
 }
 
