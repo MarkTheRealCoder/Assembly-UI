@@ -1,0 +1,39 @@
+Finestra
+- Completamente ridimensionabile
+Toolbar
+- Icona: apre la pagina delle repositories su github
+- File:
+-- Cambiare la directory di lavoro (la cartella dove si trovano i file ijvm e a8088)
+-- Aprire un file ijvm o a8088
+-- Creare un nuovo file ijvm o a8088
+-- Salvare il file corrente come nuovo file (nome) ma con la stessa estensione
+-- Cambiare le opzioni di visualizzazione dell'applicazione (fonts ecc...)
+- Help:
+-- Visualizzare la lista delle features dell'applicazione
+-- Visualizzare la guida su 8088
+-- Visualizzare la guida su ijvm
+- Titlebar:
+-- Mostra la directory di lavoro corrente
+-- Con doppio click si può copiare la directory
+-- Con ctrl-click si può aprire la directory con il file browser predefinito del sistema
+-- Con click + trascinamento si può spostare la finestra
+- Pulsante di minimizzazione
+- Pulsante di espansione e riduzione
+- Pulsante di chiusura
+Editor
+- La dimensione dell'editor può essere modificata trascinando il bordo a destra
+Memory display
+- La dimensione del memory display può essere modificata trascinando il bordo a sinistra
+- Il memory display mostra la memoria dell'ijvm o dell'a8088 con i cambiamenti in tempo reale
+- Si adatta automaticamente al tipo di file che si sta visualizzando
+- Cambiare il file visualizzato durante un'esecuzione resetta immediatamente l'esecuzione corrente
+- Facendo doppio-click su una cella si può copiare il suo contenuto
+Input
+Output
+Controllo esecuzione
+- Pulsante di reverse di 10 istruzioni
+- Pulsante di reverse di 1 istruzione
+- Pulsante di esecuzione/pausa esecuzione
+- Pulsante di esecuzione di 1 istruzione
+- Pulsante di esecuzione di 10 istruzioni
+- Tempo di attesa tra un'istruzione e un'altra (modificabile)

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Testing</title>
+        <meta charset="UTF-8">
+    </head>
+
+    <style>
+        .text, .text .monospace > span {
+            font-style: normal;
+            font-size: medium;
+
+            color: #D2D6D6;
+            font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .text .monospace {
+            font-family:'Courier New', Courier, monospace;
+        }
+
+        .text span {
+            font-style: italic;
+        }
+
+        table {
+            width: 100%;
+
+            margin-bottom: 1em; /* So it will be equal to the margin on a regular html paragraph */
+            border-collapse: collapse;
+        }
+
+        th {
+            background-color: #202020;
+            text-align: center;
+        }
+
+        th, td {
+            padding: 1%;
+            border: 1px solid gray;
+        }
+
+        tr {
+            background-color: #303030;
+        }
+
+        tr:nth-child(2n) {
+            background-color: #383838;
+        }
+
+        tr.not-implemented {
+            background-color: rgb(62, 0, 0);
+        }
+
+        th:nth-child(1), td:nth-child(1), th:nth-child(2), td:nth-child(2) {
+            min-width: 150px;
+        }
+
+        body {
+            background-color: #202020;
+        }
+
+        h1, h2 {
+            text-align: center;
+        }
+
+        li {
+            list-style: none;
+        }
+
+        section {
+            padding: 15px;
+            background-color: rgb(62, 0, 0);
+            border: 1px solid gray;
+            text-align: center;
+        }
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+
+        /* Track */
+        ::-webkit-scrollbar-track {
+            background: #0B0C10;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #268AAA;
+        }
+
+        ::-webkit-scrollbar-corner {
+            background: #0B0C10;
+        }
+
+    </style>
+
+    <body class="text">
+        <h1>Istruzioni IJVM (set ridotto)</h1>
+        <br>
+        <table>
+            <thead>
+                <tr>
+                    <th>KEYWORDS</th>
+                    <th>OPERANDI</th>
+                    <th>DESCRIZIONE</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="monospace">BIPUSH</td>
+                    <td class="monospace">byte</td>
+                    <td>Mette un byte in cima nello stack.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">DUP</td>
+                    <td class="monospace">🞬</td>
+                    <td>Duplica il byte in cima allo stack, <strong>BIPUSH</strong> della copia.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">ERR</td>
+                    <td class="monospace">🞬</td>
+                    <td>Stampa un messaggio di errore e <strong>HALT</strong>.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">GOTO</td>
+                    <td class="monospace">label name</td>
+                    <td>Salta incondizionalmente.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">HALT</td>
+                    <td class="monospace">🞬</td>
+                    <td>Blocca l'esecuzione del programma.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">IADD</td>
+                    <td class="monospace">🞬</td>
+                    <td><strong>POP</strong> di due parole e <strong>PUSH</strong> della somma.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">IAND</td>
+                    <td class="monospace">🞬</td>
+                    <td><strong>POP</strong> di due parole e <strong>PUSH</strong> il valore "boolean AND" delle due.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">IFEQ</td>
+                    <td class="monospace">label name</td>
+                    <td><strong>POP</strong> di una parola e <strong>GOTO</strong> alla <strong>label</strong> se il valore della parola e' zero.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">IFLT</td>
+                    <td class="monospace">label name</td>
+                    <td><strong>POP</strong> di una parola e <strong>GOTO</strong> alla <strong>label</strong> se il valore della parola e' minore di zero.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">IF_ICMPEQ</td>
+                    <td class="monospace">label name</td>
+                    <td><strong>POP</strong> di due parole e <strong>GOTO</strong> alla <strong>label</strong> se sono equivalenti.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">IINC</td>
+                    <td class="monospace">var name, byte</td>
+                    <td>Somma un byte ad una variabile locale.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">ILOAD</td>
+                    <td class="monospace">var name</td>
+                    <td><strong>BIPUSH</strong> di una variabile.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">IN</td>
+                    <td class="monospace">🞬</td>
+                    <td>Legge e <strong>BIPUSH</strong> di un carattere dall'input. Se non e' disponibile alcun carattere, <strong>BIPUSH 0x0</strong>.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">INVOKEVIRTUAL</td>
+                    <td class="monospace">method name</td>
+                    <td>Invoca un metodo, <strong>POP</strong> dell'oggetto e degli eventuali argomenti del metodo.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">IOR</td>
+                    <td class="monospace">🞬</td>
+                    <td><strong>POP</strong> di due parole e <strong>PUSH</strong> il valore "boolean OR" delle due.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">IRETURN</td>
+                    <td class="monospace">🞬</td>
+                    <td>Ritorna dal metodo con un valore intero.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">ISTORE</td>
+                    <td class="monospace">var name</td>
+                    <td><strong>POP</strong> di una parola e memorizzazione in una variabile.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">ISUB</td>
+                    <td class="monospace">🞬</td>
+                    <td><strong>POP</strong> di due parole sottrae la seconda parola con la prima, <strong>BIPUSH</strong> della differenza.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">LDC_W</td>
+                    <td class="monospace">const name</td>
+                    <td><strong>BIPUSH</strong> di una costante.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">NOP</td>
+                    <td class="monospace">🞬</td>
+                    <td>Non fa nulla.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">OUT</td>
+                    <td class="monospace">🞬</td>
+                    <td><strong>POP</strong> di una parola e stampa il carattere corrispondente.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">POP</td>
+                    <td class="monospace">🞬</td>
+                    <td>Rimozione di una parola dalla cima dello stack.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">SWAP</td>
+                    <td class="monospace">🞬</td>
+                    <td>Scambia le prime due parole nello stack.</td>
+                </tr>
+                <tr class="not-implemented">
+                    <td class="monospace">WIDE</td>
+                    <td class="monospace">🞬</td>
+                    <td>Estende il formato di un'istruzione.</td>
+                </tr>
+            </tbody>
+        </table>
+        <br>
+        <table>
+            <thead>
+                <tr>
+                    <th>OPERANDI</th>
+                    <th>DESCRIZIONE</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="monospace">byte</td>
+                    <td>Valore numerico nei formati: ottale <span>(es. 027, 019)</span>, decimale <span>(es. 27, 19)</span>, esadecimale <span>(es. 0x1B, 0x13)</span>.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">label name</td>
+                    <td>Il nome di stringa di un'etichetta.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">var name</td>
+                    <td>Il nome di stringa di una variabile locale.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">method name</td>
+                    <td>Il nome di stringa di un metodo.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">const name</td>
+                    <td>Il nome di stringa di una costante.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">N/A</td>
+                    <td>Questa istruzione non richiede operandi.</td>
+                </tr>
+            </tbody>
+        </table>
+        <br>
+        <section>
+            <p>Le istruzioni in rosso non sono state implementate nell'interprete IJVM dato che nell'anno accademico 2021/2022 non sono state utilizzate.</p>
+        </section>
+        <br>
+    </body>
+</html>
