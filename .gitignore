@@ -1,0 +1,6 @@
+register.log
+dist/*
+build/*
+venv/*
+AssemblyStdio.spec
+.idea/*

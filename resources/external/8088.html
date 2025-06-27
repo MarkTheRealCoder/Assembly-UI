@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>8088 Assembly Instructions</title>
+        <meta charset="UTF-8">
+    </head>
+
+    <style>
+        .text, .text .monospace > span {
+            font-style: normal;
+            font-size: medium;
+
+            color: #D2D6D6;
+            font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .text .monospace {
+            font-family:'Courier New', Courier, monospace;
+        }
+
+        .text span {
+            font-style: italic;
+        }
+
+        table {
+            width: 100%;
+
+            margin-bottom: 1em; /* So it will be equal to the margin on a regular html paragraph */
+            border-collapse: collapse;
+        }
+
+        th {
+            background-color: #202020;
+            text-align: center;
+        }
+
+        th, td {
+            padding: 1%;
+            border: 1px solid gray;
+        }
+
+        tr {
+            background-color: #303030;
+        }
+
+        tr:nth-child(2n) {
+            background-color: #383838;
+        }
+
+        tr.not-implemented {
+            background-color: rgb(62, 0, 0);
+        }
+
+        th:nth-child(1), td:nth-child(1), th:nth-child(2), td:nth-child(2) {
+            min-width: 150px;
+        }
+
+        body {
+            background-color: #202020;
+        }
+
+        h1, h2 {
+            text-align: center;
+        }
+
+        li {
+            list-style: none;
+        }
+
+        section {
+            padding: 15px;
+            background-color: rgb(62, 0, 0);
+            border: 1px solid gray;
+            text-align: center;
+        }
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+
+        /* Track */
+        ::-webkit-scrollbar-track {
+            background: #0B0C10;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #268AAA;
+        }
+
+        ::-webkit-scrollbar-corner {
+            background: #0B0C10;
+        }
+
+        a {
+            color: #2680aa;
+        }
+
+    </style>
+
+    <body class="text">
+        <h1>Istruzioni 8088 (set ridotto)</h1>
+        <br>
+        <h2>Istruzioni di Trasferimento Dati</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ISTRUZIONE</th>
+                    <th>OPERANDI</th>
+                    <th>DESCRIZIONE</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="monospace">MOV</td>
+                    <td class="monospace">dest, src</td>
+                    <td>Sposta il valore sorgente nella destinazione.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">MOVB</td>
+                    <td class="monospace">dest, src</td>
+                    <td>Sposta un byte dalla sorgente alla destinazione.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">PUSH</td>
+                    <td class="monospace">operand</td>
+                    <td>Inserisce un valore nello stack.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">POP</td>
+                    <td class="monospace">dest</td>
+                    <td>Rimuove un valore dallo stack e lo memorizza nella destinazione.</td>
+                </tr>
+            </tbody>
+        </table>
+        <br>
+        
+        <h2>Istruzioni Aritmetiche</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ISTRUZIONE</th>
+                    <th>OPERANDI</th>
+                    <th>DESCRIZIONE</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="monospace">ADD</td>
+                    <td class="monospace">dest, src</td>
+                    <td>Somma il valore sorgente alla destinazione.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">ADDB</td>
+                    <td class="monospace">dest, src</td>
+                    <td>Somma un byte sorgente al byte destinazione.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">ADC</td>
+                    <td class="monospace">dest, src</td>
+                    <td>Somma con riporto: aggiunge sorgente e carry flag alla destinazione.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">SUB</td>
+                    <td class="monospace">dest, src</td>
+                    <td>Sottrae il valore sorgente dalla destinazione.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">SUBB</td>
+                    <td class="monospace">dest, src</td>
+                    <td>Sottrae un byte sorgente dal byte destinazione.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">SBB</td>
+                    <td class="monospace">dest, src</td>
+                    <td>Sottrazione con prestito: sottrae sorgente e carry flag dalla destinazione.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">MUL</td>
+                    <td class="monospace">operand</td>
+                    <td>Moltiplica AL per l'operando, risultato in AX.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">MULB</td>
+                    <td class="monospace">operand</td>
+                    <td>Moltiplica AL per l'operando byte, risultato in AL:AH.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">DIV</td>
+                    <td class="monospace">operand</td>
+                    <td>Divide AX per l'operando, quoziente in AL, resto in AH.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">DIVB</td>
+                    <td class="monospace">operand</td>
+                    <td>Divide AL per l'operando byte, quoziente in AL, resto in AH.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">INC</td>
+                    <td class="monospace">operand</td>
+                    <td>Incrementa l'operando di 1.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">DEC</td>
+                    <td class="monospace">operand</td>
+                    <td>Decrementa l'operando di 1.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">CMP</td>
+                    <td class="monospace">op1, op2</td>
+                    <td>Confronta due operandi impostando i flag (op1 - op2).</td>
+                </tr>
+                <tr>
+                    <td class="monospace">CMPB</td>
+                    <td class="monospace">op1, op2</td>
+                    <td>Confronta due operandi byte impostando i flag.</td>
+                </tr>
+            </tbody>
+        </table>
+        <br>
+        
+        <h2>Istruzioni Logiche</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ISTRUZIONE</th>
+                    <th>OPERANDI</th>
+                    <th>DESCRIZIONE</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="monospace">AND</td>
+                    <td class="monospace">dest, src</td>
+                    <td>AND logico bit per bit tra destinazione e sorgente.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">OR</td>
+                    <td class="monospace">dest, src</td>
+                    <td>OR logico bit per bit tra destinazione e sorgente.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">XOR</td>
+                    <td class="monospace">dest, src</td>
+                    <td>XOR logico bit per bit tra destinazione e sorgente.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">XORB</td>
+                    <td class="monospace">dest, src</td>
+                    <td>XOR logico bit per bit tra due byte.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">NOT</td>
+                    <td class="monospace">operand</td>
+                    <td>Complemento logico bit per bit dell'operando.</td>
+                </tr>
+            </tbody>
+        </table>
+        <br>
+        
+        <h2>Istruzioni di Controllo del Flusso</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ISTRUZIONE</th>
+                    <th>OPERANDI</th>
+                    <th>DESCRIZIONE</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="monospace">JMP</td>
+                    <td class="monospace">label</td>
+                    <td>Salto incondizionato all'etichetta.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">JE / JZ</td>
+                    <td class="monospace">label</td>
+                    <td>Salta se uguale (Zero Flag = 1).</td>
+                </tr>
+                <tr>
+                    <td class="monospace">JNE / JNZ</td>
+                    <td class="monospace">label</td>
+                    <td>Salta se non uguale (Zero Flag = 0).</td>
+                </tr>
+                <tr>
+                    <td class="monospace">JL / JNGE</td>
+                    <td class="monospace">label</td>
+                    <td>Salta se minore (Sign Flag ≠ Overflow Flag).</td>
+                </tr>
+                <tr>
+                    <td class="monospace">JLE / JNG</td>
+                    <td class="monospace">label</td>
+                    <td>Salta se minore o uguale (ZF=1 OR SF≠OF).</td>
+                </tr>
+                <tr>
+                    <td class="monospace">JG / JNLE</td>
+                    <td class="monospace">label</td>
+                    <td>Salta se maggiore (ZF=0 AND SF=OF).</td>
+                </tr>
+                <tr>
+                    <td class="monospace">JGE / JNL</td>
+                    <td class="monospace">label</td>
+                    <td>Salta se maggiore o uguale (Sign Flag = Overflow Flag).</td>
+                </tr>
+                <tr>
+                    <td class="monospace">JB / JNAE / JC</td>
+                    <td class="monospace">label</td>
+                    <td>Salta se sotto (Carry Flag = 1) - confronto unsigned.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">JBE / JNA</td>
+                    <td class="monospace">label</td>
+                    <td>Salta se sotto o uguale (CF=1 OR ZF=1) - confronto unsigned.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">JA / JNBE</td>
+                    <td class="monospace">label</td>
+                    <td>Salta se sopra (CF=0 AND ZF=0) - confronto unsigned.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">JAE / JNB / JNC</td>
+                    <td class="monospace">label</td>
+                    <td>Salta se sopra o uguale (Carry Flag = 0) - confronto unsigned.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">JS</td>
+                    <td class="monospace">label</td>
+                    <td>Salta se segno negativo (Sign Flag = 1).</td>
+                </tr>
+                <tr>
+                    <td class="monospace">JNS</td>
+                    <td class="monospace">label</td>
+                    <td>Salta se segno positivo (Sign Flag = 0).</td>
+                </tr>
+                <tr>
+                    <td class="monospace">JO</td>
+                    <td class="monospace">label</td>
+                    <td>Salta se overflow (Overflow Flag = 1).</td>
+                </tr>
+                <tr>
+                    <td class="monospace">JNO</td>
+                    <td class="monospace">label</td>
+                    <td>Salta se non overflow (Overflow Flag = 0).</td>
+                </tr>
+                <tr>
+                    <td class="monospace">JP / JPE</td>
+                    <td class="monospace">label</td>
+                    <td>Salta se parità pari (Parity Flag = 1).</td>
+                </tr>
+                <tr>
+                    <td class="monospace">JNP / JPO</td>
+                    <td class="monospace">label</td>
+                    <td>Salta se parità dispari (Parity Flag = 0).</td>
+                </tr>
+                <tr>
+                    <td class="monospace">JCXZ</td>
+                    <td class="monospace">label</td>
+                    <td>Salta se CX è zero.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">LOOP</td>
+                    <td class="monospace">label</td>
+                    <td>Decrementa CX e salta se CX ≠ 0.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">CALL</td>
+                    <td class="monospace">label</td>
+                    <td>Chiama una subroutine, salva l'indirizzo di ritorno nello stack.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">RET</td>
+                    <td class="monospace">🞬</td>
+                    <td>Ritorna da una subroutine, recupera l'indirizzo dallo stack.</td>
+                </tr>
+            </tbody>
+        </table>
+        <br>
+        
+        <h2>Istruzioni di Sistema</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ISTRUZIONE</th>
+                    <th>OPERANDI</th>
+                    <th>DESCRIZIONE</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="monospace">SYS</td>
+                    <td class="monospace">🞬</td>
+                    <td>Chiamata di sistema. Il numero della syscall deve essere nello stack.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">HLT</td>
+                    <td class="monospace">🞬</td>
+                    <td>Ferma l'esecuzione del programma.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">NOP</td>
+                    <td class="monospace">🞬</td>
+                    <td>Nessuna operazione - non fa nulla.</td>
+                </tr>
+            </tbody>
+        </table>
+        <br>
+        
+        <h2>Tipi di Operandi</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>TIPO</th>
+                    <th>DESCRIZIONE</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="monospace">register16</td>
+                    <td>Registri a 16 bit: <span>AX, BX, CX, DX, SI, DI, BP, SP</span></td>
+                </tr>
+                <tr>
+                    <td class="monospace">register8</td>
+                    <td>Registri a 8 bit: <span>AL, AH, BL, BH, CL, CH, DL, DH</span></td>
+                </tr>
+                <tr>
+                    <td class="monospace">segment</td>
+                    <td>Registri di segmento: <span>CS, DS, ES, SS</span></td>
+                </tr>
+                <tr>
+                    <td class="monospace">immediate</td>
+                    <td>Valori immediati nei formati: ottale <span>(es. 027)</span>, decimale <span>(es. 27)</span>, esadecimale <span>(es. 0x1B)</span></td>
+                </tr>
+                <tr>
+                    <td class="monospace">memory</td>
+                    <td>Riferimenti di memoria: <span>[BX], [BP+8], [SI+DI], [label]</span></td>
+                </tr>
+                <tr>
+                    <td class="monospace">label</td>
+                    <td>Etichette per salti e chiamate: <span>loop_start, end_program</span></td>
+                </tr>
+                <tr>
+                    <td class="monospace">🞬</td>
+                    <td>Questa istruzione non richiede operandi.</td>
+                </tr>
+            </tbody>
+        </table>
+        <br>
+        
+        <h2>Chiamate di Sistema (SYS)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>NUMERO</th>
+                    <th>NOME</th>
+                    <th>DESCRIZIONE</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="monospace">1</td>
+                    <td class="monospace">EXIT</td>
+                    <td>Termina il programma. Codice di uscita nello stack.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">117</td>
+                    <td class="monospace">GETCHAR</td>
+                    <td>Legge un carattere dall'input, lo memorizza in AL.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">127</td>
+                    <td class="monospace">PRINTF</td>
+                    <td>Stampa una stringa formattata. Formato e valore nello stack.</td>
+                </tr>
+            </tbody>
+        </table>
+        <br>
+        
+        <h2>Flag del Processore</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>FLAG</th>
+                    <th>NOME</th>
+                    <th>DESCRIZIONE</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="monospace">ZF</td>
+                    <td class="monospace">Zero Flag</td>
+                    <td>Impostato quando il risultato di un'operazione è zero.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">SF</td>
+                    <td class="monospace">Sign Flag</td>
+                    <td>Impostato quando il risultato di un'operazione è negativo.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">CF</td>
+                    <td class="monospace">Carry Flag</td>
+                    <td>Impostato quando c'è un riporto o un prestito nell'operazione.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">OF</td>
+                    <td class="monospace">Overflow Flag</td>
+                    <td>Impostato quando c'è un overflow aritmetico in complemento a due.</td>
+                </tr>
+                <tr>
+                    <td class="monospace">PF</td>
+                    <td class="monospace">Parity Flag</td>
+                    <td>Impostato quando il numero di bit 1 nel risultato è pari.</td>
+                </tr>
+            </tbody>
+        </table>
+        <br>
+        
+        <section>
+            <p>
+                Le istruzioni non presenti in questa lista non sono supportate, 
+                per ulteriori informazioni si veda la 
+                <a href="https://github.com/atom7xyz/antlr-impl/blob/master/src/main/resources/8088.pdf">documentazione</a>.
+            </p>
+        </section>
+        <br>
+    </body>
+</html>
