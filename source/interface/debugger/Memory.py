@@ -1,5 +1,6 @@
 from typing import Literal
 
+from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QGridLayout
 from PyQt5.QtWidgets import QLabel, QWidget, QSizePolicy, QLayout
 
@@ -21,31 +22,17 @@ class MemoryGraphics(QLabel):
         self.setLayout(layout)
 
 
-class Memory(MemoryGraphics):
-    def __init__(self, mwt: QWidget):
-        super().__init__(parent=mwt)
+class MemoryLogic(MemoryGraphics):
+    def __init__(self, parent):
+        super().__init__(parent)
         self.___widgets: dict[str: Segment] = {
             "CONSTANTS": None,
             "VARIABLES": None,
+            "SECT_DATA": None,
+            "SECT_BSS": None,
             "STACK": None,
             "REGISTERS": None
         }
-
-        db.DOCTYPE.connect(self.load_scopes)
-
-    def load_scopes(self):
-        doctype = db.DOCTYPE.getValue()
-
-        segments: list[str] = ["CONSTANTS", "VARIABLES", "STACK"]
-        if doctype == FT.F8088:
-            segments.append("REGISTERS")
-
-        layout = self.layout()
-
-        self.updateWidgets(segments, layout)
-        self.buildLayout(layout, segments)
-        self.setLayout(layout)
-        self.update()
 
     def buildLayout(self, layout: QGridLayout, segments: list[str]) -> None:
         ijvm = len(segments) == 3
@@ -61,7 +48,7 @@ class Memory(MemoryGraphics):
 
     def updateWidgets(self, segments: list[str], layout: QGridLayout) -> None:
         for i in self.___widgets.keys():
-            oldwidget: QWidget = self.___widgets.get(i) # noqas
+            oldwidget: QWidget = self.___widgets.get(i)
             if oldwidget is not None:
                 layout.removeWidget(oldwidget)
                 oldwidget.deleteLater()
@@ -69,12 +56,43 @@ class Memory(MemoryGraphics):
         for i in segments:
             self.___widgets[i] = Segment(self, i)
 
-    def addFragment(self, trgt: Literal["CONSTANTS", "VARIABLES", "STACK", "REGISTERS"], _k: str, *args, _sk: str = None):
-        m: Segment = self.___widgets.get(trgt)  # noqas
+    def addFragment(self, target: Literal["CONSTANTS", "VARIABLES", "SECT_DATA", "SECT_BSS", "STACK", "REGISTERS"], _k: str, *args, _sk: str = None):
+        m: Segment = self.___widgets.get(target)
         if m is not None:
-            v = m.getMemseg()
-            v.addFragment(_k, *args, _sk=_sk)
+            m.addFragment(_k, *args, _sk=_sk)
             self.update()
+
+
+class Memory(MemoryLogic):
+    def __init__(self, mwt: QWidget):
+        super().__init__(parent=mwt)
+        db.DOCTYPE.connect(self.load_scopes)
+        QTimer.singleShot(5000, lambda: add_mock_fragments(self))
+
+    def load_scopes(self):
+        doctype = db.DOCTYPE.getValue()
+
+        if doctype == FT.F8088:
+            segments: list[str] = ["SECT_DATA", "SECT_BSS", "STACK", "REGISTERS"]
+        else:
+            segments: list[str] = ["CONSTANTS", "VARIABLES", "STACK"]
+
+        layout = self.layout()
+
+        self.updateWidgets(segments, layout)
+        self.buildLayout(layout, segments)
+        self.setLayout(layout)
+        self.update()
+
+
+def add_mock_fragments(memory: Memory):
+    """
+    Adds mock fragments to the memory display for testing purposes.
+    This function is called after the memory display is initialized.
+    """
+    memory.addFragment("CONSTANTS", "CONST1", "Value1")
+    memory.addFragment("VARIABLES", "VAR1", "Value2")
+    memory.addFragment("STACK", "STACK1", "Value3")
 
 
 """

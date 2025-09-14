@@ -1,0 +1,74 @@
+variables {
+
+    ---legacy-background-color: #0B0C10;
+    ---legacy-light-background-color: #0F2235;
+    ---legacy-highlight-background-color: #2D223D;
+    ---legacy-text-color: #E48300;
+    ---legacy-highlightable-text: #258FF9;
+    ---legacy-highlight-text-color: #A4FFFC;
+    ---legacy-extras-color: #268AAA;
+    ---legacy-light-tab-border-color: #72569f;
+    ---legacy-tab-color: #191b27;
+    ---legacy-light-tab-color: #222434;
+    ---legacy-high-contrast-text-highlight: #00AAFF;
+
+
+    ---generic-background-color: #1E1E1E;
+    ---generic-light-background-color: #252526;
+    ---generic-highlight-background-color: #2D2D30;
+    ---generic-text-color: #CCCCCC;
+    ---generic-highlightable-text: #569CD6;
+    ---generic-highlight-text-color: #FFFFFF;
+    ---generic-extras-color: #9CDCFE;
+    ---generic-light-tab-border-color: #007ACC;
+    ---generic-tab-color: #2D2D30;
+    ---generic-light-tab-color: #37373D;
+    ---old-high-contrast-text-highlight: #FFC83D;
+}
+
+QFrame#EditorWrapper {
+    background-color: var(---generic-tab-color);
+    border: none;
+}
+
+QsciScintilla#Editor {
+    background-color: var(---generic-background-color);
+    color: var(---generic-text-color);
+    selection-background-color: var(---generic-highlight-background-color);
+    selection-color: var(---generic-text-color);
+    font-family: "Monospace";
+    font-size: 12pt;
+    border: none;
+    margin: 0px;
+    padding: 0px;
+}
+
+QsciScintilla#Editor QScrollBar:vertical {
+    background-color: var(---generic-light-background-color);
+    width: 12px;
+    border: none;
+    border-radius: 6px;
+}
+
+QsciScintilla#Editor QScrollBar::handle:vertical {
+    background-color: var(---generic-highlight-background-color);
+    border-radius: 6px;
+    min-height: 20px;
+    margin: 0px;
+}
+
+QsciScintilla#Editor QScrollBar::handle:vertical:hover {
+    background-color: var(---generic-light-tab-border-color);
+}
+
+QsciScintilla#Editor QScrollBar::add-line:vertical,
+QsciScintilla#Editor QScrollBar::sub-line:vertical {
+    height: 0px;
+    width: 0px;
+    border: none;
+}
+
+QsciScintilla#Editor QScrollBar::add-page:vertical,
+QsciScintilla#Editor QScrollBar::sub-page:vertical {
+    background: none;
+} 

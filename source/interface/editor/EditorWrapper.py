@@ -6,7 +6,6 @@ from source.comms import Database
 from source.comms.events import ClosingEvent, NoTabEvent, ReadyEvent
 from source.comms.handlers import EventRegister
 from source.filesystem import HandleJson as HJ
-from source.filesystem import HandleJson as HJ
 from source.filesystem.documents import Document, FT
 from source.filesystem.documents import Watcher
 from source.interface.editor.Editor import Editor
@@ -74,7 +73,7 @@ class EditorWrapperLogic(EditorWrapperGraphics):
             self.document_uniqueness(doc),
             doc.getExtension()
         )
-        self._frame.addEditor(docHash, Editor(self._frame), doc.text)
+        self._frame.addEditor(docHash, Editor(self._frame, doc.text), doc.text)
 
         Database.ON_TAB_SELECTED.setValue(docHash)
         Database.DOCTYPE.setValue(int(FT.findByExt(doc.getExtension())))
@@ -114,7 +113,6 @@ class EditorWrapperLogic(EditorWrapperGraphics):
     def getFromDisk(self):
         docHash = Database.ON_TAB_SELECTED.getValue()
         doc = self._documents.get(docHash)
-        print(doc.getPath())
         if update := self.___consistency_checker.getDocumentUpdates(doc):
             editor = self._frame.getEditor(docHash)
             editor.setText(update)

@@ -14,16 +14,41 @@ class SegmentScrollGraphics(QScrollArea):
         self.setObjectName("GenericScroll")
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setWidgetResizable(True)
-        self.__fc = FragmentContainer(self, f"{title}Scroll")
-        self.setWidget(self.__fc)
+        self.fc = FragmentContainer(self, f"{title}Scroll")
+        self.setWidget(self.fc)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
 
-class SegmentScroll(SegmentScrollGraphics):
-    def __init__(self, parent, title: str, contextChange: bool = False):
+class SegmentScrollLogic(SegmentScrollGraphics):
+    def __init__(self, parent, title: str):
         super().__init__(parent, title)
         self.___title: str = title
+
+    def getTitle(self):
+        return self.___title
+
+    def delFragment(self, _k: Union[Fragment, str]) -> bool:
+        w: FragmentContainer = self.widget()
+
+        _ks: str = None
+        _sks: str = None
+
+        if isinstance(_k, Fragment):
+            _ks, _sks = _k.getKey()
+        else:
+            _ks = _k
+
+        return w.delFragment(_ks, _sks)
+
+    def delAllFragments(self) -> bool:
+        w: FragmentContainer = self.widget()
+        return w.clearFragments()
+
+
+class SegmentScroll(SegmentScrollLogic):
+    def __init__(self, parent, title: str, contextChange: bool = False):
+        super().__init__(parent, title)
         if contextChange:
             db.METHOD.connect(self.changeContext)
 
@@ -36,33 +61,13 @@ class SegmentScroll(SegmentScrollGraphics):
             label.setText(self.getTitle())
         label.update()
 
-    def getTitle(self):
-        return self.___title
-
     def addFragment(self, _k: str, *args, _sk: str = None):
-        self.__fc.addFragment(Fragment(self.__fc, str(_k), *args, _sk=_sk))
+        self.fc.addFragment(Fragment(self.fc, str(_k), *args, _sk=_sk))
         self.update()
         self.repaint()
 
     def updateFragment(self, _k: str, *args, _sk: str = None):
-        self.__fc.updateFragment(Fragment(self.__fc, str(_k), *args, _sk=_sk))
+        self.fc.updateFragment(Fragment(self.fc, str(_k), *args, _sk=_sk))
         self.update()
         self.repaint()
-
-    def delFragment(self, _k: Union[Fragment, str]) -> bool:
-        w: FragmentContainer = self.widget() # noqas
-
-        _ks: str = None  # noqas
-        _sks: str = None  # noqas
-
-        if isinstance(_k, Fragment):
-            _ks, _sks = _k.getKey()
-        else:
-            _ks = _k
-
-        return w.delFragment(_ks, _sks)
-
-    def delAllFragments(self) -> bool:
-        w: FragmentContainer = self.widget() # noqas
-        return w.clearFragments()
 

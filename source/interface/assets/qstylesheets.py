@@ -17,5 +17,6 @@ def translateQSS(style: str):
     style = style[last_index + 1:]
     matches: list[regex.Match] = regex.findall(r"(var\s*\((.*)\))", style)
     for s, r in matches:
-        style = style.replace(s, variables.get(r))
+        replacement = variables.get(r, s)  # Use original var() if not found
+        style = style.replace(s, replacement)
     return style

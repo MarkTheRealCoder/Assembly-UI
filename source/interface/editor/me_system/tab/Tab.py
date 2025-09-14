@@ -7,6 +7,7 @@ from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
 from source.filesystem.IconManager import IconManager
 from source.filesystem.documents.FileTypes import FT
+from source.interface.Tooltips import Tooltip
 from source.interface.editor.me_system.tab.Icon import TabIcon
 from source.interface.editor.me_system.tab.Label import TabLabel
 from source.interface.shared import createLayout
@@ -19,6 +20,10 @@ class TabGraphics(QFrame):
         self.setObjectName("Tab")
         self.setFixedSize(QSize(150, 40))
         self.setFrameStyle(QFrame.Panel | QFrame.Raised)
+        self._tooltip = Tooltip(self, "Tab Tooltip")
+        self._tooltip.setPosition("below", "center")
+        self._tooltip.setFollowing("widget")
+        self._tooltip.setSpecific("Tab")
 
     def setupLayout(self, name: str, ext: str, tab_id: int):
         layout: QHBoxLayout = createLayout(QHBoxLayout, self)
@@ -27,7 +32,7 @@ class TabGraphics(QFrame):
         layout.addWidget(CloseButton(self, "Tab", {"tab": True})
                          .setEventIdentifiers(id=tab_id))
         self.setLayout(layout)
-        self.setToolTip(name)
+        self._tooltip.setText(name)
 
 
 class TabLogic(TabGraphics):

@@ -26,7 +26,6 @@ def createSubWindow(reason: str, parent, wclass, *args, **kwargs):
 class WindowGraphics(QLabel):
     def __init__(self, reason: str, parent, content, *args, **kwargs):
         super().__init__(parent)
-
         self._reason = reason
         self.configurations(content(self, *args, **kwargs))
 
@@ -71,13 +70,19 @@ class WindowGraphics(QLabel):
         self.move(x, y)
 
 
-
-class Window(WindowGraphics):
+class WindowLogic(WindowGraphics):
     def __init__(self, reason: str, parent, content, *args, **kwargs):
         super().__init__(reason, parent, content, *args, **kwargs)
 
-        EventRegister.mregister(self, ClosingEvent, reason, EventRegister.HIGH)
+    def reason(self):
+        return self._reason
 
+
+@EventRegister.register(ClosingEvent, priority=EventRegister.HIGH)
+class Window(WindowLogic):
+    def __init__(self, reason: str, parent, content, *args, **kwargs):
+        super().__init__(reason, parent, content, *args, **kwargs)
+        EventRegister.mregister(self, ClosingEvent, reason, EventRegister.HIGH)
         self.resizeEventHandler = Resizer(self, reason)
 
     def onClosingEvent(self, event):
@@ -95,8 +100,5 @@ class Window(WindowGraphics):
 
     def event(self, e):
         return super().event(e)
-
-    def reason(self):
-        return self._reason
 
 

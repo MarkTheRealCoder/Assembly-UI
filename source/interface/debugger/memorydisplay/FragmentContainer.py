@@ -19,20 +19,12 @@ class FragmentContainerGraphics(QFrame):
         self.setLayout(layout)
 
 
-class FragmentContainer(FragmentContainerGraphics):
+class FragmentContainerLogic(FragmentContainerGraphics):
     def __init__(self, parent, name):
         super().__init__(parent, name)
 
-    def addFragment(self, widget: Fragment):
-        layout: QVBoxLayout = self.layout() # noqas
-        layout.addWidget(widget, 1)
-        print(layout.count())
-
-    def updateFragment(self, widget: Fragment):
-        pass
-
     def delFragment(self, _ks: str, _sks: str = None) -> bool:
-        layout: QVBoxLayout = self.layout() # noqas
+        layout: QVBoxLayout = self.layout()
         children = layout.children()
         fragments: list[Fragment] = list(filter(lambda f: f.compare(_ks, _sks), children))
         any_frag = len(fragments) > 0
@@ -54,3 +46,16 @@ class FragmentContainer(FragmentContainerGraphics):
         map(delete, children)
         self.setLayout(layout)
         return layout.children() == []
+
+
+class FragmentContainer(FragmentContainerLogic):
+    def __init__(self, parent, name):
+        super().__init__(parent, name)
+
+    def addFragment(self, widget: Fragment):
+        layout: QVBoxLayout = self.layout()
+        layout.addWidget(widget, 1)
+        print(layout.count())
+
+    def updateFragment(self, widget: Fragment):
+        pass

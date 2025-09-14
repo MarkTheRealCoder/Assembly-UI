@@ -20,15 +20,12 @@ def modalOpen(parent, anywidget, title: str, size: QSize = None):
         WINDOW_ACTIVE.show()
 
 
-
 class ModalWindowGraphics(QLabel):
-
     def __init__(self, parent, widget, size: QSize, title: str):
         super().__init__(parent)
         self.setObjectName("Trash")
         self.setConfigurations(size)
         self.___widget = widget
-
         self.setMainWidget(widget, title)
         self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
 
@@ -75,7 +72,13 @@ class ModalWindowGraphics(QLabel):
         self.move(x, y)
 
 
-class ModalWindow(ModalWindowGraphics):
+class ModalWindowLogic(ModalWindowGraphics):
+    def __init__(self, parent, widget, size: QSize, title: str):
+        super().__init__(parent, widget, size, title)
+
+
+@EventRegister.register(ClosingEvent, "Tool", EventRegister.LOW)
+class ModalWindow(ModalWindowLogic):
     def __init__(self, parent, widget, size: QSize, title: str):
         super().__init__(parent, widget, size, title)
         self.resizeEventHandler = Resizer(self, "Tool")

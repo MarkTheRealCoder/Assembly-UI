@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assembly Stdio - Features</title>
+    <style>
+        :root {
+            --bg-color: #0B0C10;
+            --light-bg-color: #0F2235;
+            --highlight-bg-color: #2D223D;
+            --text-color: #E48300;
+            --highlight-text: #258FF9;
+            --accent-color: #A4FFFC;
+            --extras-color: #268AAA;
+            --border-color: #72569f;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Anonymous Pro', 'Courier New', monospace;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: var(--light-bg-color);
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--accent-color);
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--highlight-text);
+            font-size: 1.2em;
+            margin-bottom: 40px;
+            font-style: italic;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .feature-card {
+            background-color: var(--highlight-bg-color);
+            border-radius: 8px;
+            padding: 25px;
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(114, 86, 159, 0.3);
+        }
+
+        .feature-title {
+            color: var(--accent-color);
+            font-size: 1.4em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feature-icon {
+            font-size: 1.5em;
+            color: var(--highlight-text);
+        }
+
+        .feature-list {
+            list-style: none;
+            margin-left: 15px;
+        }
+
+        .feature-list li {
+            margin-bottom: 8px;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .feature-list li:before {
+            content: "▶";
+            color: var(--extras-color);
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+        .feature-list ul {
+            list-style: none;
+            margin-left: 20px;
+            margin-top: 8px;
+        }
+
+        .feature-list ul li:before {
+            content: "•";
+            color: var(--highlight-text);
+        }
+
+        .highlight {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .code {
+            background-color: var(--bg-color);
+            color: var(--highlight-text);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: inherit;
+        }
+
+        .tip {
+            background-color: var(--bg-color);
+            border-left: 4px solid var(--extras-color);
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .tip-title {
+            color: var(--accent-color);
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Assembly Stdio Features</h1>
+        <p class="subtitle">A comprehensive assembly language IDE for 8088 and IJVM architectures</p>
+
+        <div class="tip">
+            <div class="tip-title">Getting Started</div>
+            Assembly Stdio is designed to provide a complete development environment for assembly programming. 
+            Navigate through the features below to discover all the powerful tools at your disposal.
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <h2 class="feature-title">
+                    <span class="feature-icon">File Operations</span>
+                </h2>
+                <ul class="feature-list">
+                    <li><span class="highlight">Multi-format Support</span> - Work with <span class="code">.ijvm</span> and <span class="code">.a8088</span> files</li>
+                    <li><span class="highlight">Working Directory</span> - Set and manage your project workspace</li>
+                    <li><span class="highlight">File Management</span>
+                        <ul>
+                            <li>Open existing assembly files</li>
+                            <li>Create new files with templates</li>
+                            <li>Save as... with automatic extension handling</li>
+                        </ul>
+                    </li>
+                    <li><span class="highlight">Smart File Detection</span> - Automatic syntax highlighting based on file type</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h2 class="feature-title">
+                    <span class="feature-icon">Code Editor</span>
+                </h2>
+                <ul class="feature-list">
+                    <li><span class="highlight">Syntax Highlighting</span> - Color-coded assembly instructions</li>
+                    <li><span class="highlight">Tabbed Interface</span> - Work with multiple files simultaneously</li>
+                    <li><span class="highlight">Modern Font Support</span> - Scalable fonts that adapt to screen size</li>
+                    <li><span class="highlight">Auto-indentation</span> - Smart code formatting</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h2 class="feature-title">
+                    <span class="feature-icon">Memory Visualization</span>
+                </h2>
+                <ul class="feature-list">
+                    <li><span class="highlight">Real-time Updates</span> - Watch memory changes during execution</li>
+                    <li><span class="highlight">Architecture-specific Display</span>
+                        <ul>
+                            <li>IJVM: Constants, Variables, Stack</li>
+                            <li>8088: SECT DATA, SECT BSS, Stack, Registers</li>
+                        </ul>
+                    </li>
+                    <li><span class="highlight">Interactive Cells</span> - Double-click any cell to copy its content</li>
+                    <li><span class="highlight">Dynamic Resizing</span> - Adjust memory panel width</li>
+                    <li><span class="highlight">Context Switching</span> - Automatic reset when changing file types</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h2 class="feature-title">
+                    <span class="feature-icon">Execution Controls</span>
+                </h2>
+                <ul class="feature-list">
+                    <li><span class="highlight">Step-by-step Execution</span> - Execute one instruction at a time</li>
+                    <li><span class="highlight">Bulk Execution</span> - Run 10 instructions at once</li>
+                    <li><span class="highlight">Play/Pause Control</span> - Continuous execution with pause capability</li>
+                    <li><span class="highlight">Configurable Timing</span> - Adjust delay between instructions</li>
+                    <li><span class="highlight">Execution Reset</span> - Start over with a clean state</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h2 class="feature-title">
+                    <span class="feature-icon">Input/Output System</span>
+                </h2>
+                <ul class="feature-list">
+                    <li><span class="highlight">Interactive Input</span> - Provide input during program execution</li>
+                    <li><span class="highlight">Real-time Output</span> - View program output immediately</li>
+                    <li><span class="highlight">Clear Formatting</span> - Easy-to-read I/O display</li>
+                    <li><span class="highlight">Scrollable Output</span> - Handle large amounts of output data</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h2 class="feature-title">
+                    <span class="feature-icon">User Interface</span>
+                </h2>
+                <ul class="feature-list">
+                    <li><span class="highlight">Dark Theme</span> - Eye-friendly dark color scheme</li>
+                    <li><span class="highlight">Scalable Fonts</span> - Automatically adjust to screen resolution</li>
+                    <li><span class="highlight">Responsive Design</span> - Adapts to different window sizes</li>
+                    <li><span class="highlight">Professional Styling</span> - Modern, clean interface design</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h2 class="feature-title">
+                    <span class="feature-icon">Help & Documentation</span>
+                </h2>
+                <ul class="feature-list">
+                    <li><span class="highlight">Built-in Instruction Reference</span>
+                        <ul>
+                            <li>Complete 8088 instruction set documentation</li>
+                            <li>Comprehensive IJVM instruction guide</li>
+                        </ul>
+                    </li>
+                    <li><span class="highlight">Interactive Help</span> - HTML-based documentation viewer</li>
+                    <li><span class="highlight">Feature Overview</span> - This comprehensive features page</li>
+                    <li><span class="highlight">Context-sensitive Help</span> - Relevant help based on current context</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h2 class="feature-title">
+                    <span class="feature-icon">Settings & Customization</span>
+                </h2>
+                <ul class="feature-list">
+                    <li><span class="highlight">Font Configuration</span> - Choose fonts and sizes</li>
+                    <li><span class="highlight">Display Options</span> - Customize visual appearance</li>
+                    <li><span class="highlight">Editor Preferences</span> - Configure editing behavior</li>
+                    <li><span class="highlight">Theme Settings</span> - Adjust color schemes</li>
+                    <li><span class="highlight">Auto-save Options</span> - Configure automatic file saving</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h2 class="feature-title">
+                    <span class="feature-icon">Advanced Features</span>
+                </h2>
+                <ul class="feature-list">
+                    <li><span class="highlight">Title Bar Integration</span>
+                        <ul>
+                            <li>Display current working directory</li>
+                            <li>Double-click to maximize the window</li>
+                            <li>Ctrl+click to open directory in file browser</li>
+                        </ul>
+                    </li>
+                    <li><span class="highlight">Memory Highlighting</span> - Visual feedback for memory changes</li>
+                    <li><span class="highlight">File Type Detection</span> - Automatic mode switching</li>
+                    <li><span class="highlight">Cross-platform Support</span> - Works on multiple operating systems</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="tip">
+            <div class="tip-title">Pro Tips</div>
+            <ul class="feature-list">
+                <li>Use <span class="code">Ctrl+Click</span> on the title bar to quickly access your working directory</li>
+                <li>Double-click memory cells to copy their values for debugging</li>
+                <li>Drag the splitter between editor and memory to optimize your workspace</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html> 

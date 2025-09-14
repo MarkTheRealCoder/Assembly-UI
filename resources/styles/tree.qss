@@ -1,25 +1,37 @@
 variables {
-    ---old-generic-text-color: #E48300;
-    ---old-generic-text-color: #E49920;
-    ---old-generic-background-color: #1E1E1E;
-    ---old-generic-gray-background-color: #2F2C2C;
-    ---old-high-contrast-text-highlight: #00AAFF;
-    
-    ---generic-background-color: #0B0C10;
-    ---generic-light-background-color: #0F2235;
-    ---generic-highlight-background-color: #2D223D;
-    ---generic-text-color: #E48300;
-    ---generic-highlightable-text: #258FF9;
-    ---generic-highlight-text-color: #A4FFFC;
-    ---generic-extras-color: #268AAA;
-}
+    /* Legacy Color Theme (renamed for backward compatibility) */
+    ---legacy-background-color: #0B0C10;
+    ---legacy-light-background-color: #0F2235;
+    ---legacy-highlight-background-color: #2D223D;
+    ---legacy-text-color: #E48300;
+    ---legacy-highlightable-text: #258FF9;
+    ---legacy-highlight-text-color: #A4FFFC;
+    ---legacy-extras-color: #268AAA;
+    ---legacy-light-tab-border-color: #72569f;
+    ---legacy-tab-color: #191b27;
+    ---legacy-light-tab-color: #222434;
+    ---legacy-high-contrast-text-highlight: #00AAFF;
+
+    /* Modern IDE Dark Theme - Optimized for Readability */
+    ---generic-background-color: #1E1E1E;
+    ---generic-light-background-color: #252526;
+    ---generic-highlight-background-color: #2D2D30;
+    ---generic-text-color: #CCCCCC;
+    ---generic-highlightable-text: #569CD6;
+    ---generic-highlight-text-color: #FFFFFF;
+    ---generic-extras-color: #9CDCFE;
+    ---generic-light-tab-border-color: #007ACC;
+    ---generic-tab-color: #2D2D30;
+    ---generic-light-tab-color: #37373D;
+    ---old-high-contrast-text-highlight: #FFC83D;
+} 
 
 QTreeView {
     border: 1px solid var(---generic-background-color);
     border-radius: 10px;
-    padding: 10px 10px 10px 10px;
-    margin: 0px;
-    color: #E48300;
+    padding: 10px;
+    margin: 0;
+    color: var(---generic-text-color);
     background-color: var(---generic-highlight-background-color);
 }
 
@@ -27,20 +39,19 @@ QTreeView::item:open {
     color: var(---old-high-contrast-text-highlight);
 }
 
-QTreeView::item:hover {
+QTreeView::item:hover, QTreeView::item:selected {
     background-color: var(---generic-light-background-color);
+    border: none;
 }
 
 QTreeView::item:selected {
-    background-color: var(---generic-light-background-color);
-    border: none;
     color: var(---old-high-contrast-text-highlight);
 }
 
 QScrollBar:vertical {
     background-color: var(---generic-light-background-color);
     width: 5px;
-    margin: 0px 0px 0px 0px;
+    margin: 0;
 }
 
 QScrollBar::handle:vertical {

@@ -28,39 +28,37 @@ class MainWidgetGraphics(QWidget):
         self.setLayout(layout)
 
     def buildCoreComponents(self, layout: QVBoxLayout):
-
         layout.setAlignment(Qt.AlignTop | Qt.AlignCenter)
 
-        code_and_memory: QHBoxLayout = createLayout(QHBoxLayout, self)   # Code and Memory
-        IO_and_options: QHBoxLayout = createLayout(QHBoxLayout, self)    # Secondary
+        code_and_memory: QHBoxLayout = createLayout(QHBoxLayout, self)
+        IO_and_options: QHBoxLayout = createLayout(QHBoxLayout, self)
 
         # Add to main layout
         layout.addLayout(code_and_memory)
-        layout.addSpacerItem(QSpacerItem(0, 7, QSizePolicy.Expanding, QSizePolicy.Fixed))   # Horizontal
+        layout.addSpacerItem(QSpacerItem(0, 7, QSizePolicy.Expanding, QSizePolicy.Fixed))
         layout.addLayout(IO_and_options)
-        layout.addSpacerItem(QSpacerItem(0, 7, QSizePolicy.Expanding, QSizePolicy.Fixed))   # Horizontal
+        layout.addSpacerItem(QSpacerItem(0, 7, QSizePolicy.Expanding, QSizePolicy.Fixed))
 
         layout.setStretchFactor(code_and_memory, 4)
         layout.setStretchFactor(IO_and_options, 1)
 
         # Add code and memory to their H layout
-        code_and_memory.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding))  # Vertical
+        code_and_memory.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding))
         code_and_memory.addWidget(self.setSplitter(), 1)
-        code_and_memory.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding))  # Vertical
+        code_and_memory.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding))
 
         # Add input, output and memory options to their layout
-        IO_and_options.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding))   # Vertical
+        IO_and_options.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding))
         IO_and_options.addWidget(Input(self), 1)
-        IO_and_options.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding))   # Vertical
+        IO_and_options.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding))
         IO_and_options.addWidget(Output(self), 1)
-        IO_and_options.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding))   # Vertical
+        IO_and_options.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding))
         IO_and_options.addWidget(OptionsContainer(self), 1)
-        IO_and_options.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding))   # Vertical
+        IO_and_options.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding))
         return layout
 
     def setSplitter(self):
         cmResizer: QSplitter = QSplitter(self)
-        #cmResizer.splitterMoved.connect(lambda: DataBase.ON_SPLITTER_MOVE.setValue(True))
         cmResizer.splitterMoved.connect(lambda: EventRegister.send(EditorResizeEvent(), "Tab"))
         cmResizer.setOrientation(Qt.Horizontal)
         cmResizer.setObjectName("Mem-CodeSplitter")
@@ -75,7 +73,12 @@ class MainWidgetGraphics(QWidget):
         return cmResizer
 
 
-class MainWidget(MainWidgetGraphics):
+class MainWidgetLogic(MainWidgetGraphics):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+
+class MainWidget(MainWidgetLogic):
     def __init__(self, parent):
         super().__init__(parent)
         self.setObjectName("MainWidget")

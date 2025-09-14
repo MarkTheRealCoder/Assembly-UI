@@ -62,6 +62,5 @@ class CloseButton(CloseButtonLogic):
         if not self.isTriggerable():
             e.ignore()
             return
-        print("Closing", self.___subclass)
         EventRegister.send(ClosingEvent(*self.getArgs()), self.___subclass, **self.getIden())
         e.accept()
