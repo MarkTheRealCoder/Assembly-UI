@@ -6,7 +6,6 @@ from source.comms.Signals import DataBase
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
 from source.filesystem.IconManager import IconManager
-from source.filesystem.documents.FileTypes import FT
 from source.interface.Tooltips import Tooltip
 from source.interface.editor.me_system.tab.Icon import TabIcon
 from source.interface.editor.me_system.tab.Label import TabLabel
@@ -82,7 +81,6 @@ class TabLogic(TabGraphics):
                 self.___initial_pos_x = event.pos().x()
             elif event.type() == QEvent.MouseButtonRelease:
                 DataBase.ON_TAB_SELECTED.setValue(self.___id)
-                DataBase.DOCTYPE.setValue(int(FT.findByExt(self.___ext)))
                 self.___movable = False
                 self.setCursor(Qt.ArrowCursor)
 

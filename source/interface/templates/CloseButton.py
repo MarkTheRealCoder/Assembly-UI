@@ -3,7 +3,6 @@ from PyQt5.QtGui import QMouseEvent, QIcon
 
 from source.comms.Signals import Variable
 from source.comms.events import ClosingEvent
-from source.comms.events import CursorChangeEvent
 from source.comms.handlers import EventRegister
 from source.filesystem.Folder import find_path
 from source.interface.templates import GenericButton
@@ -48,19 +47,12 @@ class CloseButtonLogic(CloseButtonGraphics):
         return self.___iden
 
 
-@EventRegister.register(CursorChangeEvent, "Main", EventRegister.HIGH)
 class CloseButton(CloseButtonLogic):
     def __init__(self, parent, subclass: str = "Main", properties: dict[str, bool] = {}):
         super().__init__(parent, properties)
         self.___subclass: str = subclass
         self.setObjectName("Close")
 
-    def onCursorChangeEvent(self, e: CursorChangeEvent):
-        self.setTriggerable(e.disabled())
-
     def mousePressEvent(self, e: QMouseEvent):
-        if not self.isTriggerable():
-            e.ignore()
-            return
-        EventRegister.send(ClosingEvent(*self.getArgs()), self.___subclass, **self.getIden())
         e.accept()
+        EventRegister.send(ClosingEvent(*self.getArgs()), self.___subclass, **self.getIden())

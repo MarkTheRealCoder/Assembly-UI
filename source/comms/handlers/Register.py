@@ -1,5 +1,3 @@
-import logging
-from pprint import pformat
 from threading import Semaphore
 from weakref import WeakKeyDictionary
 
@@ -21,8 +19,8 @@ class Register:
     def __init__(self):
         self.___reference: dict[type: dict[str: dict[Priority: Register.___DictWrapper[object: dict]]]] = {}
         self.___sem = Semaphore(1)
-        logging.basicConfig(filename='register.log', level=logging.DEBUG,
-                            format='%(asctime)s:%(levelname)s:%(message)s')
+        # logging.basicConfig(filename='register.log', level=logging.DEBUG,
+        #                     format='%(asctime)s:%(levelname)s:%(message)s')
 
     def ___dive(self, event: type, identifier: str = None, priority: Priority = None):
         """
@@ -37,8 +35,8 @@ class Register:
         result = self.___reference.get(event, None)
 
         # if the event is of type ClosingEvent, we need to log into a log file the whole register (reference) formatted with pformat
-        if "ResizeEvent" in f"{event}":
-            logging.debug(f"Register: {pformat(self.___reference)}")
+        # if "ResizeEvent" in f"{event}":
+            # logging.debug(f"Register: {pformat(self.___reference)}")
 
 
         if result is None:
@@ -112,8 +110,8 @@ class Register:
             d: Register.___DictWrapper = self.___dive(event, identifier, priority)
             if hasattr(value, '__weakref__'):  # Verifica se l'oggetto può essere referenziato debolmente
                 d[value] = specifiers
-            else:
-                logging.warning(f"Impossibile creare riferimento debole per {value}")
+            # else:
+            #     logging.warning(f"Impossibile creare riferimento debole per {value}")
         finally:
             self.___sem.release()
 

@@ -1,10 +1,9 @@
 from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtWidgets import QDesktopWidget, QHBoxLayout, QVBoxLayout, QSpacerItem, QSizePolicy, QLabel
+from PyQt5.QtWidgets import QDesktopWidget, QHBoxLayout, QVBoxLayout, QSpacerItem, QSizePolicy, QWidget
 
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
-from source.comms.handlers.resize import Resizer
-from source.interface.shared import createLayout
+from source.interface.shared import createLayout, makeResizingLayout
 from source.interface.templates.CloseButton import CloseButton
 from source.interface.templates.Title import Title
 from source.platform import Desktop
@@ -20,14 +19,14 @@ def modalOpen(parent, anywidget, title: str, size: QSize = None):
         WINDOW_ACTIVE.show()
 
 
-class ModalWindowGraphics(QLabel):
+class ModalWindowGraphics(QWidget):
     def __init__(self, parent, widget, size: QSize, title: str):
         super().__init__(parent)
-        self.setObjectName("Trash")
         self.setConfigurations(size)
         self.___widget = widget
         self.setMainWidget(widget, title)
         self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
+        self.setAttribute(Qt.WA_TranslucentBackground, True)
 
     def setConfigurations(self, size: QSize):
         self.setWindowFlag(Qt.FramelessWindowHint, True)
@@ -36,14 +35,20 @@ class ModalWindowGraphics(QLabel):
         self.setMinimumSize(size)
         self.centerOnScreen()
 
-    def setMainWidget(self, widget, title: str):
-        widget.setParent(self)
+    def setMainWidget(self, content, title: str):
+        widget = QWidget(self)
+        main_layout = createLayout(QVBoxLayout, self)
+        main_layout.addWidget(widget)
+        mw = makeResizingLayout(widget)
+        mw.setObjectName("Trash")
+        self.setLayout(main_layout)
+        content.setParent(mw)
 
-        layout: QVBoxLayout = createLayout(QVBoxLayout, self)
-        tlayout: QHBoxLayout = createLayout(QHBoxLayout, self)
-        mlayout: QHBoxLayout = createLayout(QHBoxLayout, self)
+        layout: QVBoxLayout = createLayout(QVBoxLayout, mw)
+        tlayout: QHBoxLayout = createLayout(QHBoxLayout, mw)
+        mlayout: QHBoxLayout = createLayout(QHBoxLayout, mw)
 
-        top = Title(self)
+        top = Title(mw, self)
         top.setText(title)
         tlayout.addWidget(top)
         tlayout.addWidget(CloseButton(self, "Tool"))
@@ -52,7 +57,7 @@ class ModalWindowGraphics(QLabel):
         tlayout.setStretch(1, 1)
 
         mlayout.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Expanding, QSizePolicy.Fixed))
-        mlayout.addWidget(widget)
+        mlayout.addWidget(content)
         mlayout.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Expanding, QSizePolicy.Fixed))
 
         mlayout.setStretch(1, 10)
@@ -62,7 +67,7 @@ class ModalWindowGraphics(QLabel):
         layout.addSpacerItem(QSpacerItem(0, 7, QSizePolicy.Fixed, QSizePolicy.Expanding))
 
         layout.setStretch(1, 1)
-        self.setLayout(layout)
+        mw.setLayout(layout)
 
     def centerOnScreen(self):
         desktop = QDesktopWidget()
@@ -81,7 +86,6 @@ class ModalWindowLogic(ModalWindowGraphics):
 class ModalWindow(ModalWindowLogic):
     def __init__(self, parent, widget, size: QSize, title: str):
         super().__init__(parent, widget, size, title)
-        self.resizeEventHandler = Resizer(self, "Tool")
         EventRegister.mregister(self, ClosingEvent, "Tool", EventRegister.LOW)
 
     def onClosingEvent(self, e):

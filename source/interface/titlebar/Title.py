@@ -1,9 +1,9 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow
 
-from source.comms.Signals import DataBase as db
 from source.filesystem import open_dir
 from source.interface.Tooltips import Tooltip
+from source.interface.shared import Settings
 from source.interface.templates import Title as BaseTitle
 from source.platform import Desktop
 
@@ -11,7 +11,7 @@ from source.platform import Desktop
 class Title(BaseTitle):
     def __init__(self, parent, mw: QMainWindow):
         super().__init__(parent, mw)
-        db.FOLDER.connect(self.setLabel)
+        Settings.addNotificationGroup("application/cwd", self.setLabel)
         self.setupFontAndAlignment()
         
         self.___curr_dir = None
@@ -39,5 +39,5 @@ class Title(BaseTitle):
             self.mw.showMaximized()
 
     def setLabel(self):
-        self.___curr_dir = db.FOLDER.getValue()
+        self.___curr_dir = Settings.get("application/cwd", "Select a working directory")
         self.setText(f"Assembly Stdio - {self.___curr_dir}")

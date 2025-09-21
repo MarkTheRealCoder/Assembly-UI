@@ -3,7 +3,6 @@ from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtWidgets import QAbstractItemView, QTreeView, QSizePolicy
 
 from source.asyncro.Scheduler import Scheduler
-from source.comms.Signals import DataBase as db
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
 from source.filesystem import IconManager
@@ -11,6 +10,7 @@ from source.filesystem.Folder import find_path, get_available_disks, ls
 from source.filesystem.documents.Document import Document
 from source.filesystem.documents.FileTypes import FT
 from source.interface.assets import translateQSS
+from source.interface.shared import Settings
 from source.platform import isWindows
 
 
@@ -53,7 +53,7 @@ class PathTreeLogic(PathTreeGraphic):
         if not is_file:
             items += [(i, "") for i in get_available_disks()]
         else:
-            items += ls(db.FOLDER.getValue(), self.___exts)
+            items += ls(Settings.get("application/cwd"), self.___exts)
         for i in items:
             item = Item(*i)
             model.appendRow(item)
@@ -75,7 +75,7 @@ class PathTreeLogic(PathTreeGraphic):
         items = []
         if root:
             if is_file:
-                items += ls(db.FOLDER.getValue(), self.___exts)
+                items += ls(Settings.get("application/cwd"), self.___exts)
             else:
                 items += [(i, "") for i in get_available_disks()]
         else:
@@ -130,7 +130,7 @@ class PathTreeLogic(PathTreeGraphic):
             if not isWindows():
                 items[-1] = ""  # For fixing main directory issue
         else:
-            result += db.FOLDER.getValue()
+            result += Settings.get("application/cwd")
         return result + Document.SEP.join(items[::-1]) + (Document.SEP if not item.is_file() else "")
 
 

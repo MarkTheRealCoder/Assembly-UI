@@ -29,7 +29,13 @@ class HelpMenu(GenericButton):
         self.setMenu(menu)
 
     def mousePressEvent(self, e: QMouseEvent):
-        if not self.isTriggerable():
+                # Only handle the event if the button is triggerable
+        if hasattr(self, "isTriggerable"):
+            triggerable = self.isTriggerable()
+        else:
+            triggerable = self.isEnabled()
+        if triggerable:
+            super().mousePressEvent(e)
+            e.accept()
+        else:
             e.ignore()
-            return
-        super().mousePressEvent(e)

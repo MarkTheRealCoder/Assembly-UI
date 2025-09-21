@@ -13,7 +13,7 @@ class Toolbar(QFrame):
 
     def __init__(self, mwt: QWidget):
         super().__init__(mwt)
-        self.mw: QMainWindow = mwt.parent()  # noqas
+        self.mw: QMainWindow = mwt.parent().parent()  # noqas
         self.setObjectName("Toolbar")
         self.setFixedHeight(35)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)

@@ -1,4 +1,4 @@
-from PyQt5.Qsci import QsciLexerCustom, QsciScintilla
+from PyQt5.Qsci import QsciLexerCustom, QsciScintilla, QsciAPIs
 from PyQt5.QtGui import QColor, QFont
 
 
@@ -18,6 +18,17 @@ class IJVMLexer(QsciLexerCustom):
         self._parent: QsciScintilla = self.parent()
         self.setupStyles()
         self.setupKeywords()
+        self.___apis = QsciAPIs(self)
+        for api in self.instructions.union(self.blockKeywords):
+            self.___apis.add(api)
+        self.___apis.prepare()
+        self.setAPIs(self.___apis)
+
+    def autoCompletionWordSeparators(self):
+        return [",", " ", "\t", "(", ")", "[", "]", "{", "}", ":", ";", "+", "-", "*", "/", "=", "<", ">", "!", "&", "|", "^", "%", "~", "\"", "'"]
+
+    def wordCharacters(self):
+        return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_.-"
 
     def setupStyles(self):
         # Default style

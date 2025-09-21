@@ -27,7 +27,11 @@ variables {
 } 
 
 
-#MainWidget, #MainWindow {
+#MainWindow, #MainSupportWidget {
+    background-color: transparent;
+}
+
+#MainWidget {
     background-color: var(---generic-background-color);
 }
 
@@ -151,6 +155,7 @@ Tab > QToolTip {
     border: 1px solid var(---generic-highlight-text-color);
     padding: 5px;
     font-size: 14px;
+
 }
 
 QLabel#TabLabel {
@@ -240,7 +245,7 @@ QPushButton#Icon {
     border: none;
 }
 
-QPushButton#File, QPushButton#Help, QPushButton#Minimize, QPushButton#Close, QPushButton#Run {
+QPushButton#File, QPushButton#Help, QPushButton#Minimize, QPushButton#Maximize, QPushButton#Close, QPushButton#Run {
     text-align: center;
     qproperty-alignment: AlignCenter;
     color: var(---generic-highlightable-text);
@@ -250,7 +255,7 @@ QPushButton#File, QPushButton#Help, QPushButton#Minimize, QPushButton#Close, QPu
     padding: 0;
 }
 
-QPushButton#Minimize, QPushButton#Close {
+QPushButton#Minimize, QPushButton#Maximize, QPushButton#Close {
     font-size: 18px;
 }
 
@@ -287,11 +292,11 @@ QPushButton#Close:hover {
     background-color: #F44747;
 }
 
-QPushButton#Minimize:hover {
+QPushButton#Minimize:hover, QPushButton#Maximize:hover {
     background-color: #3C3C3C;
 }
 
-QPushButton#Minimize:pressed {
+QPushButton#Minimize:pressed, QPushButton#Maximize:pressed {
     background-color: var(---generic-light-background-color);
 }
 
@@ -312,7 +317,7 @@ QMenu::item:hover, QMenu::item:selected {
 }
 
 
-QLabel#Window, QLabel#Trash {
+QWidget#Window, QWidget#Trash {
     background-color: var(---generic-background-color);
     border: 1px solid var(---generic-highlight-background-color);
 }
@@ -405,4 +410,101 @@ QLabel#Tooltip {
     qproperty-borderColor: #706D6D;
     padding: 5px;
     font-size: 14px;
+}
+
+QTabWidget {
+    background-color: var(---generic-light-background-color);
+    border: none;
+}
+
+QTabWidget::pane {
+    border: none;
+    background-color: var(---generic-light-background-color);
+}
+
+QTabBar::tab {
+    background-color: var(---generic-tab-color);
+    color: var(---generic-extras-color);
+    padding: 10px;
+    border: 1px solid var(---generic-tab-color);
+    width: 100px;
+}
+
+QTabBar::tab:selected {
+    background-color: var(---generic-light-tab-color);
+    color: var(---generic-text-color);
+    border: 1px solid var(---generic-light-tab-border-color);
+    border-bottom: none;
+}
+
+QFrame#TitledLine {
+    min-height: 50px;
+}
+
+QLabel#TitledLineLabel {
+    font-weight: bold;
+    font-size: 22px;
+    font-family: "sans-serif";
+    padding-left: 25px;
+    padding-right: 5px;
+    color: white;
+}
+QFrame#TitledLineLine {
+    color: white;        /* line color */
+    background: white;   /* important for visible line */
+    max-height: 1px;   /* thickness */
+    margin-right: 50px;
+}
+
+QLabel#CPLabel {
+    color: var(---generic-text-color);
+    background-color: transparent;
+    border: none;
+    height: 30px;
+    width: 200px;
+    padding-left: 10px;
+    padding-right: 10px;
+    font-size: 15px;
+}
+
+QPushButton#CPColorDialogButton {
+    border: 2px solid var(---generic-light-tab-border-color);
+    height: 30px;
+    width: 30px;
+    background-color: var(---generic-extras-color);
+}
+
+QPushButton#CPColorDialogButton:hover {
+    border: 2px solid var(---old-high-contrast-text-highlight);
+}
+
+QLineEdit#CPHexConverter {
+    width: 120px;
+    height: 30px;
+    border: 1px solid var(---generic-light-tab-color);
+    border-radius: 5px;
+    color: var(---generic-text-color);
+    font-size: 20px;
+    font-weight: bold;
+    font-family: "Monospace";
+    background-color: var(---generic-light-background-color);
+}
+
+QLineEdit#CPHexConverter:focus {
+    border: 1px solid var(---generic-highlight-text-color);
+    color: var(---generic-highlight-text-color);
+}
+
+QPushButton#ResetButton {
+    background-color: var(---generic-highlight-background-color);
+    border: 1px solid var(---generic-light-tab-color);
+    border-radius: 15px;
+    height: 30px;
+    width: 30px;
+    color: white;
+}
+
+QPushButton#ResetButton:hover {
+    background-color: darkred;
+    color: white;
 }

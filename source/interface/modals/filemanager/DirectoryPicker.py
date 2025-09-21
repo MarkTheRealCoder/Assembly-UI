@@ -1,10 +1,9 @@
 from PyQt5.QtWidgets import QFrame, QSizePolicy, QVBoxLayout
 
-from source.comms.Signals import DataBase
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
 from source.interface.modals.filemanager.paths import PathTree
-from source.interface.shared import createLayout
+from source.interface.shared import createLayout, Settings
 
 
 class DirectoryPicker(QFrame):
@@ -25,5 +24,5 @@ class DirectoryPicker(QFrame):
 
     def set_path(self, path: str, is_file: bool):
         if not is_file:
-            DataBase.FOLDER.setValue(path)
+            Settings.set("application/cwd", path)
             EventRegister.send(ClosingEvent(), "Tool")

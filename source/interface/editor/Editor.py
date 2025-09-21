@@ -1,7 +1,7 @@
-from PyQt5.Qsci import QsciScintilla
+from PyQt5.Qsci import QsciScintilla, QsciCommandSet, QsciCommand
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QFont
-from PyQt5.QtWidgets import QWidget, QSizePolicy, QApplication
+from PyQt5.QtWidgets import QWidget, QSizePolicy
 
 from source.comms import Database
 from source.filesystem import find_path
@@ -17,7 +17,7 @@ class Editor(QsciScintilla):
         self.setObjectName("Editor")
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
-        Database.FONT.connect(self.set_font)
+        #Database.FONT.connect(self.set_font)
         Database.ON_TAB_SELECTED.connect(self.onTabChanged)
         self.loadStyles()
         self.setupLexer()
@@ -57,13 +57,35 @@ class Editor(QsciScintilla):
         self.installEventFilter(self)
 
     def configureTextFeatures(self):
-        self.setAutoIndent(True)
-        self.setIndentationWidth(2)
+        self.setAutoCompletionShowSingle(True)
+        self.setAutoCompletionUseSingle(QsciScintilla.AcusExplicit)
+        self.setAutoCompletionCaseSensitivity(False)
         self.setAutoCompletionReplaceWord(False)
+        self.setAutoCompletionThreshold(1)
+
         self.setAutoCompletionFillups(" ")
         self.setAutoCompletionFillupsEnabled(True)
-        self.setAutoCompletionShowSingle(False)
-        self.setAutoCompletionSource(QsciScintilla.AcsAPIs)
+        self.setAutoCompletionSource(QsciScintilla.AcsAll)
+
+        self.setAutoIndent(True)
+        self.setTabIndents(True)
+        self.setTabWidth(8)
+        self.setIndentationWidth(8)
+        self.setIndentationsUseTabs(True)
+        self.configureCommands()
+
+    def configureCommands(self):
+        commands: QsciCommandSet = self.standardCommands()
+
+        def add_command(cmd, seq):
+            nonlocal commands
+            if command := commands.find(cmd):
+                command.setKey(seq)
+
+        add_command(QsciCommand.LineCut, Qt.CTRL + Qt.Key_X)
+        add_command(QsciCommand.LineCopy, Qt.CTRL + Qt.Key_C)
+        add_command(QsciCommand.MoveSelectedLinesUp, Qt.SHIFT + Qt.CTRL + Qt.Key_Up)
+        add_command(QsciCommand.MoveSelectedLinesDown, Qt.SHIFT + Qt.CTRL + Qt.Key_Down)
 
     def configureMargin(self):
         self.setMarginType(0, QsciScintilla.NumberMargin)
@@ -84,22 +106,3 @@ class Editor(QsciScintilla):
             self.content = content
         lexer = LexerFactory.createLexer(self, self.content)
         self.setLexer(lexer)
-
-    def eventFilter(self, obj, event):
-        if event.type() == event.KeyPress:
-            if event.key() == Qt.Key_X and event.modifiers() == Qt.ControlModifier:
-                text = ""
-                if not self.hasSelectedText():
-                    line = self.getCursorPosition()[0]
-                    text = self.text(line)
-                    self.setSelection(line, 0, line+1, 0)
-                else:
-                    text = self.selectedText()
-                self.removeSelectedText()
-                clipboard = QApplication.clipboard()
-                if text != "":
-                    clipboard.setText(text)
-                return True
-        return super().eventFilter(obj, event)
-
-

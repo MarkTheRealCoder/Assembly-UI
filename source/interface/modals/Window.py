@@ -1,10 +1,9 @@
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QSpacerItem, QSizePolicy, QLabel
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QSpacerItem, QSizePolicy
 
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
-from source.comms.handlers.resize import Resizer
-from source.interface.shared import createLayout
+from source.interface.shared import createLayout, makeResizingLayout
 from source.interface.templates import CloseButton
 from source.interface.templates import Title
 from source.platform import Desktop
@@ -23,23 +22,29 @@ def createSubWindow(reason: str, parent, wclass, *args, **kwargs):
     window.show()
 
 
-class WindowGraphics(QLabel):
+class WindowGraphics(QWidget):
     def __init__(self, reason: str, parent, content, *args, **kwargs):
         super().__init__(parent)
         self._reason = reason
-        self.configurations(content(self, *args, **kwargs))
-
-    def configurations(self, content: QWidget):
         self.defineWindowSize()
-        self.setObjectName("Window")
         self.setWindowFlags(Qt.Tool | Qt.FramelessWindowHint)
         self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
+        self.configurations(content(self, *args, **kwargs))
+        self.setAttribute(Qt.WA_TranslucentBackground, True)
 
-        layout: QVBoxLayout = createLayout(QVBoxLayout, self)
-        tlayout: QHBoxLayout = createLayout(QHBoxLayout, self)
-        mlayout: QHBoxLayout = createLayout(QHBoxLayout, self)
+    def configurations(self, content: QWidget):
+        widget = QWidget(self)
+        main_layout = createLayout(QVBoxLayout, self)
+        main_layout.addWidget(widget)
+        self.setLayout(main_layout)
 
-        tlayout.addWidget(Title(self))
+        mw = makeResizingLayout(widget) # Fix misparenting target
+        mw.setObjectName("Window")
+        layout: QVBoxLayout = createLayout(QVBoxLayout, mw)
+        tlayout: QHBoxLayout = createLayout(QHBoxLayout, mw)
+        mlayout: QHBoxLayout = createLayout(QHBoxLayout, mw)
+
+        tlayout.addWidget(Title(mw, self))
         tlayout.addWidget(CloseButton(self, self._reason))
 
         tlayout.setStretch(0, 5)
@@ -56,7 +61,7 @@ class WindowGraphics(QLabel):
         layout.addSpacerItem(QSpacerItem(0, 7, QSizePolicy.Fixed, QSizePolicy.Expanding))
 
         layout.setStretch(1, 1)
-        self.setLayout(layout)
+        widget.setLayout(layout)
 
     def defineWindowSize(self):
         self.setMinimumSize(Desktop.sizeHint(2 / 5, 2 / 4))
@@ -83,7 +88,6 @@ class Window(WindowLogic):
     def __init__(self, reason: str, parent, content, *args, **kwargs):
         super().__init__(reason, parent, content, *args, **kwargs)
         EventRegister.mregister(self, ClosingEvent, reason, EventRegister.HIGH)
-        self.resizeEventHandler = Resizer(self, reason)
 
     def onClosingEvent(self, event):
         try:

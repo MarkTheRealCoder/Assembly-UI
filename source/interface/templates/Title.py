@@ -1,10 +1,8 @@
 from typing import Literal
 
 from PyQt5.QtCore import QEvent, QObject, Qt, QRect, QPoint
+from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QLabel, QSizePolicy, QDesktopWidget, QWidget
-
-from source.comms.events import CursorChangeEvent
-from source.comms.handlers import EventRegister
 
 
 class TitleGraphics(QLabel):
@@ -38,6 +36,12 @@ class TitleLogic(TitleGraphics):
         if (curr_pos.y() + diff.y()) < bottom_right.y() - 15:
             self.mw.move(curr_pos + diff)
 
+    def teleportToCursor(self):
+        cursor_pos: QPoint = QCursor.pos()
+        cursor_pos.setX(cursor_pos.x() - self.mw.width() // 2)
+        cursor_pos.setY(cursor_pos.y() - 5 - self.height() // 2)
+        self.mw.move(cursor_pos)
+
     def setActionOn(self, event: Literal["LeftCtrlClick", "LeftDoubleClick"], func):
         if not callable(func):
             raise TypeError('Func must be a callable...')
@@ -61,27 +65,28 @@ class TitleLogic(TitleGraphics):
             self.___left_ctrl_click()
 
 
-@EventRegister.register(CursorChangeEvent, "Main", EventRegister.HIGH)
 class Title(TitleLogic):
     movable: bool = False
 
     def __init__(self, parent, mw: QWidget = None):
         super().__init__(parent, mw)
-        self.___event_enabled = True
-
+        self.justNormalized = False
         self.installEventFilter(self)
         self.setObjectName("Title")
 
-    def onCursorChangeEvent(self, e: CursorChangeEvent):
-        self.___event_enabled = e.disabled()
-
     def eventFilter(self, o: QObject, e: QEvent) -> bool:
 
-        if not self.___event_enabled:
-            return super().eventFilter(o, e)
-
         if e.type() == QEvent.MouseMove and Title.movable:
-            self.moveWindow(e)
+            if self.mw.isMaximized() or self.mw.isFullScreen():
+                self.mw.showNormal()
+                self.teleportToCursor()
+                self.justNormalized = True
+            elif self.justNormalized:
+                self.justNormalized = False
+                self.setPressPosition(e.globalPos())
+                self.setMovePosition(e.globalPos())
+            else:
+                self.moveWindow(e)
 
         elif hasattr(e, "button") and e.button() == Qt.LeftButton:
 

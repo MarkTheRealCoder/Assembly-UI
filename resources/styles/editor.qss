@@ -71,4 +71,27 @@ QsciScintilla#Editor QScrollBar::sub-line:vertical {
 QsciScintilla#Editor QScrollBar::add-page:vertical,
 QsciScintilla#Editor QScrollBar::sub-page:vertical {
     background: none;
-} 
+}
+
+QListWidget {
+    background-color: #252526;
+    color: #CCCCCC;
+    border: 1px solid #007ACC;
+    border-radius: 4px;
+    font-family: "Bahnschrift";
+    font-size: 12pt;
+    selection-background-color: #2D2D30;
+    selection-color: #FFFFFF;
+}
+QListWidget::item {
+    padding: 4px 8px;
+    margin: 0px;
+    border: none;
+}
+QListWidget::item:selected {
+    background-color: #007ACC;
+    color: #FFFFFF;
+}
+QListWidget::item:hover {
+    background-color: #2D2D30;
+}

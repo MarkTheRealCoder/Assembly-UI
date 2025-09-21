@@ -1,3 +1,3 @@
-from .Settings import Settings
+from .SettingsWidget import SettingsWidget
 
-__all__ = ['Settings'] 
+__all__ = ['SettingsWidget']

@@ -2,8 +2,6 @@ from typing import Any
 
 from PyQt5.QtCore import pyqtSignal, QObject
 
-from source.filesystem.documents.Document import Document
-
 
 class Variable(QObject):
     signal = pyqtSignal(str)
@@ -48,13 +46,6 @@ class DataBase:
 
     # Decorations
     METHOD: Variable = Variable(str)                        # ON METHOD CHANGE IJVM ONLY
-    DOCTYPE: Variable = Variable(int)                       # ON DOCTYPE CHANGE
-
-    # Services
-    FONT: Variable = Variable(str)                          # ON FONT CHANGE
-    FOLDER: Variable = Variable(str)                        # ON MAIN FOLDER CHANGE
-    OPEN_FILE: Variable = Variable(str)                     # ON FILE OPENING
-    CURRENT_FILE: Variable = Variable(Document)             # ON FILE CHANGE
 
     # Tabs
     ON_TAB_CLOSE: Variable = Variable(int)                  # ON TAB CLOSE

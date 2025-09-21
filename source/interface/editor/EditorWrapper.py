@@ -5,13 +5,13 @@ from source.asyncro import Scheduler
 from source.comms import Database
 from source.comms.events import ClosingEvent, NoTabEvent, ReadyEvent
 from source.comms.handlers import EventRegister
-from source.filesystem import HandleJson as HJ
-from source.filesystem.documents import Document, FT
+# from source.filesystem import HandleJson as HJ
+from source.filesystem.documents import Document
 from source.filesystem.documents import Watcher
 from source.interface.editor.Editor import Editor
 from source.interface.editor.EditorFrame import EditorFrame
 from source.interface.editor.me_system import TabManager, Tab
-from source.interface.shared import createLayout
+from source.interface.shared import createLayout, Settings
 
 
 class EditorWrapperGraphics(QFrame):
@@ -45,18 +45,20 @@ class EditorWrapperLogic(EditorWrapperGraphics):
         self.setupConnections()
 
     def setupConnections(self):
-        Database.OPEN_FILE.connect(self.openDocument)
+        Settings.addNotificationGroup("editor/current", self.openDocument)
         Database.ON_TAB_CLOSE.connect(self.closeTab)
         Database.ON_TAB_SELECTED.connect(self.setCurrentFile)
         Database.ON_TAB_SELECTED.connect(self.getFromDisk)
 
     def setCurrentFile(self):
-        Database.CURRENT_FILE.setValue(
-            self._documents.get(Database.ON_TAB_SELECTED.getValue(), None)
-        )
+        if doc := self._documents.get(Database.ON_TAB_SELECTED.getValue(), None):
+            Settings.set("editor/current", str(doc))
+        else:
+            Settings.remove("editor/current")
 
-    def openDocument(self, file: str):
-        path = file if file is not None else Database.OPEN_FILE.getValue()
+    def openDocument(self, file: str = None):
+        path = Settings.get("editor/current", None) if file is None else file
+
         if (paths := [d.getPath() for d in self._documents.values()]) and path in paths:
             return
 
@@ -76,32 +78,28 @@ class EditorWrapperLogic(EditorWrapperGraphics):
         self._frame.addEditor(docHash, Editor(self._frame, doc.text), doc.text)
 
         Database.ON_TAB_SELECTED.setValue(docHash)
-        Database.DOCTYPE.setValue(int(FT.findByExt(doc.getExtension())))
 
     def initializeSchedulers(self, docHash: int):
         if self._scheduler is None:
             self._scheduler = Scheduler(None, self.___auto_save)
-            Database.DOCTYPE.setValue(int(FT.findByExt(
-                self._documents[docHash].getExtension()
-            )))
         self._frame.getEditor(docHash).textChanged.connect(
             self._scheduler.trigger
         )
 
     def document_uniqueness(self, document: Document):
         tabs = self.findChildren(Tab)
-        name = str(document)
+        name = repr(document)
         unique = True
         for tab in tabs:
             text = tab.text()
             if text == name or name in text:
                 unique = False
                 tab.setText(
-                    f"{self._documents[tab.getId()]:sub:{Database.FOLDER.getValue()}}"
+                    f"{self._documents[tab.getId()]:sub:{Settings.get('application/cwd')}}"
                 )
         if unique:
             return name
-        return f"{document:sub:{Database.FOLDER.getValue()}}"
+        return f"{document:sub:{Settings.get('application/cwd')}}"
 
     def closeTab(self):
         docHash = Database.ON_TAB_CLOSE.getValue()
@@ -113,7 +111,7 @@ class EditorWrapperLogic(EditorWrapperGraphics):
     def getFromDisk(self):
         docHash = Database.ON_TAB_SELECTED.getValue()
         doc = self._documents.get(docHash)
-        if update := self.___consistency_checker.getDocumentUpdates(doc):
+        if doc and (update := self.___consistency_checker.getDocumentUpdates(doc)):
             editor = self._frame.getEditor(docHash)
             editor.setText(update)
 
@@ -126,8 +124,7 @@ class EditorWrapperLogic(EditorWrapperGraphics):
     @staticmethod
     def reset_variables():
         Database.ON_TAB_SELECTED.setValue(0)
-        Database.CURRENT_FILE.setValue(None)
-        Database.DOCTYPE.setValue(0)
+        Settings.remove("editor/current")
 
 
 @EventRegister.register(ClosingEvent, priority=EventRegister.URGENT)
@@ -140,42 +137,22 @@ class EditorWrapper(EditorWrapperLogic):
         if self._scheduler is not None:
             self._scheduler.terminate()
             del self._scheduler
-        HJ.get_instance().set_files(
-            list(map(lambda x: x.getPath(), self._documents.values()))
-        )
+        Settings.silentSet("editor/files", list(map(lambda x: str(x), self._documents.values())))
         del self._documents
+        e.accept()
 
     def onReadyEvent(self, event):
-        files = HJ.get_instance().get_files()
+        files = Settings.get("editor/files", [], list)
         if files:
             for f in files:
                 self.openDocument(f)
+        event.accept()
 
     def eventFilter(self, obj, e: QEvent):
         if e.type() == NoTabEvent.gtype():
             EditorWrapper.reset_variables()
             return True
         return super().event(e)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #
 # @EventRegister.register(ClosingEvent, priority=EventRegister.URGENT)
@@ -295,6 +272,3 @@ class EditorWrapper(EditorWrapperLogic):
 #         Database.ON_TAB_SELECTED.setValue(0)
 #         Database.CURRENT_FILE.setValue(None)
 #         Database.DOCTYPE.setValue(0)
-
-
-

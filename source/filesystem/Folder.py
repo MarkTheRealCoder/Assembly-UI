@@ -87,12 +87,12 @@ def create_dir(path: str, name: str) -> bool:
     return True
 
 
-def create_file(path: str, name: str, ext: str) -> bool:
+def create_file(path: str, name: str, ext: str) -> Path | None:
     file = Path(path + f"{name}.{ext}")
     if not file.exists():
         try:
             file.touch()
-            return True
+            return file
         except FileExistsError:
-            return False
-    return False
+            return None
+    return None

@@ -63,8 +63,11 @@ class Document:
             "text": self.text
         }
 
-    def __str__(self):
+    def __repr__(self):
         return f"{self.___name}.{self.___extension}"
+
+    def __str__(self):
+        return self.___path
 
     def __format__(self, format_spec: str):
         if format_spec.startswith("sub"):

@@ -15,7 +15,5 @@ class MinimizeButton(GenericButton):
         self.setObjectName("Minimize")
 
     def mousePressEvent(self, e: QMouseEvent):
-        if not self.isTriggerable():
-            e.ignore()
-            return
         self.mainwindow.showMinimized()
+        e.accept()

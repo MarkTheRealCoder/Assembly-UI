@@ -1,7 +1,6 @@
 from PyQt5.QtWidgets import QFrame, QSizePolicy, QVBoxLayout, QHBoxLayout
 from regex import regex
 
-from source.comms import Database
 from source.filesystem import create_dir, open_dir
 from source.filesystem.documents import Document
 from source.interface.modals.Dialog import Dialog
@@ -13,7 +12,7 @@ from source.interface.modals.filemanager.complex.strings import ExtensionBox
 from source.interface.modals.filemanager.complex.strings import FileBox
 from source.interface.modals.filemanager.complex.strings import PathBox
 from source.interface.modals.filemanager.paths import PathTree
-from source.interface.shared import createLayout
+from source.interface.shared import createLayout, Settings
 
 
 class FileDialogGraphics(QFrame):
@@ -75,12 +74,12 @@ class FileDialogLogic(FileDialogGraphics):
             name = regex.match(f".*\\{Document.SEP}(\\w+)\\.\\w+", path).group(1)
             self._name.setText(name)
         else:
-            rp = Document.SEP + path.removeprefix(Database.FOLDER.getValue()) # Referred path
+            rp = Document.SEP + path.removeprefix(Settings.get("application/cwd")) # Referred path
             self._box.setText(rp)
 
     def create_folder(self):
         def create_folder(name: str) -> bool:
-            return create_dir(Database.FOLDER.getValue() + self._box.text().removeprefix(Document.SEP), name)
+            return create_dir(Settings.get("application/cwd") + self._box.text().removeprefix(Document.SEP), name)
 
         self._dialog = Dialog(self, "Create Folder", "Insert the folder name", create_folder)
 
@@ -88,7 +87,7 @@ class FileDialogLogic(FileDialogGraphics):
         self._box.setText(Document.SEP)
 
     def open_folder(self):
-        open_dir(Database.FOLDER.getValue() + self._box.text().removeprefix(Document.SEP))
+        open_dir(Settings.get("application/cwd") + self._box.text().removeprefix(Document.SEP))
 
     def get_path(self) -> str:
         return self._box.text()

@@ -1,10 +1,9 @@
 from PyQt5.QtWidgets import QFrame, QSizePolicy, QVBoxLayout
 
-from source.comms.Signals import DataBase
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
 from source.interface.modals.filemanager.paths import PathTree
-from source.interface.shared import createLayout
+from source.interface.shared import createLayout, Settings
 
 
 class FilePicker(QFrame):
@@ -25,5 +24,5 @@ class FilePicker(QFrame):
 
     def set_path(self, path: str, is_file: bool):
         if is_file:
-            DataBase.OPEN_FILE.setValue(path)
+            Settings.set("editor/current", path)
             EventRegister.send(ClosingEvent(), "Tool")

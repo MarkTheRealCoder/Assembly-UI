@@ -8,7 +8,7 @@ from source.interface.debugger.options import OptionsContainer
 from source.interface.editor.EditorWrapper import EditorWrapper
 from source.interface.io.Input import Input
 from source.interface.io.Output import Output
-from source.interface.shared import createLayout
+from source.interface.shared import createLayout, makeResizingLayout
 from source.interface.titlebar import Toolbar
 
 INTEGER_MAX = 2147483647
@@ -20,12 +20,16 @@ class MainWidgetGraphics(QWidget):
         self.resize(parent.size())
         self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.setMainLayout()
+        self.setObjectName("MainSupportWidget")
+        self.setAttribute(Qt.WA_TranslucentBackground, True)
 
     def setMainLayout(self):
-        layout: QVBoxLayout = createLayout(QVBoxLayout, self)
-        layout.addWidget(Toolbar(self), 0)
+        widget = makeResizingLayout(self)
+        widget.setObjectName("MainWidget")
+        layout: QVBoxLayout = createLayout(QVBoxLayout, widget)
+        layout.addWidget(Toolbar(widget), 0)
         self.buildCoreComponents(layout)
-        self.setLayout(layout)
+        widget.setLayout(layout)
 
     def buildCoreComponents(self, layout: QVBoxLayout):
         layout.setAlignment(Qt.AlignTop | Qt.AlignCenter)
@@ -81,4 +85,3 @@ class MainWidgetLogic(MainWidgetGraphics):
 class MainWidget(MainWidgetLogic):
     def __init__(self, parent):
         super().__init__(parent)
-        self.setObjectName("MainWidget")

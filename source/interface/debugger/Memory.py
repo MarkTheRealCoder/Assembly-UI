@@ -4,9 +4,9 @@ from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QGridLayout
 from PyQt5.QtWidgets import QLabel, QWidget, QSizePolicy, QLayout
 
-from source.comms import Database as db
-from source.filesystem.documents import FT
+from source.filesystem.documents import FT, Document
 from source.interface.debugger.memorydisplay import Segment
+from source.interface.shared import Settings
 
 
 class MemoryGraphics(QLabel):
@@ -66,23 +66,25 @@ class MemoryLogic(MemoryGraphics):
 class Memory(MemoryLogic):
     def __init__(self, mwt: QWidget):
         super().__init__(parent=mwt)
-        db.DOCTYPE.connect(self.load_scopes)
         QTimer.singleShot(5000, lambda: add_mock_fragments(self))
+        Settings.addNotificationGroup("editor/current", self.load_scopes)
 
     def load_scopes(self):
-        doctype = db.DOCTYPE.getValue()
+        if doc := Settings.get("editor/current", None):
+            doctype = Document(doc).getExtension()
+            doctype = FT.findByExt(doctype)
 
-        if doctype == FT.F8088:
-            segments: list[str] = ["SECT_DATA", "SECT_BSS", "STACK", "REGISTERS"]
-        else:
-            segments: list[str] = ["CONSTANTS", "VARIABLES", "STACK"]
+            if doctype == FT.F8088:
+                segments: list[str] = ["SECT_DATA", "SECT_BSS", "STACK", "REGISTERS"]
+            else:
+                segments: list[str] = ["CONSTANTS", "VARIABLES", "STACK"]
 
-        layout = self.layout()
+            layout = self.layout()
 
-        self.updateWidgets(segments, layout)
-        self.buildLayout(layout, segments)
-        self.setLayout(layout)
-        self.update()
+            self.updateWidgets(segments, layout)
+            self.buildLayout(layout, segments)
+            self.setLayout(layout)
+            self.update()
 
 
 def add_mock_fragments(memory: Memory):

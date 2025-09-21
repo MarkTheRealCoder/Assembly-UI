@@ -15,13 +15,13 @@ if __name__ == "__main__":
         # Se l'applicazione è congelata (exe), reindirizza stderr a un file
         log_path = os.path.join(os.path.dirname(sys.executable), 'error.log')
         sys.stderr = open(log_path, 'w')
-    
+
     faulthandler.enable()
     QApplication.setApplicationName("Assembly Stdio")
     QApplication.setApplicationDisplayName("Assembly Stdio")
     QApplication.setApplicationVersion("1.0")
     QApplication.setOrganizationName("Assembly Stdio")
-    QApplication.setOrganizationDomain("Assembly Stdio")
+    QApplication.setOrganizationDomain("assemblystdio.dev")
     QApplication.setQuitOnLastWindowClosed(True)
     app = QApplication(sys.argv)
     with open(find_path("style.qss"), "r") as f:
@@ -32,8 +32,6 @@ if __name__ == "__main__":
     window.show()
     sys.exit(app.exec_())
 
-
-# todo: Modify Window layout to add minimal borders for resizing
 # todo: Create options window
 # todo: Create buttons for Debug interface
 # todo: Refactor code for Debugger Memory view
