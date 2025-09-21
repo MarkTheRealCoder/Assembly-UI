@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QComboBox, QSizePolicy
 
-from source.filesystem.IconManager import IconManager
+from source.filesystem import IconManager
 
 
 class ExtensionBox(QComboBox):

@@ -5,7 +5,6 @@ from source.asyncro import Scheduler
 from source.comms import Database
 from source.comms.events import ClosingEvent, NoTabEvent, ReadyEvent
 from source.comms.handlers import EventRegister
-# from source.filesystem import HandleJson as HJ
 from source.filesystem.documents import Document
 from source.filesystem.documents import Watcher
 from source.interface.editor.Editor import Editor

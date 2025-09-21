@@ -3,7 +3,7 @@ from regex import regex
 
 from source.filesystem import create_dir, open_dir
 from source.filesystem.documents import Document
-from source.interface.modals.Dialog import Dialog
+from source.interface.modals import Dialog
 from source.interface.modals.filemanager.complex.buttons import ConfirmButton
 from source.interface.modals.filemanager.complex.buttons import FolderButton
 from source.interface.modals.filemanager.complex.buttons import HomeButton

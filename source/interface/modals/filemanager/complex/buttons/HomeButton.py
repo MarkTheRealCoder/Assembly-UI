@@ -1,6 +1,6 @@
 from PyQt5.QtGui import QIcon
 
-from source.filesystem.Folder import find_path
+from source.filesystem import find_path
 from source.interface.modals.filemanager.complex.buttons.Button import Button
 
 

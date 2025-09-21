@@ -2,8 +2,8 @@ from pathlib import Path
 
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
+from source.filesystem.documents import Document
 from source.filesystem.documents import FT
-from source.filesystem.documents.Document import Document
 from source.interface.modals.filemanager.complex import FileDialog
 from source.interface.shared import Settings
 

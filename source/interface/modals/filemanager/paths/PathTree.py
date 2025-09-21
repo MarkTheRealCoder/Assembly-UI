@@ -2,13 +2,13 @@ from PyQt5.QtCore import QModelIndex
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtWidgets import QAbstractItemView, QTreeView, QSizePolicy
 
-from source.asyncro.Scheduler import Scheduler
+from source.asyncro import Scheduler
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
 from source.filesystem import IconManager
-from source.filesystem.Folder import find_path, get_available_disks, ls
-from source.filesystem.documents.Document import Document
-from source.filesystem.documents.FileTypes import FT
+from source.filesystem import find_path, get_available_disks, ls
+from source.filesystem.documents import Document
+from source.filesystem.documents import FT
 from source.interface.assets import translateQSS
 from source.interface.shared import Settings
 from source.platform import isWindows

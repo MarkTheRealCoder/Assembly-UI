@@ -4,8 +4,8 @@ from PyQt5.QtWidgets import QDesktopWidget, QHBoxLayout, QVBoxLayout, QSpacerIte
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
 from source.interface.shared import createLayout, makeResizingLayout
-from source.interface.templates.CloseButton import CloseButton
-from source.interface.templates.Title import Title
+from source.interface.templates import CloseButton
+from source.interface.templates import Title
 from source.platform import Desktop
 
 WINDOW_ACTIVE = None

@@ -5,7 +5,7 @@ from PyQt5.QtGui import QMouseEvent, QPainter, QColor, QPixmap, QIcon
 from PyQt5.QtSvg import QSvgRenderer
 from PyQt5.QtWidgets import QWidget, QLayout, QFrame, QSizePolicy, QGridLayout
 
-from source.comms.Signals import Variable
+from source.comms import Variable
 from source.interface import MainWindow
 
 

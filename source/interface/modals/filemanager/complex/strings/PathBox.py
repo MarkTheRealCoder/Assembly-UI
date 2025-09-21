@@ -1,4 +1,4 @@
-from source.filesystem.documents.Document import Document
+from source.filesystem.documents import Document
 from source.interface.modals.filemanager.complex.strings.TextBox import TextBox
 
 

@@ -5,8 +5,8 @@ from PyQt5.QtWidgets import QWidget, QSizePolicy
 
 from source.comms import Database
 from source.filesystem import find_path
-from source.interface.assets.qstylesheets import translateQSS
-from source.interface.editor.lexers.Lexer import LexerFactory
+from source.interface.assets import translateQSS
+from source.interface.editor.lexers import LexerFactory
 
 
 class Editor(QsciScintilla):

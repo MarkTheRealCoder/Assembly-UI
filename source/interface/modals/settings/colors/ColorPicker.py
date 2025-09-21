@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QWidget, QHBoxLayout
 
-from source.interface.modals.settings.base.RollbackButton import RollbackButton
+from source.interface.modals.settings.base import RollbackButton
 from source.interface.modals.settings.colors.ColorButton import ColorButton
 from source.interface.modals.settings.colors.ColorLabel import ColorLabel
 from source.interface.modals.settings.colors.HexCodeColorLine import HexCodeColorLine

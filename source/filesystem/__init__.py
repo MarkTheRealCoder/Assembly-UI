@@ -10,6 +10,4 @@ __all__ = [
     "create_dir",
     "IconManager",
     "create_file",
-    "DataManager",
-    #"HandleJson"
 ]

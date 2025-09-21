@@ -3,11 +3,11 @@ from PyQt5.QtWidgets import QWidget, QSplitter, QSizePolicy, QVBoxLayout, QHBoxL
 
 from source.comms.events import EditorResizeEvent
 from source.comms.handlers import EventRegister
-from source.interface.debugger.Memory import Memory
-from source.interface.debugger.options import OptionsContainer
-from source.interface.editor.EditorWrapper import EditorWrapper
-from source.interface.io.Input import Input
-from source.interface.io.Output import Output
+from source.interface.debugger import Memory
+from source.interface.debugger import OptionsContainer
+from source.interface.editor import EditorWrapper
+from source.interface.io import Input
+from source.interface.io import Output
 from source.interface.shared import createLayout, makeResizingLayout
 from source.interface.titlebar import Toolbar
 
