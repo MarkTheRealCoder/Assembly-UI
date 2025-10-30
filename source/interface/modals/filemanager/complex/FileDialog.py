@@ -4,10 +4,7 @@ from regex import regex
 from source.filesystem import create_dir, open_dir
 from source.filesystem.documents import Document
 from source.interface.modals import Dialog
-from source.interface.modals.filemanager.complex.buttons import ConfirmButton
-from source.interface.modals.filemanager.complex.buttons import FolderButton
-from source.interface.modals.filemanager.complex.buttons import HomeButton
-from source.interface.modals.filemanager.complex.buttons import OpenFolderButton
+from source.interface.modals.filemanager.complex.Button import Button
 from source.interface.modals.filemanager.complex.strings import ExtensionBox
 from source.interface.modals.filemanager.complex.strings import FileBox
 from source.interface.modals.filemanager.complex.strings import PathBox
@@ -25,11 +22,11 @@ class FileDialogGraphics(QFrame):
         self._box = PathBox(self)
         self._name = FileBox(self, **kwargs)
 
-        self._home = HomeButton(self)
+        self._home = Button(self, "home.svg", "Set current path to home")
 
-        self._open_folder = OpenFolderButton(self)
-        self._create_folder = FolderButton(self)
-        self.confirm = ConfirmButton(self)
+        self._open_folder = Button(self, "open_folder.svg", "Open folder path")
+        self._create_folder = Button(self, "new_folder.svg", "Create new folder")
+        self.confirm = Button(self, "confirm.svg", "Confirm choices")
 
         self._ext_picker = ExtensionBox(self, extensions)
 
@@ -51,6 +48,7 @@ class FileDialogGraphics(QFrame):
         blayout.addWidget(self._ext_picker)
         blayout.addWidget(self.confirm, 1)
 
+        layout.setSpacing(10)
         layout.addLayout(tlayout)
         layout.addWidget(self._tree)
         layout.addLayout(blayout)

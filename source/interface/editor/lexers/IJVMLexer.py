@@ -34,7 +34,7 @@ class IJVMLexer(QsciLexerCustom):
         # Default style
         self.setDefaultFont(QFont("Bahnschrift", 12))
         self.setDefaultColor(QColor("#CCCCCC"))
-        self.setDefaultPaper(QColor("#1E1E1E"))
+        self.setDefaultPaper(QColor("#292727"))
 
         # Block keyword style (.constant, .main, etc.)
         self.setColor(QColor("#569CD6"), self.BlockKeyword)

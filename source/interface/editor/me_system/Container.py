@@ -6,7 +6,7 @@ from source.comms import Database
 from source.interface.editor.me_system.Icon import Icon
 from source.interface.editor.me_system.Label import Label
 from source.interface.shared import createLayout
-from source.interface.templates import CloseButton
+from source.interface.templates import CloseButton, Tooltip
 
 
 class Container(QFrame):
@@ -15,6 +15,11 @@ class Container(QFrame):
 
         self.___id: int = _id
 
+        self.tooltip = Tooltip(self, name)
+        self.tooltip.setPosition("right", "center")
+        self.tooltip.setFollowing("widget")
+        self.tooltip.setAutomatic(True)
+
         self.configurations(_id, name, icon)
 
         self.selected()
@@ -22,7 +27,7 @@ class Container(QFrame):
 
     def configurations(self, _id: int, name: str, icon: QIcon):
         self.setObjectName("Container")
-        self.setFixedSize(150, 25)
+        self.setFixedWidth(150)
         layout: QHBoxLayout = createLayout(QHBoxLayout, self)
         layout.addWidget(Icon(self, icon))
         layout.addWidget(Label(self, name))

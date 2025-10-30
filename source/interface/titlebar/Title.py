@@ -2,9 +2,9 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow
 
 from source.filesystem import open_dir
-from source.interface.Tooltips import Tooltip
 from source.interface.shared import Settings
 from source.interface.templates import Title as BaseTitle
+from source.interface.templates import Tooltip
 from source.platform import Desktop
 
 

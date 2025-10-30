@@ -47,13 +47,12 @@ QsciScintilla#Editor QScrollBar:vertical {
     background-color: var(---generic-light-background-color);
     width: 12px;
     border: none;
-    border-radius: 6px;
 }
 
 QsciScintilla#Editor QScrollBar::handle:vertical {
     background-color: var(---generic-highlight-background-color);
-    border-radius: 6px;
     min-height: 20px;
+    border-radius: 0px;
     margin: 0px;
 }
 

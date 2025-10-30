@@ -1,56 +1,34 @@
 from PyQt5.Qsci import QsciLexerCustom, QsciScintilla
 from PyQt5.QtGui import QColor, QFont
 
-from source.filesystem.documents import Document
 from .Asm8088Lexer import Asm8088Lexer
 from .IJVMLexer import IJVMLexer
-from ...shared import Settings
 
 
 class LexerFactory:
     """Factory class to create appropriate lexers based on file type or content"""
     
     @staticmethod
-    def createLexer(parent: QsciScintilla, content: str = None):
+    def createLexer(parent: QsciScintilla, ext: str):
         """
-        Create an appropriate lexer based on current file extension or content
+        Create an appropriate lexer based on file extension
         
         Args:
             parent: The QsciScintilla parent widget
-            content: Optional content to analyze for lexer selection
+            ext: The file extension
             
         Returns:
             Appropriate lexer instance (Asm8088Lexer, IJVMLexer, or DefaultLexer)
         """
         
         # Get current document from Database
-        if current_document := Settings.get("editor/current", None):
-
-            # Determine lexer type from file extension
-            doc = Document(current_document)
-            if doc:
-                file_ext = doc.getExtension().lower()
-                if file_ext in ['asm', 's', 'a8088', '8088']:
-                    return Asm8088Lexer(parent)
-                elif file_ext in ['ijvm', 'jvm']:
-                    return IJVMLexer(parent)
+        if ext == 'a8088':
+            return Asm8088Lexer(parent)
+        elif ext == 'ijvm':
+            return IJVMLexer(parent)
         
-        # Determine lexer type from content analysis
-        if content:
-            content_lower = content.lower()
-            
-            # Check for IJVM-specific keywords
-            ijvm_keywords = ['.constant', '.main', '.method', '.var', 'halt', 'iadd', 'bipush']
-            if any(keyword in content_lower for keyword in ijvm_keywords):
-                return IJVMLexer(parent)
-            
-            # Check for 8088-specific keywords
-            asm8088_keywords = ['.sect', '.data', '.text', '.bss', 'mov', 'push', 'pop', 'jmp']
-            if any(keyword in content_lower for keyword in asm8088_keywords):
-                return Asm8088Lexer(parent)
-        
-        # Default to 8088 assembly lexer if no specific match
-        return Asm8088Lexer(parent)
+        # Default lexer if no specific match
+        return DefaultLexer(parent)
 
 
 class DefaultLexer(QsciLexerCustom):

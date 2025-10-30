@@ -1,4 +1,3 @@
-from PyQt5.QtGui import QMouseEvent
 from PyQt5.QtWidgets import QMenu
 
 from source.interface.modals import modalOpen, FilePicker, DirectoryPicker, FileCreator, FileSaver, SettingsWidget
@@ -29,7 +28,3 @@ class FileMenu(GenericButton):
         menu.addSeparator()
         menu.addAction("Settings", lambda: modalOpen(self.parent().mw, SettingsWidget(self.parent().mw), "Settings"))
         self.setMenu(menu)
-
-    def mousePressEvent(self, e: QMouseEvent):
-        super().mousePressEvent(e)
-        e.accept()

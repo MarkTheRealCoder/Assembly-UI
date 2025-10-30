@@ -19,7 +19,7 @@ class BoxLogic(BoxGraphics):
         super().__init__(parent, prompt)
         if not callable(action):
             raise TypeError("The action must be a callable function")
-        self.___action: callable = action
+        self._action: callable = action
 
 
 class Box(BoxLogic):
@@ -28,7 +28,7 @@ class Box(BoxLogic):
 
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() == Qt.Key.Key_Return:
-            if not self.___action(self.text()):
+            if not self._action(self.text()):
                 self.setText("")
                 self.parent().log("Action failed, try again.")
             else:
@@ -70,7 +70,7 @@ class DialogGraphics(QLabel):
 
     def __init__(self, parent, title: str, prompt: str, action: callable):
         super().__init__(parent)
-        self.___title = title
+        self._title = title
         self.configurations(title, prompt, action)
 
     def configurations(self, title: str, prompt: str, action: callable):
@@ -98,7 +98,7 @@ class DialogLogic(DialogGraphics):
 
     def log(self, message: str):
         label = self.layout().itemAt(0).widget()
-        label.setText(f"{self.___title}: {message}")
+        label.setText(f"{self._title}: {message}")
 
 
 class Dialog(DialogLogic):

@@ -4,6 +4,8 @@ import sys
 
 from PyQt5.QtWidgets import QApplication, QDesktopWidget
 
+from source.comms.events import ClosingEvent
+from source.comms.handlers import EventRegister
 from source.filesystem import find_path
 from source.interface import MainWindow
 from source.interface.assets import add_fonts, translateQSS
@@ -24,15 +26,19 @@ if __name__ == "__main__":
     QApplication.setOrganizationDomain("assemblystdio.dev")
     QApplication.setQuitOnLastWindowClosed(True)
     app = QApplication(sys.argv)
+    app.aboutToQuit.connect(lambda: EventRegister.send(ClosingEvent(), "Main"))
     with open(find_path("style.qss"), "r") as f:
         app.setStyleSheet(translateQSS(f.read()))
     Desktop.setDesktopSize(QDesktopWidget().screenGeometry().size())
     add_fonts()
     window: MainWindow = MainWindow()
     window.show()
+    window.raise_()
+    window.activateWindow()
+    window.setFocus()
     sys.exit(app.exec_())
 
-# todo: Create options window
+# todo: Create toolbar window
 # todo: Create buttons for Debug interface
 # todo: Refactor code for Debugger Memory view
 # todo: Create a JPype impl for using Antonio's Java code

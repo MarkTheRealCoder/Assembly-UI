@@ -1,4 +1,3 @@
-from PyQt5.QtGui import QMouseEvent
 from PyQt5.QtWidgets import QMenu
 
 from source.filesystem import find_path
@@ -27,15 +26,3 @@ class HelpMenu(GenericButton):
         menu.addAction("8088 Instructions", lambda: createSubWindow("8088", self, Renderer, find_path("8088.html")))
         menu.addAction("IJVM Instructions", lambda: createSubWindow("IJVM", self, Renderer, find_path("IJVM.html")))
         self.setMenu(menu)
-
-    def mousePressEvent(self, e: QMouseEvent):
-                # Only handle the event if the button is triggerable
-        if hasattr(self, "isTriggerable"):
-            triggerable = self.isTriggerable()
-        else:
-            triggerable = self.isEnabled()
-        if triggerable:
-            super().mousePressEvent(e)
-            e.accept()
-        else:
-            e.ignore()

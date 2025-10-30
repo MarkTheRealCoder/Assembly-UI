@@ -81,12 +81,11 @@ class ModalWindowLogic(ModalWindowGraphics):
     def __init__(self, parent, widget, size: QSize, title: str):
         super().__init__(parent, widget, size, title)
 
-
+@EventRegister.register(ClosingEvent, "Main")
 @EventRegister.register(ClosingEvent, "Tool", EventRegister.LOW)
 class ModalWindow(ModalWindowLogic):
     def __init__(self, parent, widget, size: QSize, title: str):
         super().__init__(parent, widget, size, title)
-        EventRegister.mregister(self, ClosingEvent, "Tool", EventRegister.LOW)
 
     def onClosingEvent(self, e):
         print("Closing Tool Window")
@@ -94,6 +93,3 @@ class ModalWindow(ModalWindowLogic):
         WINDOW_ACTIVE = None
         self.deleteLater()
         self.close()
-
-    def event(self, e):
-        return super().event(e)

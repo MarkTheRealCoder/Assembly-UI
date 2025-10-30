@@ -10,7 +10,7 @@ class MinimizeButton(GenericButton):
     def __init__(self, parent, mw: QMainWindow):
         super().__init__(parent)
         self.mainwindow = mw
-        self.setIcon(QIcon(find_path("minimize.png")))
+        self.setIcon(self.rerenderIcon(QIcon(find_path("minimize.svg")), "#569CD6"))
         self.setIconSize(QSize(20, 20))
         self.setObjectName("Minimize")
 

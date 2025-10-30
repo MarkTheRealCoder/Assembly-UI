@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QFrame, QSizePolicy, QVBoxLayout
 
 from source.asyncro import Scheduler
 from source.comms import Database
-from source.comms.events import ClosingEvent, NoTabEvent, ReadyEvent
+from source.comms.events import ClosingEvent, NoTabEvent, ReadyEvent, TabAddedEvent
 from source.comms.handlers import EventRegister
 from source.filesystem.documents import Document
 from source.filesystem.documents import Watcher
@@ -11,6 +11,7 @@ from source.interface.editor.Editor import Editor
 from source.interface.editor.EditorFrame import EditorFrame
 from source.interface.editor.me_system import TabManager, Tab
 from source.interface.shared import createLayout, Settings
+from source.interface.templates import FindWidget
 
 
 class EditorWrapperGraphics(QFrame):
@@ -27,9 +28,11 @@ class EditorWrapperGraphics(QFrame):
 
         layout: QVBoxLayout = createLayout(QVBoxLayout, self)
         self._tab_manager = TabManager(self)
+        self._find_widget = FindWidget(self, "editor")
         self._frame = EditorFrame(self)
 
         layout.addWidget(self._tab_manager, 1)
+        layout.addWidget(self._find_widget, 1)
         layout.addWidget(self._frame, 10)
         self.setLayout(layout)
 
@@ -50,7 +53,8 @@ class EditorWrapperLogic(EditorWrapperGraphics):
         Database.ON_TAB_SELECTED.connect(self.getFromDisk)
 
     def setCurrentFile(self):
-        if doc := self._documents.get(Database.ON_TAB_SELECTED.getValue(), None):
+        _id = Database.ON_TAB_SELECTED.getValue()
+        if doc := self._documents.get(_id, None):
             Settings.set("editor/current", str(doc))
         else:
             Settings.remove("editor/current")
@@ -74,9 +78,10 @@ class EditorWrapperLogic(EditorWrapperGraphics):
             self.document_uniqueness(doc),
             doc.getExtension()
         )
-        self._frame.addEditor(docHash, Editor(self._frame, doc.text), doc.text)
+        self._frame.addEditor(docHash, Editor(self._frame, doc.getExtension()), doc.text)
 
         Database.ON_TAB_SELECTED.setValue(docHash)
+        EventRegister.send(TabAddedEvent(), "Tab")
 
     def initializeSchedulers(self, docHash: int):
         if self._scheduler is None:

@@ -1,5 +1,5 @@
-from PyQt5.QtCore import QSize
-from PyQt5.QtGui import QMouseEvent, QIcon
+from PyQt5.QtCore import QSize, QTimer
+from PyQt5.QtGui import QIcon
 
 from source.comms.Signals import Variable
 from source.comms.events import ClosingEvent
@@ -9,24 +9,25 @@ from source.interface.templates import GenericButton
 
 
 class CloseButtonGraphics(GenericButton):
-    def __init__(self, parent, properties: dict[str, bool] = {}):
+    def __init__(self, parent, properties: dict[str, bool] = None):
         super().__init__(parent)
 
-        icon_size: tuple[int, int] = (20, 20)
-        self.setFixedHeight(34)
-        if "tab" in properties.keys():
-            self.setFixedWidth(34)
+
+        if not properties or "tab" not in properties.keys():
+            self.setFixedHeight(34)
+            icon_size: tuple[int, int] = (20, 20)
+        else:
             icon_size = (10, 10)
 
         self.setIconSize(QSize(*icon_size))
-        self.setIcon(QIcon(find_path("close.svg")))
+        self.setIcon(self.rerenderIcon(QIcon(find_path("close.svg")), "#569CD6"))
 
-        for k, v in properties.items():
-            self.setProperty(k, v)
-
+        if properties:
+            for k, v in properties.items():
+                self.setProperty(k, v)
 
 class CloseButtonLogic(CloseButtonGraphics):
-    def __init__(self, parent, properties: dict[str, bool] = {}):
+    def __init__(self, parent, properties: dict[str, bool] = None):
         super().__init__(parent, properties=properties)
         self.___args = ()
         self.___iden = {}
@@ -48,11 +49,14 @@ class CloseButtonLogic(CloseButtonGraphics):
 
 
 class CloseButton(CloseButtonLogic):
-    def __init__(self, parent, subclass: str = "Main", properties: dict[str, bool] = {}):
+    def __init__(self, parent, subclass: str = "Main", properties: dict[str, bool] = None):
         super().__init__(parent, properties)
         self.___subclass: str = subclass
         self.setObjectName("Close")
+        self.clicked.connect(self._onClick)
 
-    def mousePressEvent(self, e: QMouseEvent):
-        e.accept()
-        EventRegister.send(ClosingEvent(*self.getArgs()), self.___subclass, **self.getIden())
+    def _onClick(self):
+        QTimer.singleShot(10, lambda: EventRegister.send(
+            ClosingEvent(*self.getArgs()), self.___subclass, **self.getIden()
+        ))
+

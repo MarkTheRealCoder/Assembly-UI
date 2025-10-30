@@ -1,5 +1,3 @@
-from .Memory import Memory
-from .options import OptionsContainer
+from .ExecutionContext import ExecutionContext
 
-__all__ = ['Memory', 'OptionsContainer']
-
+__all__ = ['ExecutionContext']

@@ -6,9 +6,8 @@ from PyQt5.QtCore import pyqtSignal, QObject
 class Variable(QObject):
     signal = pyqtSignal(str)
 
-    def __init__(self, _type: type, wrapped: bool = False):
+    def __init__(self, _type: type):
         super(QObject, self).__init__()
-        self.___wrapped: bool = wrapped
         if not isinstance(_type, type):
             raise TypeError("_type must be a class not an instance...")
         self.___noneable: bool = False

@@ -36,7 +36,7 @@ class Asm8088Lexer(QsciLexerCustom):
         # Default style
         self.setDefaultFont(QFont("Bahnschrift", 12))
         self.setDefaultColor(QColor("#CCCCCC"))
-        self.setDefaultPaper(QColor("#1E1E1E"))
+        self.setDefaultPaper(QColor("#292727"))
 
         # Directive style (.SECT, .BYTE, etc.)
         self.setColor(QColor("#569CD6"), self.Directive)

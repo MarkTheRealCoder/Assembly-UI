@@ -38,7 +38,10 @@ class EventRegister:
         :return:
         """
 
+
+
         def wrapper(cls):
+
 
             class Wrapper(cls):
                 def __init__(self, *args, **kwargs):
@@ -75,10 +78,6 @@ class EventRegister:
         :param arg: event\' subclass
         :return:
         """
-        # if "ClosingEvent" in f"{ev}":
-        #     print(f"CLOSINGEVENT REGISTERED FOR : {obj} - {keys}")
-        if "ResizeEvent" in str(ev):
-            print(f"Registering {obj} to {ev} with args {arg} and keys {keys}")
         EventRegister.REFERENCE.add(ev, arg, priority, obj, **keys)
         if hasattr(obj, "event"):
 
@@ -137,8 +136,6 @@ class EventRegister:
             raise TypeError("Event must be a class")
         app = QApplication.instance()
         refs = EventRegister.get(event, arg, **keys)
-        if "ResiteEvent" in str(event):
-            print(f"Posting {event} to {refs}")
         for ref in refs:
             e = event(*args)
             e.on(ref)

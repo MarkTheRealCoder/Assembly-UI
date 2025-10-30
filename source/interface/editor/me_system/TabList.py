@@ -27,7 +27,7 @@ class TabList(QScrollArea):
         self.update()
 
     def count(self):
-        return self.widget().layout().count()
+        return self.widget().count()
 
     def wheelEvent(self, event):
         delta = event.angleDelta().y()
@@ -50,7 +50,10 @@ class _Support(QFrame):
 
     def addTab(self, tab):
         layout: QHBoxLayout = self.layout()     # noqas
-        layout.addWidget(tab, 1)
+        layout.addWidget(tab)
+
+    def count(self):
+        return self.layout().count()
 
     def moveTab(self, target, v):
 
@@ -63,5 +66,5 @@ class _Support(QFrame):
         elif indx >= self.layout().count():
             indx = self.layout().count()
 
-        self.layout().insertWidget(indx, target, 1)
+        self.layout().insertWidget(indx, target)
         self.update()

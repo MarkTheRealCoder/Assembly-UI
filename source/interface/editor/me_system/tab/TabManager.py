@@ -26,7 +26,7 @@ class TabManager(QFrame):
 
     def configurations(self):
         self.setObjectName("TabManager")
-        self.setFixedHeight(40)
+        self.setFixedHeight(44)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.setContentsMargins(0, 0, 0, 0)
 

@@ -3,11 +3,8 @@ from PyQt5.QtWidgets import QWidget, QSplitter, QSizePolicy, QVBoxLayout, QHBoxL
 
 from source.comms.events import EditorResizeEvent
 from source.comms.handlers import EventRegister
-from source.interface.debugger import Memory
-from source.interface.debugger import OptionsContainer
+from source.interface.debugger import ExecutionContext
 from source.interface.editor import EditorWrapper
-from source.interface.io import Input
-from source.interface.io import Output
 from source.interface.shared import createLayout, makeResizingLayout
 from source.interface.titlebar import Toolbar
 
@@ -28,49 +25,34 @@ class MainWidgetGraphics(QWidget):
         widget.setObjectName("MainWidget")
         layout: QVBoxLayout = createLayout(QVBoxLayout, widget)
         layout.addWidget(Toolbar(widget), 0)
-        self.buildCoreComponents(layout)
+        self.buildCoreComponents(layout, widget)
         widget.setLayout(layout)
 
-    def buildCoreComponents(self, layout: QVBoxLayout):
+    def buildCoreComponents(self, layout: QVBoxLayout, widget):
         layout.setAlignment(Qt.AlignTop | Qt.AlignCenter)
 
-        code_and_memory: QHBoxLayout = createLayout(QHBoxLayout, self)
-        IO_and_options: QHBoxLayout = createLayout(QHBoxLayout, self)
+        code_and_memory: QHBoxLayout = createLayout(QHBoxLayout, widget)
 
         # Add to main layout
         layout.addLayout(code_and_memory)
         layout.addSpacerItem(QSpacerItem(0, 7, QSizePolicy.Expanding, QSizePolicy.Fixed))
-        layout.addLayout(IO_and_options)
-        layout.addSpacerItem(QSpacerItem(0, 7, QSizePolicy.Expanding, QSizePolicy.Fixed))
-
-        layout.setStretchFactor(code_and_memory, 4)
-        layout.setStretchFactor(IO_and_options, 1)
 
         # Add code and memory to their H layout
         code_and_memory.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding))
-        code_and_memory.addWidget(self.setSplitter(), 1)
+        code_and_memory.addWidget(self.setSplitter(widget), 1)
         code_and_memory.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding))
-
-        # Add input, output and memory options to their layout
-        IO_and_options.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding))
-        IO_and_options.addWidget(Input(self), 1)
-        IO_and_options.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding))
-        IO_and_options.addWidget(Output(self), 1)
-        IO_and_options.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding))
-        IO_and_options.addWidget(OptionsContainer(self), 1)
-        IO_and_options.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Fixed, QSizePolicy.Expanding))
         return layout
 
-    def setSplitter(self):
-        cmResizer: QSplitter = QSplitter(self)
+    def setSplitter(self, widget):
+        cmResizer: QSplitter = QSplitter(widget)
         cmResizer.splitterMoved.connect(lambda: EventRegister.send(EditorResizeEvent(), "Tab"))
         cmResizer.setOrientation(Qt.Horizontal)
         cmResizer.setObjectName("Mem-CodeSplitter")
         cmResizer.setHandleWidth(7)
         cmResizer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
-        cmResizer.addWidget(EditorWrapper(self))
-        cmResizer.addWidget(Memory(self))
+        cmResizer.addWidget(EditorWrapper(widget))
+        cmResizer.addWidget(ExecutionContext(widget)) # todo change to Memory(self) when implemented
         cmResizer.setSizes([INTEGER_MAX, INTEGER_MAX])
         cmResizer.setStretchFactor(0, 1)
         cmResizer.setStretchFactor(1, 1)
@@ -85,3 +67,12 @@ class MainWidgetLogic(MainWidgetGraphics):
 class MainWidget(MainWidgetLogic):
     def __init__(self, parent):
         super().__init__(parent)
+        self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
+
+
+
+
+"""
+
+
+"""

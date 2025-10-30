@@ -1,15 +1,15 @@
 from PyQt5.QtCore import QSize, QEvent, Qt
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QFrame, QHBoxLayout
+from PyQt5.QtWidgets import QFrame, QHBoxLayout, QSizePolicy, QLayout
 
 from source.comms.Signals import DataBase
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
 from source.filesystem.IconManager import IconManager
-from source.interface.Tooltips import Tooltip
 from source.interface.editor.me_system.tab.Icon import TabIcon
 from source.interface.editor.me_system.tab.Label import TabLabel
 from source.interface.shared import createLayout
+from source.interface.templates import Tooltip
 from source.interface.templates.CloseButton import CloseButton
 
 
@@ -17,21 +17,31 @@ class TabGraphics(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
         self.setObjectName("Tab")
-        self.setFixedSize(QSize(150, 40))
         self.setFrameStyle(QFrame.Panel | QFrame.Raised)
+
+        self.setMinimumWidth(150)
+        self.setMaximumWidth(250)
+        self.setFixedHeight(44)
+        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+
         self._tooltip = Tooltip(self, "Tab Tooltip")
         self._tooltip.setPosition("below", "center")
         self._tooltip.setFollowing("widget")
         self._tooltip.setSpecific("Tab")
 
+    def sizeHint(self) -> QSize:
+        return QSize(150, 44)
+
     def setupLayout(self, name: str, ext: str, tab_id: int):
         layout: QHBoxLayout = createLayout(QHBoxLayout, self)
+        layout.setSizeConstraint(QLayout.SetFixedSize)
         layout.addWidget(TabIcon(self, ext))
         layout.addWidget(TabLabel(self, name))
         layout.addWidget(CloseButton(self, "Tab", {"tab": True})
                          .setEventIdentifiers(id=tab_id))
         self.setLayout(layout)
         self._tooltip.setText(name)
+        self.adjustSize()
 
 
 class TabLogic(TabGraphics):
@@ -99,6 +109,10 @@ class Tab(TabLogic):
         print("Closing tab", self.getId())
         DataBase.ON_TAB_CLOSE.setValue(self.getId())
         self.deleteLater()
+
+    def mousePressEvent(self, a0):
+        print(self.size())
+        super().mousePressEvent(a0)
 
 
 

@@ -43,40 +43,25 @@ QSplitter#Mem-CodeSplitter::handle {
     background-color: var(---generic-background-color);
 }
 
-
-QLabel#Output, QTextEdit#Input {
-    color: var(---generic-text-color);
-    font-size: 11pt;
-    font-family: "Calibri";
-    background-color: var(---generic-light-background-color);
-    text-align: topleft;
-    border: none;
-}
-
-QTextEdit#Input {
-    qproperty-placeholderText: "Write here your inputs...";
-}
-
 QsciScintilla#Editor {
     border: none;
 }
 
 
-QScrollBar:vertical, QScrollBar#VScrollCode:vertical {
+QScrollBar:vertical {
     background-color: var(---generic-light-background-color);
     width: 10px;
     margin: 0;
     border: none;
 }
 
-QScrollBar::handle:vertical, QScrollBar#VScrollCode::handle:vertical {
+QScrollBar::handle:vertical {
     background-color: var(---generic-extras-color);
     border-radius: 5px;
     min-height: 20px;
 }
 
-QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical,
-QScrollBar#VScrollCode::add-page:vertical, QScrollBar#VScrollCode::sub-page:vertical {
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
     background-color: var(---generic-light-background-color);
     image: none;
 }
@@ -103,21 +88,28 @@ QFrame#EditorFrame > QLabel {
     color: var(---generic-highlightable-text);
 }
 
+QFrame#TabManager {
+    padding: 0;
+}
+
 QScrollArea#TabList {
     border: none;
     background-color: var(---generic-tab-color);
+    border-bottom: 1px solid var(---generic-background-color);
+    padding: 0;
 }
 
 QFrame#TabListPanel {
     background-color: var(---generic-tab-color);
+    padding: 0;
 }
 
-
 QPushButton#TabButton {
-    width: 38px;
-    height: 38px;
+    width: 39px;
+    height: 39px;
     background-color: var(---generic-tab-color);
     border: 1px solid var(---generic-tab-color);
+    border-bottom: 1px solid var(---generic-background-color);
 }
 
 QPushButton#TabButton:hover {
@@ -146,26 +138,19 @@ Container[marked="true"] {
 Tab[marked="true"] {
     color: var(---generic-text-color);
     background-color: var(---generic-light-tab-color);
-    border-bottom: 2px solid var(---generic-light-tab-border-color);
-}
-
-Tab > QToolTip {
-    color: var(---generic-light-tab-border-color);
-    background-color: var(---generic-light-background-color);
-    border: 1px solid var(---generic-highlight-text-color);
-    padding: 5px;
-    font-size: 14px;
-
+    border-bottom: 5px solid var(---generic-light-tab-border-color);
 }
 
 QLabel#TabLabel {
     background-color: transparent;
     color: var(---generic-extras-color);
+    padding: 0;
 }
 
 QPushButton#Close[tab="true"] {
-    height: 12px;
-    width: 12px;
+    height: 16px;
+    width: 16px;
+    max-height: 16px;
     border: 2px solid transparent;
     border-radius: 5px;
     background-color: transparent;
@@ -179,56 +164,6 @@ QPushButton#TabIcon {
     background-color: transparent;
     padding-bottom: 2px;
 }
-
-
-QLabel#Options, QLabel#Memory, QLabel#Fragment {
-    border: none;
-}
-
-QLabel#Options {
-    background-color: var(---generic-light-background-color);
-}
-
-QLabel#Memory {
-    background-color: var(---generic-background-color);
-}
-
-QLabel#MemoryLabel {
-    background-color: var(---generic-background-color);
-    font-size: 15px;
-    font-family: "Calibri";
-    color: var(---generic-text-color);
-}
-
-QScrollArea#GenericScroll {
-    background-color: var(---generic-light-background-color);
-    border: none;
-}
-
-QLabel#KeyLabel {
-    color: var(---generic-extras-color);
-    background-color: transparent;
-    border: none;
-}
-
-QLabel#ValueLabel {
-    color: var(---generic-text-color);
-    background-color: transparent;
-    border: none;
-}
-
-QLabel#Fragment {
-    background-color: var(---generic-background-color);
-}
-
-QLabel#Fragment:hover {
-    background-color: var(---generic-highlight-background-color);
-}
-
-QFrame#RegistersScroll, QFrame#ConstantsScroll, QFrame#VariablesScroll, QFrame#StackScroll, QFrame#Sect_BssScroll, QFrame#Sect_DataScroll {
-    background-color: var(---generic-light-background-color);
-}
-
 
 #Toolbar {
     background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0,
@@ -280,6 +215,11 @@ QPushButton#Run:hover {
 }
 
 QPushButton#File:hover, QPushButton#Help:hover {
+    color: var(---generic-highlight-text-color);
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+QPushButton#File::focus, QPushButton#Help::focus {
     color: var(---generic-highlight-text-color);
     background-color: rgba(255, 255, 255, 0.1);
 }
@@ -397,7 +337,6 @@ QLabel#Dialog > QLineEdit {
     font-weight: 200;
 }
 
-
 QLabel#SettingsSection {
     font-weight: bold;
     margin: 10px 0px;
@@ -507,4 +446,94 @@ QPushButton#ResetButton {
 QPushButton#ResetButton:hover {
     background-color: darkred;
     color: white;
+}
+
+QTextEdit#Terminal {
+    background-color: #292727;
+    color: #007700;
+    border: none;
+    font-family: "Monospace";
+    font-size: 13px;
+    font-style: italic;
+}
+
+QFrame#MemoryViewer, QFrame#ExecutionToolbar {
+    background-color: var(---generic-tab-color);
+    border: none;
+    border-bottom: 1px solid var(---generic-background-color);
+}
+
+QFrame#ExecutionToolbar {
+    width: 100%;
+    background-color: var(---generic-tab-color);
+    padding: 0 10px 0 10px;
+}
+
+QPushButton#FakeFindButton, QPushButton#ClearButton, QPushButton#ScrollButton,
+QPushButton#RunButton, QPushButton#DebugButton, QPushButton#StopButton, QPushButton#FinderButton {
+    background-color: var(---generic-tab-color);
+    border-radius: 5px;
+    border: none;
+    height: 30px;
+    width: 30px;
+    max-height: 30px;
+    max-width: 30px;
+}
+
+QPushButton#FakeFindButton:hover, QPushButton#ClearButton:hover, QPushButton#ScrollButton:hover,
+ QPushButton#RunButton:hover, QPushButton#FinderButton:hover {
+    background-color: var(---generic-text-color);
+}
+
+QPushButton#FakeFindButton[findActive="true"] {
+    background-color: var(---generic-text-color);
+}
+
+QPushButton#ClearButton[active="true"] {
+    background-color: #3FB950;
+}
+
+QPushButton#ClearButton[active="true"]:hover {
+    background-color: #3FB950;
+}
+
+QPushButton#RunButton[active="true"] {
+    background-color: #3FB950;
+}
+
+QPushButton#StopButton {
+    background-color: #DA3633;
+}
+
+QPushButton#StopButton:hover {
+    background-color: #CD3633;
+}
+
+QFrame#FindWidget {
+    background-color: var(---generic-tab-color);
+    border: none;
+    border-bottom: 1px solid var(---generic-background-color);
+    padding: 5px 10px 5px 10px;
+    max-height: 30px;
+    height: 30px;
+    min-height: 30px;
+    width: 100%;
+}
+
+QLineEdit#FindTextBox {
+    background-color: var(---generic-tab-color);
+    border: none;
+    border-bottom: 1px solid #999999;
+    color: var(---generic-highlight-text-color);
+    font-family: "Monospace";
+    font-size: 15px;
+    padding: 0 0 2px 4px;
+    height: 20px;
+}
+
+QLabel#OccurrenceCounter {
+    color: var(---generic-highlight-text-color);
+    background-color: transparent;
+    border: none;
+    padding: 0 5px 0 0;
 }
