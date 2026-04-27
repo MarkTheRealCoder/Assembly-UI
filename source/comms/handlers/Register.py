@@ -34,11 +34,6 @@ class Register:
 
         result = self.___reference.get(event, None)
 
-        # if the event is of type ClosingEvent, we need to log into a log file the whole register (reference) formatted with pformat
-        # if "ResizeEvent" in f"{event}":
-            # logging.debug(f"Register: {pformat(self.___reference)}")
-
-
         if result is None:
             self.___reference[event] = {}
             result = self.___reference[event]
@@ -118,7 +113,6 @@ class Register:
 
     def remove(self, obj) -> None:
         self.___sem.acquire()
-        print(f"----------------------------------Removing: {obj}")
         self.___deep_dive(self.___reference, {"___obj": obj, "___deleted": True})
         self.___sem.release()
 

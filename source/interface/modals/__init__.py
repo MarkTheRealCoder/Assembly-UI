@@ -3,7 +3,6 @@ from .ModalWindow import modalOpen
 from .Window import createSubWindow
 from .filemanager import FilePicker, FileCreator, FileSaver, DirectoryPicker
 from .html import Renderer
-from .settings import SettingsWidget
 
 __all__ = [
     'modalOpen',
@@ -15,7 +14,6 @@ __all__ = [
     'FileSaver',
     'Renderer',
     'createSubWindow',
-    'SettingsWidget'
 ]
 
 

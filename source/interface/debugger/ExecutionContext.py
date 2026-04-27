@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QFrame, QSizePolicy, QHBoxLayout, QVBoxLayout
+from PyQt5.QtWidgets import QFrame, QSizePolicy, QHBoxLayout, QVBoxLayout, QSpacerItem
 
 from source.interface.debugger.mem import MemoryViewer
 from source.interface.debugger.term import Terminal
@@ -27,8 +27,9 @@ class ExecutionContextGraphics(QFrame):
         vlayout.addWidget(FindWidget(self,  "terminal"), 1)
         vlayout.addWidget(self.terminal, 3)
 
-        hlayout.addLayout(vlayout)
-        hlayout.addWidget(self.memory_viewer)
+        hlayout.addLayout(vlayout, 2)
+        hlayout.addSpacerItem(QSpacerItem(1, 1, QSizePolicy.Minimum, QSizePolicy.Expanding))
+        hlayout.addWidget(self.memory_viewer, 3)
 
         layout.addWidget(self.toolbar, 2)
         layout.addLayout(hlayout, 1)

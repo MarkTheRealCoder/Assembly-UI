@@ -54,7 +54,7 @@ class TabLogic(TabGraphics):
         self.___initial_pos_x = None
 
         self.setupLayout(name, ext, _id)
-        self.installEventFilter(self)
+
 
         DataBase.ON_TAB_SELECTED.connect(self.selected)
 
@@ -106,13 +106,9 @@ class Tab(TabLogic):
         return super().event(event)
 
     def onClosingEvent(self, event: ClosingEvent):
-        print("Closing tab", self.getId())
         DataBase.ON_TAB_CLOSE.setValue(self.getId())
         self.deleteLater()
 
-    def mousePressEvent(self, a0):
-        print(self.size())
-        super().mousePressEvent(a0)
 
 
 

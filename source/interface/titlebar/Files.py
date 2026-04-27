@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QMenu
 
-from source.interface.modals import modalOpen, FilePicker, DirectoryPicker, FileCreator, FileSaver, SettingsWidget
+from source.interface.modals import modalOpen, FilePicker, DirectoryPicker, FileCreator, FileSaver
 from source.interface.templates import GenericButton
 from source.platform import Desktop
 
@@ -25,6 +25,4 @@ class FileMenu(GenericButton):
         menu.addAction("Open", lambda: modalOpen(self.parent().mw, FilePicker(), "Open a File"))
         menu.addAction("New", lambda: modalOpen(self.parent().mw, FileCreator(), "Create a New File"))
         menu.addAction("Save as...", lambda: modalOpen(self.parent().mw, FileSaver(), "Save the current file as ..."))
-        menu.addSeparator()
-        menu.addAction("Settings", lambda: modalOpen(self.parent().mw, SettingsWidget(self.parent().mw), "Settings"))
         self.setMenu(menu)

@@ -4,3 +4,5 @@ build/*
 venv/*
 AssemblyStdio.spec
 .idea/*
+*.ini
+!settings.ini

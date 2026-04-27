@@ -50,14 +50,14 @@ QsciScintilla#Editor QScrollBar:vertical {
 }
 
 QsciScintilla#Editor QScrollBar::handle:vertical {
-    background-color: var(---generic-highlight-background-color);
+    background-color: var(---generic-text-color);
     min-height: 20px;
     border-radius: 0px;
     margin: 0px;
 }
 
 QsciScintilla#Editor QScrollBar::handle:vertical:hover {
-    background-color: var(---generic-light-tab-border-color);
+    background-color: gray;
 }
 
 QsciScintilla#Editor QScrollBar::add-line:vertical,

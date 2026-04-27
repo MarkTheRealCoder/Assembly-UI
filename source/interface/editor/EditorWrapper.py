@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QFrame, QSizePolicy, QVBoxLayout
 
 from source.asyncro import Scheduler
 from source.comms import Database
-from source.comms.events import ClosingEvent, NoTabEvent, ReadyEvent, TabAddedEvent
+from source.comms.events import ClosingEvent, NoTabEvent, ReadyEvent, TabAddedEvent, FindShortcutEvent
 from source.comms.handlers import EventRegister
 from source.filesystem.documents import Document
 from source.filesystem.documents import Watcher
@@ -51,6 +51,8 @@ class EditorWrapperLogic(EditorWrapperGraphics):
         Database.ON_TAB_CLOSE.connect(self.closeTab)
         Database.ON_TAB_SELECTED.connect(self.setCurrentFile)
         Database.ON_TAB_SELECTED.connect(self.getFromDisk)
+        Database.ON_TAB_SELECTED.connect(self._find_widget.sync)
+        Database.ON_TAB_SELECTED.connect(lambda: EventRegister.send(FindShortcutEvent(True), "editor") if Database.ON_TAB_SELECTED.getValue() == 0 else None)
 
     def setCurrentFile(self):
         _id = Database.ON_TAB_SELECTED.getValue()
@@ -78,7 +80,7 @@ class EditorWrapperLogic(EditorWrapperGraphics):
             self.document_uniqueness(doc),
             doc.getExtension()
         )
-        self._frame.addEditor(docHash, Editor(self._frame, doc.getExtension()), doc.text)
+        self._frame.addEditor(docHash, Editor(self._frame, doc.getExtension(), docHash), doc.text)
 
         Database.ON_TAB_SELECTED.setValue(docHash)
         EventRegister.send(TabAddedEvent(), "Tab")
@@ -131,11 +133,19 @@ class EditorWrapperLogic(EditorWrapperGraphics):
         Settings.remove("editor/current")
 
 
+@EventRegister.register(FindShortcutEvent, "editor", priority=EventRegister.URGENT)
 @EventRegister.register(ClosingEvent, priority=EventRegister.URGENT)
 @EventRegister.register(ReadyEvent, priority=EventRegister.HIGH)
 class EditorWrapper(EditorWrapperLogic):
     def __init__(self, parent):
         super().__init__(parent)
+
+    def onFindShortcutEvent(self, event: FindShortcutEvent):
+        if self._frame.getEditor(Database.ON_TAB_SELECTED.getValue()) is not None:
+            if event.mustClose():
+                self._find_widget.toggle(True)
+                return
+            self._find_widget.toggle()
 
     def onClosingEvent(self, e: ClosingEvent):
         if self._scheduler is not None:

@@ -21,6 +21,7 @@ class TabManager(QFrame):
         self.___layout: QHBoxLayout = None
         self.___list: TabList = None
         self.___emergency: TabButton = TabButton(self)
+        self.___emergency.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
 
         self.configurations()
 

@@ -46,7 +46,7 @@ class FindButton(FindButtonLogic):
         self.___active = False
 
     def onFindShortcutEvent(self, event: FindShortcutEvent):
-        self.___active = not self.___active
+        self.___active = not event.mustClose()
         if self.___active:
             self.activeProtocol()
         else:

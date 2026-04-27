@@ -1,3 +1,5 @@
+import re
+
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QTextCharFormat, QColor, QFont, QTextCursor, QKeySequence, QTextFrameFormat, QTextLength
 from PyQt5.QtWidgets import QTextEdit, QAction, QMenu
@@ -32,8 +34,10 @@ class TerminalLogic(TerminalGraphics):
     errorFmt = QTextCharFormat()
     writeFmt = QTextCharFormat()
     separatorFmt = QTextFrameFormat()
+    highlightFmt = QTextCharFormat()
+    currentHighlightFmt = QTextCharFormat()
 
-    for fmt in [infoFmt, warnFmt, errorFmt, writeFmt]:
+    for fmt in [infoFmt, warnFmt, errorFmt, writeFmt, highlightFmt, currentHighlightFmt]:
         fmt.setFont(QFont("FiraCode"))
         fmt.setFontPointSize(13)
         fmt.setFontItalic(False)
@@ -42,6 +46,8 @@ class TerminalLogic(TerminalGraphics):
     warnFmt.setForeground(QColor("#CCCC00"))   # Yellow
     errorFmt.setForeground(QColor("#DD0000"))  # Red
     writeFmt.setForeground(QColor("#00CC00"))  # Green
+    highlightFmt.setBackground(QColor("#8800CC"))  # Purple highlight
+    currentHighlightFmt.setBackground(QColor("#CC00FF"))  # Brighter purple for current match
 
     separatorFmt.setHeight(1)
     separatorFmt.setWidth(QTextLength(QTextLength.PercentageLength, 100))
@@ -54,6 +60,11 @@ class TerminalLogic(TerminalGraphics):
         # Implementation of terminal logic goes here
         self.setUndoRedoEnabled(False)
         self.separator()
+
+        self._search_matches: list[tuple[int, int]] = []  # (start, end) positions
+        self._current_match_index: int = -1
+        self._last_search_prompt: str = ""
+        self._last_search_regex: bool = False
 
     def _set_to_eof(self):
         cursor = self.textCursor()
@@ -189,7 +200,7 @@ class TerminalLogic(TerminalGraphics):
         self.moveCursor(self.textCursor().Start)
 
     def openFindWidget(self):
-        EventRegister.send(FindShortcutEvent(), "terminal")
+        EventRegister.send(FindShortcutEvent(False), "terminal/find")
 
     def paste(self):
         cursor = self.textCursor()
@@ -199,13 +210,139 @@ class TerminalLogic(TerminalGraphics):
         cursor.setCharFormat(TerminalLogic.writeFmt)
         self.setTextCursor(cursor)
         super().paste()
+    
+    def _clearHighlights(self):
+        """Remove all search highlights from the document."""
+        cursor = QTextCursor(self.document())
+        cursor.select(QTextCursor.Document)
+        
+        # Reset to default format (preserves original formatting)
+        fmt = QTextCharFormat()
+        fmt.setBackground(QColor("transparent"))
+        cursor.mergeCharFormat(fmt)
+
+    def _highlightMatches(self):
+        """Highlight all search matches."""
+        self._clearHighlights()
+        
+        for i, (start, end) in enumerate(self._search_matches):
+            cursor = QTextCursor(self.document())
+            cursor.setPosition(start)
+            cursor.setPosition(end, QTextCursor.KeepAnchor)
+            
+            if i == self._current_match_index:
+                cursor.mergeCharFormat(TerminalLogic.currentHighlightFmt)
+            else:
+                cursor.mergeCharFormat(TerminalLogic.highlightFmt)
+
+    def _performSearch(self, prompt: str, use_regex: bool) -> int:
+        """Search for text in terminal content. Returns number of matches."""
+        self._search_matches.clear()
+        self._current_match_index = -1
+        self._last_search_prompt = prompt
+        self._last_search_regex = use_regex
+        
+        if not prompt:
+            self._clearHighlights()
+            return 0
+        
+        text = self.toPlainText()
+        
+        try:
+            if use_regex:
+                pattern = re.compile(prompt)
+                for match in pattern.finditer(text):
+                    self._search_matches.append((match.start(), match.end()))
+            else:
+                # Plain text search (case-insensitive)
+                lower_text = text.lower()
+                lower_prompt = prompt.lower()
+                start = 0
+                while True:
+                    pos = lower_text.find(lower_prompt, start)
+                    if pos == -1:
+                        break
+                    self._search_matches.append((pos, pos + len(prompt)))
+                    start = pos + 1
+        except re.error:
+            # Invalid regex - treat as literal
+            return 0
+        
+        if self._search_matches:
+            self._current_match_index = 0
+            self._highlightMatches()
+            self._scrollToCurrentMatch()
+        
+        return len(self._search_matches)
+
+    def _scrollToCurrentMatch(self):
+        """Scroll to and select the current match."""
+        if 0 <= self._current_match_index < len(self._search_matches):
+            start, end = self._search_matches[self._current_match_index]
+            cursor = QTextCursor(self.document())
+            cursor.setPosition(start)
+            cursor.setPosition(end, QTextCursor.KeepAnchor)
+            self.setTextCursor(cursor)
+            self.ensureCursorVisible()
+
+    def _navigateMatch(self, direction: str):
+        """Navigate to next or previous match."""
+        if not self._search_matches:
+            return
+        
+        if direction == "next":
+            self._current_match_index = (self._current_match_index + 1) % len(self._search_matches)
+        elif direction == "prev":
+            self._current_match_index = (self._current_match_index - 1) % len(self._search_matches)
+        
+        self._highlightMatches()
+        self._scrollToCurrentMatch()
+
+    def _getOccurrenceInfo(self) -> tuple[int, int]:
+        """Returns (current_index + 1, total_matches) for display."""
+        if not self._search_matches:
+            return (0, 0)
+        return (self._current_match_index + 1, len(self._search_matches))
 
 
+@EventRegister.register(FindShortcutEvent, "terminal")
 class Terminal(TerminalLogic):
     def __init__(self, parent):
         super().__init__(parent)
         # Additional initialization for Terminal
         Settings.addNotificationGroup("editor/current", self.onChangeDocument)
+    
+    def onFindShortcutEvent(self, event: FindShortcutEvent):
+        """Handle find events from the FindWidget."""
+        if event.mustClose():
+            # Clear highlights when find widget closes
+            self._clearHighlights()
+            self._resetCursor()
+            self._search_matches.clear()
+            self._current_match_index = -1
+            return
+        
+        movement = event.getMovement()
+        prompt = event.getPrompt()
+        
+        if movement != "none":
+            # Navigate between matches
+            self._navigateMatch(movement)
+        elif prompt is not None:
+            # Perform new search
+            self._clearHighlights()
+            self._resetCursor()
+            self._current_match_index = -1
+            self._performSearch(prompt, event.isRegex())
+        
+        # Send back occurrence info to FindWidget
+        EventRegister.send(
+            FindShortcutEvent(
+                False,
+                occurrencies=self._getOccurrenceInfo()
+            ),
+            "terminal/find"
+        )
 
     def onChangeDocument(self):
         document = Settings.get("editor/current", None)

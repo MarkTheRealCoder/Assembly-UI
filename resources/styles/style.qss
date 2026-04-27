@@ -108,7 +108,7 @@ QPushButton#TabButton {
     width: 39px;
     height: 39px;
     background-color: var(---generic-tab-color);
-    border: 1px solid var(---generic-tab-color);
+    border: 1px solid transparent;
     border-bottom: 1px solid var(---generic-background-color);
 }
 
@@ -337,12 +337,6 @@ QLabel#Dialog > QLineEdit {
     font-weight: 200;
 }
 
-QLabel#SettingsSection {
-    font-weight: bold;
-    margin: 10px 0px;
-    color: var(---generic-text-color);
-}
-
 QLabel#Tooltip {
     color: #F0E9E9;
     background-color: #404042;
@@ -395,45 +389,6 @@ QFrame#TitledLineLine {
     margin-right: 50px;
 }
 
-QLabel#CPLabel {
-    color: var(---generic-text-color);
-    background-color: transparent;
-    border: none;
-    height: 30px;
-    width: 200px;
-    padding-left: 10px;
-    padding-right: 10px;
-    font-size: 15px;
-}
-
-QPushButton#CPColorDialogButton {
-    border: 2px solid var(---generic-light-tab-border-color);
-    height: 30px;
-    width: 30px;
-    background-color: var(---generic-extras-color);
-}
-
-QPushButton#CPColorDialogButton:hover {
-    border: 2px solid var(---old-high-contrast-text-highlight);
-}
-
-QLineEdit#CPHexConverter {
-    width: 120px;
-    height: 30px;
-    border: 1px solid var(---generic-light-tab-color);
-    border-radius: 5px;
-    color: var(---generic-text-color);
-    font-size: 20px;
-    font-weight: bold;
-    font-family: "Monospace";
-    background-color: var(---generic-light-background-color);
-}
-
-QLineEdit#CPHexConverter:focus {
-    border: 1px solid var(---generic-highlight-text-color);
-    color: var(---generic-highlight-text-color);
-}
-
 QPushButton#ResetButton {
     background-color: var(---generic-highlight-background-color);
     border: 1px solid var(---generic-light-tab-color);
@@ -463,6 +418,10 @@ QFrame#MemoryViewer, QFrame#ExecutionToolbar {
     border-bottom: 1px solid var(---generic-background-color);
 }
 
+QFrame#MemoryViewer {
+    background-color: #2D2D30;
+}
+
 QFrame#ExecutionToolbar {
     width: 100%;
     background-color: var(---generic-tab-color);
@@ -482,6 +441,10 @@ QPushButton#RunButton, QPushButton#DebugButton, QPushButton#StopButton, QPushBut
 
 QPushButton#FakeFindButton:hover, QPushButton#ClearButton:hover, QPushButton#ScrollButton:hover,
  QPushButton#RunButton:hover, QPushButton#FinderButton:hover {
+    background-color: var(---generic-text-color);
+}
+
+QPushButton#FinderButton[active="true"] {
     background-color: var(---generic-text-color);
 }
 
@@ -536,4 +499,152 @@ QLabel#OccurrenceCounter {
     background-color: transparent;
     border: none;
     padding: 0 5px 0 0;
+}
+
+QFrame#MemoryHeader {
+    background-color: #2D2D30;
+    border: 1px solid var(---generic-background-color);
+    border-radius: 8px;
+    padding: 10px;
+    margin: 8px;
+}
+
+QFrame#MemoryViewer > QFrame#MemoryHeader > QLabel {
+    background-color: #2D2D30;
+    color: var(---generic-highlightable-text);
+    border: none;
+    padding: 5px auto;
+    font-size: 14px;
+}
+
+QScrollArea#ScrollWrapper QScrollBar:vertical {
+    background-color: #2D2D30;
+    width: 12px;
+    border: none;
+}
+
+QScrollArea#ScrollWrapper QScrollBar::handle:vertical {
+    background-color: var(---generic-text-color);
+    min-height: 20px;
+    border-radius: 0px;
+    margin: 0px;
+}
+
+QScrollArea#ScrollWrapper QScrollBar::handle:vertical:hover {
+    background-color: gray;
+}
+
+QScrollArea#ScrollWrapper QScrollBar::add-line:vertical,
+QScrollArea#ScrollWrapper QScrollBar::sub-line:vertical {
+    height: 0px;
+    width: 0px;
+    border: none;
+}
+
+QScrollArea#ScrollWrapper QScrollBar::add-page:vertical,
+QScrollArea#ScrollWrapper QScrollBar::sub-page:vertical {
+    background: none;
+}
+
+QFrame#MemoryViewer > QScrollArea#ScrollWrapper {
+    background-color: #2D2D30;
+    border: none;
+}
+QFrame#MemoryViewer  QFrame#ContextContainer {
+    background-color: #2D2D30;
+    border: none;
+}
+
+QFrame#ContextWindow {
+    background-color: var(---generic-light-tab-color);
+    border: 1px solid var(---generic-background-color);
+    border-radius: 8px;
+    margin: 8px;
+}
+
+QFrame#ContextWindow > QFrame#ContextHeader {
+    background-color: rgba(30, 30, 30, 0.5);
+    border: none;
+    padding: 5px auto;
+    min-height: 20px;
+    max-height: 20px;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+QFrame#ContextWindow > QFrame#ContextHeader > QLabel {
+    background-color: transparent;
+    color: var(---generic-highlightable-text);
+    border: none;
+    padding: 0px;
+    margin: 0px;
+    font-size: 14px;
+}
+
+QFrame#ContextWindow  SingleMemoryChunk {
+    background-color: var(---generic-light-tab-color);
+    border: 1px solid var(---generic-background-color);
+    padding: 0px;
+    margin: 0px;
+    border-radius: 8px;
+    min-height: 32px;
+}
+
+QFrame#ContextWindow  SingleMemoryChunk > QLabel {
+    background-color: transparent;
+    border: none;
+    padding: 5px;
+    font-family: "Monospace";
+    font-size: 13px;
+}
+
+QFrame#ContextWindow  SingleMemoryChunk > QLabel#MemoryChunkKey {
+    color: #CCCCFF;
+}
+
+QFrame#ContextWindow  SingleMemoryChunk > QLabel#MemoryChunkValue {
+    color: var(---generic-highlight-text-color);
+}
+
+QFrame#ContextWindow SingleMemoryChunk > QPushButton {
+    padding: 0px;
+    border: 1px solid transparent;
+    background-color: transparent;
+    margin: 4px 4px;
+    border-radius: 8px;
+    min-width: 24px;
+    min-height: 24px;
+}
+
+QFrame#ContextWindow SingleMemoryChunk > QPushButton:hover {
+    border-color: #999;
+}
+
+QFrame#ContextWindow CompoundMemoryChunk {
+    background-color: var(---generic-light-tab-color);
+    border: 1px solid var(---generic-background-color);
+    padding: 0px;
+    margin: 0px;
+    border-radius: 8px;
+    min-height: 64px;
+}
+
+
+QFrame#ContextWindow CompoundMemoryChunk > QFrame#ContextHeader {
+    background-color: rgba(30, 30, 30, 0.5);
+    border: none;
+    padding: 5px auto;
+    min-height: 16px;
+    max-height: 16px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+QFrame#ContextWindow CompoundMemoryChunk > QFrame#ContextHeader > QLabel {
+    background-color: transparent;
+    color: var(---generic-highlightable-text);
+    border: none;
+    padding: 0px;
+    margin: 0px;
+    font-size: 12px;
 }

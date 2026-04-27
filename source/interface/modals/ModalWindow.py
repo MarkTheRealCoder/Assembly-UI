@@ -88,7 +88,6 @@ class ModalWindow(ModalWindowLogic):
         super().__init__(parent, widget, size, title)
 
     def onClosingEvent(self, e):
-        print("Closing Tool Window")
         global WINDOW_ACTIVE
         WINDOW_ACTIVE = None
         self.deleteLater()

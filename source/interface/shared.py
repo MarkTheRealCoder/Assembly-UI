@@ -15,7 +15,7 @@ class Settings:
 
     @staticmethod
     def get(key: str, default=None, _type: type = None):
-        return Settings.SETTINGS.value(key, default) if _type is None else Settings.SETTINGS.value(key, default, _type)
+                return Settings.SETTINGS.value(key, default) if _type is None else Settings.SETTINGS.value(key, default, _type)
 
     @staticmethod
     def set(key: str, value):
