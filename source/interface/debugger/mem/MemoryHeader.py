@@ -11,11 +11,10 @@ class MemoryHeaderGraphics(QFrame):
         self.setObjectName("MemoryHeader")
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         # Additional UI setup can be done here
-        self.program_counter = QLabel("""<span style="color: #6b6b6b;">pc</span> <span style="color: #1D9E75;">0x00000000</span>""", self)
+        self.program_counter = QLabel("""<span style="color: #6b6b6b;">pc</span> <span style="color: #1D9E75;">0</span><span style="color: #6b6b6b;"> / </span><span style="color: #1D9E75;">0x000000</span>""", self)
         self.instruction = QLabel("""<span style="color: #6b6b6b;">instr</span> <span style="color: #a0a0a0;">None</span>""", self)
         self.scope = QLabel("""<span style="color: #6b6b6b;">scope</span> <span style="color: #a0a0a0;">None</span>""", self)
         self.language = QLabel("""<span style="color: #6b6b6b;">lang</span> <span style="color: #a0a0a0;">None</span>""", self)
-
         self.setupLabels()
 
         layout: FlowLayout = createLayout(FlowLayout, self)
@@ -40,7 +39,7 @@ class MemoryHeaderGraphics(QFrame):
         # self.language.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
     def updateProgramCounter(self, value: int):
-        self.program_counter.setText(f"""<span style="color: #6b6b6b;">pc</span> <span style="color: #1D9E75;">0x{value:08X}</span>""")
+        self.program_counter.setText(f"""<span style="color: #6b6b6b;">pc</span> <span style="color: #1D9E75;">0x{value}</span><span style="color: #6b6b6b;"> / </span><span style="color: #1D9E75;">0x{value:06X}</span>""")
 
     def updateInstruction(self, value: str):
         self.instruction.setText(f"""<span style="color: #6b6b6b;">instr</span> <span style="color: #a0a0a0;">{value}</span>""")

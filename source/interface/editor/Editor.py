@@ -234,7 +234,7 @@ class EditorLogic(EditorGraphics):
 
 @EventRegister.register(FindShortcutEvent, "editor")
 class Editor(EditorLogic):
-        def __init__(self, mwt: QWidget, ext: str, _id: int):
+    def __init__(self, mwt: QWidget, ext: str, _id: int):
         super().__init__(mwt, ext)
         self._id = _id
         Database.ON_TAB_SELECTED.connect(self.onTabSelected)

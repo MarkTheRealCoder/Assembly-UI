@@ -87,7 +87,6 @@ class MemoryViewer(MemoryViewerLogic):
         self.addNodeToContext("REGISTERS", "DX.DL", 2)
         self.addNodeToContext("STACK", "0x00000000", 0)
         self.addNodeToContext("STACK", "0x00000004", 0)
-        self.addNodeToContext("STACK", "function")
         self.addNodeToContext("STACK", "0x00000008", 0)
         self.addNodeToContext("STACK", "0x0000000C", 0)
         self.addNodeToContext("STACK", "0x00000010", 0)
@@ -95,11 +94,11 @@ class MemoryViewer(MemoryViewerLogic):
         self.addNodeToContext("STACK", "0x00000018", 0)
         self.addNodeToContext("STACK", "0x0000001C", 0)
         self.addNodeToContext("STACK", "0x00000020", 0)
+        self.addNodeToContext("STACK", "0x00000024", 0)
+        self.addNodeToContext("STACK", "0x00000028", 0)
         self.addNodeToContext("STACK", "function.function")
         self.addNodeToContext("STACK", "function.function.0x00000024", 12)
         self.addNodeToContext("STACK", "function.function.function.function.function.function")
-        self.addNodeToContext("STACK", "0x00000024", 0)
-        self.addNodeToContext("STACK", "0x00000028", 0)
         self.addNodeToContext("MEMORY", "0x00000000", 0)
         self.addNodeToContext("MEMORY", "0x00000004", 0)
         self.addNodeToContext("MEMORY", "0x00000008", 0)
@@ -115,12 +114,11 @@ class MemoryViewer(MemoryViewerLogic):
         self.addNodeToContext("FLAGS", "CF", 0)
         self.addNodeToContext("FLAGS", "AF", 0)
 
-        QTimer.singleShot(5000, self.runAfter5Seconds)
-        QTimer.singleShot(8000, self.runAfter8Seconds)
+        QTimer.singleShot(10000, lambda: self.removeNodeFromContext("STACK", "function.function.function.function.function.function"))
+        QTimer.singleShot(11000, lambda: self.removeNodeFromContext("STACK", "function.function.function.function.function"))
+        QTimer.singleShot(12000, lambda: self.removeNodeFromContext("STACK", "function.function.function.function"))
+        QTimer.singleShot(13000, lambda: self.removeNodeFromContext("STACK", "function.function.function"))
+        QTimer.singleShot(14000, lambda: self.removeNodeFromContext("STACK", "function.function"))
+        QTimer.singleShot(15000, lambda: self.removeNodeFromContext("STACK", "function"))
 
 
-    def runAfter5Seconds(self):
-        self.removeNodeFromContext("STACK", "function.function.function")
-
-    def runAfter8Seconds(self):
-        self.popLastFromContext("STACK")

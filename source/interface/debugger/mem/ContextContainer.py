@@ -25,6 +25,8 @@ class ContextContainerLogic(ContextContainerGraphics):
 
     def addContext(self, name: str):
         """ Add a new context window to the container with a specific name """
+        if name in self.___context_windows:
+            return
         context_window = ContextWindow(self, name)
         self.___context_windows[name] = context_window
         self.addContextToLayout(context_window)

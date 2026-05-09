@@ -1,8 +1,9 @@
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QFrame, QHBoxLayout, QLabel, QApplication
+from PyQt5.QtWidgets import QHBoxLayout, QLabel, QApplication
 
 from source.filesystem import find_path
+from source.interface.debugger.mem.chunks.MemoryChunk import _MemoryChunk
 from source.interface.shared import createLayout
 from source.interface.templates import GenericButton, Tooltip
 
@@ -21,16 +22,11 @@ class _CopyButton(GenericButton):
         self.clicked.connect(self.___tooltip.showTooltip)
 
 
-class SingleMemoryChunkGraphics(QFrame):
-    #_CHUNK_TYPES = {list: "dict", type(None): "function"}
+class SingleMemoryChunkGraphics(_MemoryChunk):
 
     def __init__(self, parent, key: str, value: str or int ): #or list[tuple[str, int]] or None = None
         super().__init__(parent)
         self.setObjectName("SingleMemoryChunk")
-        # Additional UI setup can be done here
-        #_type = self._CHUNK_TYPES.get(type(value), "default")
-        #self.setProperty("chunk_type", _type)
-        #layout = createLayout(QHBoxLayout, self) if _type == "default" else createLayout(QVBoxLayout, self)
         layout: QHBoxLayout = createLayout(QHBoxLayout, self)
         _key = QLabel(f"{key}:")
         _key.setObjectName("MemoryChunkKey")
@@ -42,7 +38,6 @@ class SingleMemoryChunkGraphics(QFrame):
         layout.addWidget(_value, 2)
         layout.addWidget(_CopyButton(self), 0)
         self.setLayout(layout)
-
 
 
 class SingleMemoryChunkLogic(SingleMemoryChunkGraphics):

@@ -2,6 +2,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QFrame, QSizePolicy, QVBoxLayout, QHBoxLayout, QLabel
 
 from source.interface.debugger.mem.ColoredDrop import ColoredDrop
+from source.interface.debugger.mem.chunks.MemoryChunk import _MemoryChunk
 from source.interface.shared import createLayout
 from source.platform import roundColors
 
@@ -26,7 +27,7 @@ class CompoundMemoryChunkHeader(QFrame):
         self.setLayout(layout)
 
 
-class CompoundMemoryChunkGraphics(QFrame):
+class CompoundMemoryChunkGraphics(_MemoryChunk):
     def __init__(self, parent, name: str, color: str = None):
         super().__init__(parent)
         self.setObjectName("CompoundMemoryChunk")

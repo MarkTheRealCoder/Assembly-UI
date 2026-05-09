@@ -38,8 +38,6 @@ if __name__ == "__main__":
     window.setFocus()
     sys.exit(app.exec_())
 
-# todo: Create toolbar window
-# todo: Create buttons for Debug interface
-# todo: Refactor code for Debugger Memory view
 # todo: Create a JPype impl for using Antonio's Java code
-# todo: Refactor avoiding circular imports (LAST)
+
+# todo: Modify titlebar and main window to match OS signals

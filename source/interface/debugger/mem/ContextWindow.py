@@ -1,8 +1,8 @@
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QFrame, QSizePolicy, QVBoxLayout, QHBoxLayout, QLabel
+from PyQt5.QtWidgets import QFrame, QSizePolicy, QVBoxLayout, QHBoxLayout, QLabel, QLayout
 
 from source.interface.debugger.mem.ColoredDrop import ColoredDrop
-from source.interface.debugger.mem.chunks import MemoryChunk, CompoundMemoryChunk, SingleMemoryChunk
+from source.interface.debugger.mem.chunks import CompoundMemoryChunk, SingleMemoryChunk
 from source.interface.shared import createLayout
 from source.platform import roundColors
 
@@ -60,7 +60,8 @@ class ContextWindowLogic(ContextWindowGraphics):
         current_layout: QVBoxLayout = c.layout().findChild(QVBoxLayout)
         child = ContextWindowLogic.findByNodeKey(c, path[0])
         if child is None:
-            child = MemoryChunk(c, path[0], value, color_section)
+            child = CompoundMemoryChunk(c, path[0], roundColors(color_section)) if value is None \
+                else SingleMemoryChunk(c, path[0], value)
             current_layout.addWidget(child)
             ContextWindowLogic.recursive_node_path(child, path[1:], value, color_section)
         elif len(path) == 1:
@@ -77,8 +78,7 @@ class ContextWindowLogic(ContextWindowGraphics):
         child = ContextWindowLogic.findByNodeKey(c, path[0])
         if child is not None:
             if len(path) == 1:
-                current_layout.removeWidget(child)
-                child.deleteLater()
+                child.rm().connect(lambda: current_layout.removeWidget(child))
             else:
                 ContextWindowLogic.removeNodeRecursive(child, path[1:])
 
@@ -93,7 +93,8 @@ class ContextWindowLogic(ContextWindowGraphics):
         current_layout: QVBoxLayout = self.layout().findChild(QVBoxLayout)
         child = ContextWindowLogic.findByNodeKey(self, _path_members[0])
         if child is None:
-            child = MemoryChunk(self, _path_members[0], node_value, _path_members[0])
+            child = CompoundMemoryChunk(self, _path_members[0], roundColors(_path_members[0])) if node_value is None \
+                else SingleMemoryChunk(self, _path_members[0], node_value)
             current_layout.addWidget(child)
             ContextWindowLogic.recursive_node_path(child, _path_members[1:], node_value, _path_members[0])
         elif len(_path_members) == 1:
@@ -116,23 +117,24 @@ class ContextWindowLogic(ContextWindowGraphics):
         child = ContextWindowLogic.findByNodeKey(self, _path_members[0])
         if child is not None:
             if len(_path_members) == 1:
-                current_layout.removeWidget(child)
-                child.deleteLater()
+                child.rm().connect(lambda: current_layout.removeWidget(child))
             else:
                 ContextWindowLogic.removeNodeRecursive(child, _path_members[1:])
 
-    def popLastNode(self):
-        # todo Better to update it to pop the last node inside a CompoundMemoryChunk instead of the last node of the context window
-        current_layout: QVBoxLayout = self.layout().findChild(QVBoxLayout)
+    def popLastNode(self, layout: QLayout = None):
+        current_layout: QVBoxLayout = (self.layout() if layout is None else layout).findChild(QVBoxLayout)
         lc = current_layout.count()
         if lc > 0:
-            item = current_layout.takeAt(lc - 1)
-            widget = item.widget()
-            if widget is not None:
-                widget.deleteLater()
+            widget = current_layout.itemAt(lc - 1).widget()
+            if isinstance(widget, SingleMemoryChunk) or not self.popLastNode(widget.layout()):
+                    current_layout.removeWidget(widget)
+                    widget.deleteLater()
+            return True
+        return False
 
 
 class ContextWindow(ContextWindowLogic):
     def __init__(self, parent, name: str):
         super().__init__(parent, name)
         # Additional initialization for ContextWindow
+
