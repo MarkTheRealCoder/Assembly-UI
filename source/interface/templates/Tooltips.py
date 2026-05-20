@@ -3,7 +3,7 @@ from typing import Literal, Dict
 
 from PyQt5.QtCore import Qt, QPoint, QTimer, pyqtProperty
 from PyQt5.QtGui import QCursor, QPainter, QPen, QBrush, QPolygon, QPalette, QColor, QBitmap
-from PyQt5.QtWidgets import QLabel
+from PyQt5.QtWidgets import QLabel, QComboBox
 
 
 class TooltipGraphics(QLabel):
@@ -17,6 +17,26 @@ class TooltipGraphics(QLabel):
 
         self.setAttribute(Qt.WA_NoSystemBackground, True)
         self.setAttribute(Qt.WA_OpaquePaintEvent, False)
+
+        if isinstance(parent, QComboBox):
+            self._apply_combobox_tooltip_style()
+
+    def _apply_combobox_tooltip_style(self):
+        """Applica esplicitamente lo stile per i tooltip dei QComboBox"""
+        self.setStyleSheet("""
+            QLabel#Tooltip {
+                color: #F0E9E9;
+                background-color: #404042;
+                border: 1px solid #706D6D;
+                padding: 5px;
+                font-size: 14px;
+                border-radius: 3px;
+            }
+        """)
+        # Forza il refresh dello stile
+        self.style().unpolish(self)
+        self.style().polish(self)
+
 
     def setSpecific(self, spec: str):
         self.setProperty(spec, True)
@@ -374,6 +394,3 @@ class Tooltip(TooltipLogic):
         self.stop_delay()
         self.hideTooltip()
         self.__parent_mousePressEvent(ev)
-
-#    border: 1px solid var(---generic-highlight-text-color);
-#    background-color: var(---generic-light-background-color);

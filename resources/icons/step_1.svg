@@ -1,0 +1,14 @@
+<svg width="1000" height="1000" xmlns="http://www.w3.org/2000/svg">
+ <title>Step_1</title>
+
+ <g>
+  <title>Layer 1</title>
+  <line stroke-width="64" stroke-linecap="undefined" stroke-linejoin="undefined" id="svg_1" y2="759.99999" x2="797.33333" y1="759.99999" x1="197.33333" stroke="#000" fill="none"/>
+  <path id="svg_19" d="m84.66667,678.66669" opacity="NaN" stroke-width="8" stroke="#000" fill="#000000"/>
+  <g id="svg_20">
+   <line stroke-width="64" stroke-linecap="undefined" stroke-linejoin="undefined" id="svg_2" y2="208.87297" x2="514.66666" y1="626.2063" x1="62.22976" stroke="#000" fill="none"/>
+   <line stroke-width="64" stroke-linecap="undefined" stroke-linejoin="undefined" id="svg_5" y2="615.53962" x2="926.89643" y1="204.87297" x1="475.89643" stroke="#000" fill="none"/>
+   <path id="svg_11" d="m912.25622,603.21178l-7.1671,-146.66172l52.18068,50.5819l7.1671,146.66172l-151.2973,-6.94756l-52.18068,-50.5819l151.2973,6.94756z" stroke-width="8" stroke="#000" fill="#000000"/>
+  </g>
+ </g>
+</svg>

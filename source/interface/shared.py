@@ -113,7 +113,6 @@ class DraggableFrame(QFrame):
             event.accept()
 
     def mouseMoveEvent(self, event: QMouseEvent):
-        # todo: Fix resizing from corners
         if event.buttons() == Qt.LeftButton:
             border_size = 0
             exceding_width, exceding_height = False, False

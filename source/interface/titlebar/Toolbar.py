@@ -13,7 +13,6 @@ class Toolbar(QFrame):
 
     def __init__(self, mwt: QWidget):
         super().__init__(mwt)
-        self.mw: QMainWindow = self.window() #mwt.parent().parent()  # noqas
         self.setObjectName("Toolbar")
         self.setFixedHeight(35)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
@@ -25,11 +24,11 @@ class Toolbar(QFrame):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSizeConstraint(QLayout.SetNoConstraint)
         layout.addWidget(IconButton(self), 0)
-        layout.addWidget(FileMenu(self), 2)
-        layout.addWidget(HelpMenu(self), 2)
-        layout.addWidget(Title(self, self.mw), 30)
-        layout.addWidget(MinimizeButton(self, self.mw), 2)
-        layout.addWidget(MaximizeButton(self, self.mw), 2)
+        layout.addWidget(FileMenu(self), 1)
+        layout.addWidget(HelpMenu(self), 1)
+        layout.addWidget(Title(self), 30)
+        layout.addWidget(MinimizeButton(self), 1)
+        layout.addWidget(MaximizeButton(self), 1)
         layout.addSpacerItem(QSpacerItem(1, 15, QSizePolicy.Fixed, QSizePolicy.Fixed))
-        layout.addWidget(CloseButton(self), 2)
+        layout.addWidget(CloseButton(self), 1)
         self.setLayout(layout)

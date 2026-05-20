@@ -2,11 +2,11 @@ from PyQt5.QtWidgets import QFrame, QSizePolicy, QHBoxLayout, QVBoxLayout, QSpac
 
 from source.interface.debugger.mem import MemoryViewer
 from source.interface.debugger.term import Terminal
-from source.interface.debugger.toolbar import Toolbar
+from source.interface.debugger.toolbar import ToolbarExecution
+from source.interface.debugger.toolbar import ToolbarTerminal
 from source.interface.shared import createLayout
 from source.interface.templates import FindWidget
 
-"""var(---generic-tab-color)"""
 
 class ExecutionContextGraphics(QFrame):
     def __init__(self, mwt):
@@ -16,23 +16,27 @@ class ExecutionContextGraphics(QFrame):
 
         self.terminal: Terminal = Terminal(self)
         self.memory_viewer: MemoryViewer = MemoryViewer(self)
-        self.toolbar: Toolbar = Toolbar(self)
+        self.toolbar_t: ToolbarTerminal = ToolbarTerminal(self)
+        self.toolbar_e: ToolbarExecution = ToolbarExecution(self)
 
-        layout = createLayout(QVBoxLayout, self)
+        layout: QHBoxLayout = createLayout(QHBoxLayout, self)
 
-        hlayout: QHBoxLayout = createLayout(QHBoxLayout, self)
-
+        # vlayout for terminal and its toolbar
         vlayout: QVBoxLayout = createLayout(QVBoxLayout, self)
-
+        vlayout.addWidget(self.toolbar_t)
         vlayout.addWidget(FindWidget(self,  "terminal"), 1)
         vlayout.addWidget(self.terminal, 3)
 
-        hlayout.addLayout(vlayout, 2)
-        hlayout.addSpacerItem(QSpacerItem(1, 1, QSizePolicy.Minimum, QSizePolicy.Expanding))
-        hlayout.addWidget(self.memory_viewer, 3)
+        # vlayout for execution toolbar and its memory viewer
+        vlayout2: QVBoxLayout = createLayout(QVBoxLayout, self)
+        vlayout2.addWidget(self.toolbar_e)
+        vlayout2.addWidget(self.memory_viewer, 1)
 
-        layout.addWidget(self.toolbar, 2)
-        layout.addLayout(hlayout, 1)
+
+        layout.addLayout(vlayout, 2)
+        layout.addSpacerItem(QSpacerItem(1, 1, QSizePolicy.Minimum, QSizePolicy.Expanding))
+        layout.addLayout(vlayout2, 3)
+
         self.setLayout(layout)
 
 

@@ -24,19 +24,19 @@ variables {
     ---generic-tab-color: #2D2D30;
     ---generic-light-tab-color: #37373D;
     ---old-high-contrast-text-highlight: #FFC83D;
-} 
-
-
-#MainWindow, #MainSupportWidget {
-    background-color: transparent;
 }
+
+QMainWindow#MainWindow {
+    background-color: var(---generic-background-color);
+}
+
 
 #MainWidget {
     background-color: var(---generic-background-color);
 }
 
 QSplitter#Mem-CodeSplitter {
-    border-top: 7px solid var(---generic-background-color);
+    border: 7px solid var(---generic-background-color);
 }
 
 QSplitter#Mem-CodeSplitter::handle {
@@ -165,7 +165,7 @@ QPushButton#TabIcon {
     padding-bottom: 2px;
 }
 
-#Toolbar {
+QFrame#Toolbar {
     background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0,
                           stop: 0 rgba(15, 42, 79, 255),
                           stop: 0.72 rgba(28, 28, 25, 255));
@@ -175,12 +175,13 @@ QPushButton#TabIcon {
     font-family: "Anonymous Pro";
 }
 
-QPushButton#Icon {
+QFrame#Toolbar QPushButton#Icon {
     background-color: transparent;
     border: none;
+    min-width: 35px;
 }
 
-QPushButton#File, QPushButton#Help, QPushButton#Minimize, QPushButton#Maximize, QPushButton#Close, QPushButton#Run {
+QFrame#Toolbar QPushButton, QWidget#Trash QPushButton#Close, QWidget#Window QPushButton#Close {
     text-align: center;
     qproperty-alignment: AlignCenter;
     color: var(---generic-highlightable-text);
@@ -188,30 +189,21 @@ QPushButton#File, QPushButton#Help, QPushButton#Minimize, QPushButton#Maximize, 
     border: none;
     margin: 0;
     padding: 0;
-}
-
-QPushButton#Minimize, QPushButton#Maximize, QPushButton#Close {
-    font-size: 18px;
-}
-
-QPushButton#Run {
-    font-size: 30px;
+    min-width: 64px;
 }
 
 QLabel#Title {
     background-color: transparent;
     color: var(---generic-highlightable-text);
     border: none;
-    margin: 0;
-    padding: 0;
+    margin: 0px 20px;
+    padding: 0px 8px;
     text-align: center;
     qproperty-alignment: AlignCenter;
 }
 
-
-QPushButton#Run:hover {
-    color: #4EC9B0;
-    background-color: rgba(255, 255, 255, 0.1);
+QPushButton#File:hover, QPushButton#Help:hover {
+    padding: 0px 10px;
 }
 
 QPushButton#File:hover, QPushButton#Help:hover {
@@ -228,7 +220,7 @@ QLabel#Title:hover {
     color: var(---generic-highlight-text-color);
 }
 
-QPushButton#Close:hover {
+QPushButton#Close:hover, QWidget#Window QPushButton#Close:hover, QWidget#Trash QPushButton#Close:hover {
     background-color: #F44747;
 }
 
@@ -412,7 +404,7 @@ QTextEdit#Terminal {
     font-style: italic;
 }
 
-QFrame#MemoryViewer, QFrame#ExecutionToolbar {
+QFrame#MemoryViewer, QFrame#ToolbarExecution, QFrame#ToolbarTerminal {
     background-color: var(---generic-tab-color);
     border: none;
     border-bottom: 1px solid var(---generic-background-color);
@@ -422,14 +414,14 @@ QFrame#MemoryViewer {
     background-color: #2D2D30;
 }
 
-QFrame#ExecutionToolbar {
+QFrame#ToolbarTerminal, QFrame#ToolbarExecution {
     width: 100%;
     background-color: var(---generic-tab-color);
     padding: 0 10px 0 10px;
 }
 
-QPushButton#FakeFindButton, QPushButton#ClearButton, QPushButton#ScrollButton,
-QPushButton#RunButton, QPushButton#DebugButton, QPushButton#StopButton, QPushButton#FinderButton {
+QFrame#ToolbarTerminal QPushButton, QFrame#ToolbarExecution QPushButton,
+QFrame#FindWidget QPushButton, QFrame#ToolbarExecution QComboBox {
     background-color: var(---generic-tab-color);
     border-radius: 5px;
     border: none;
@@ -439,36 +431,51 @@ QPushButton#RunButton, QPushButton#DebugButton, QPushButton#StopButton, QPushBut
     max-width: 30px;
 }
 
-QPushButton#FakeFindButton:hover, QPushButton#ClearButton:hover, QPushButton#ScrollButton:hover,
- QPushButton#RunButton:hover, QPushButton#FinderButton:hover {
+QFrame#ToolbarExecution QComboBox {
+    min-width: 90px;
+    max-width: 90px;
+    padding-left: 10px;
+    text-align: center;
+    qproperty-alignment: AlignCenter;
+    font-size: 12px;
+    color: #1D9E75;
+}
+
+QFrame#ToolbarExecution QComboBox QAbstractItemView {
+    background-color: var(---generic-tab-color);
+    color: #1D9E75;
+    selection-background-color: var(---generic-highlight-background-color);
+    outline: 0px;
+}
+
+QFrame#ToolbarExecution QComboBox::drop-down {
+    subcontrol-origin: padding;
+    subcontrol-position: top right;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+
+QFrame#ToolbarTerminal QPushButton:hover,
+QFrame#ToolbarExecution QPushButton:hover,
+QFrame#FindWidget QPushButton:hover,
+QFrame#ToolbarExecution QComboBox:hover {
     background-color: var(---generic-text-color);
 }
 
-QPushButton#FinderButton[active="true"] {
+QPushButton#FinderButton[active="true"], QPushButton#FakeFindButton[findActive="true"] {
     background-color: var(---generic-text-color);
 }
 
-QPushButton#FakeFindButton[findActive="true"] {
-    background-color: var(---generic-text-color);
-}
-
-QPushButton#ClearButton[active="true"] {
+QPushButton#ClearButton[active="true"]:hover, QPushButton#RunButton[active="true"],
+QPushButton#RunButton[active="true"]:hover {
     background-color: #3FB950;
 }
 
-QPushButton#ClearButton[active="true"]:hover {
-    background-color: #3FB950;
-}
-
-QPushButton#RunButton[active="true"] {
-    background-color: #3FB950;
-}
-
-QPushButton#StopButton {
+QFrame#ToolbarExecution QPushButton#StopButton {
     background-color: #DA3633;
 }
 
-QPushButton#StopButton:hover {
+QFrame#ToolbarExecution QPushButton#StopButton:hover {
     background-color: #CD3633;
 }
 
@@ -515,6 +522,7 @@ QFrame#MemoryViewer > QFrame#MemoryHeader > QLabel {
     border: none;
     padding: 5px auto;
     font-size: 14px;
+
 }
 
 QScrollArea#ScrollWrapper QScrollBar:vertical {

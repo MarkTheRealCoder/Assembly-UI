@@ -82,5 +82,3 @@ class TabManager(QFrame):
         self.addOverflowButton()
 
 
-# TODO : fix circular import and bad module design
-

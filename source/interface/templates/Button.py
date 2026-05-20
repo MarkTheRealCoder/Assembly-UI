@@ -9,7 +9,8 @@ class GenericButton(QPushButton):
         self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Minimum)
         self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
 
-    def rerenderIcon(self, icon, color: str):
+    @staticmethod
+    def rerenderIcon(icon, color: str):
         pixmap = icon.pixmap(32, 32)  # render to 32x32 px pixmap
 
         # Create a colored version

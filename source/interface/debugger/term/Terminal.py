@@ -17,12 +17,12 @@ class TerminalGraphics(QTextEdit):
         self.setObjectName("Terminal")
         self.setLineWrapMode(QTextEdit.LineWrapMode.WidgetWidth)
         self.setAcceptRichText(False)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
         self.tooltip = Tooltip(self, "This context is read-only.")
         self.tooltip.setPosition("above", "end")
         self.tooltip.setFollowing("mouse")
         self.tooltip.setAutomatic(False)
-
 
 
 class TerminalLogic(TerminalGraphics):
@@ -453,4 +453,3 @@ class Terminal(TerminalLogic):
                 return False
         return True
 
-# todo make find functionality to search text inside terminal and move cursor to its results

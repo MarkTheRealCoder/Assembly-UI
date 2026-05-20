@@ -1,6 +1,6 @@
 from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QIcon, QMouseEvent
-from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtWidgets import QSizePolicy
 
 from source.filesystem import find_path
 from source.interface.shared import Settings
@@ -8,9 +8,9 @@ from source.interface.templates import GenericButton
 
 
 class MaximizeButton(GenericButton):
-    def __init__(self, parent, mw: QMainWindow):
+    def __init__(self, parent):
         super().__init__(parent)
-        self.mainwindow = mw
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Minimum)
         self.maximize_icon = self.rerenderIcon(QIcon(find_path("maximize.svg")), "#569CD6")
         self.restore_icon = self.rerenderIcon(QIcon(find_path("restore.svg")), "#569CD6")
 
@@ -27,10 +27,11 @@ class MaximizeButton(GenericButton):
             self.setIcon(self.maximize_icon)
 
     def mousePressEvent(self, e: QMouseEvent):
-        if not self.mainwindow.isMaximized():
-            self.mainwindow.showMaximized()
+        w = self.window()
+        if not w.isMaximized():
+            w.showMaximized()
             Settings.set("mainwindow/fullscreen", True)
         else:
-            self.mainwindow.showNormal()
+            w.showNormal()
             Settings.set("mainwindow/fullscreen", False)
         e.accept()

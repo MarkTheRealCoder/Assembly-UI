@@ -1,5 +1,6 @@
 from PyQt5.QtCore import QSize, QTimer
 from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QSizePolicy
 
 from source.comms.Signals import Variable
 from source.comms.events import ClosingEvent
@@ -21,6 +22,7 @@ class CloseButtonGraphics(GenericButton):
 
         self.setIconSize(QSize(*icon_size))
         self.setIcon(self.rerenderIcon(QIcon(find_path("close.svg")), "#569CD6"))
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
         if properties:
             for k, v in properties.items():

@@ -3,9 +3,10 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QSpacerItem, QSiz
 
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
-from source.interface.shared import createLayout, makeResizingLayout
+from source.interface.shared import createLayout
 from source.interface.templates import CloseButton
 from source.interface.templates import Title
+from source.interface.templates.window import BaseWindow
 from source.platform import Desktop
 
 WINDOWS = []
@@ -22,15 +23,13 @@ def createSubWindow(reason: str, parent, wclass, *args, **kwargs):
     window.show()
 
 
-class WindowGraphics(QWidget):
+class WindowGraphics(BaseWindow):
     def __init__(self, reason: str, parent, content, *args, **kwargs):
         super().__init__(parent)
+        self.setFrameless(["close"], flags=[Qt.Tool])
         self._reason = reason
         self.defineWindowSize()
-        self.setWindowFlags(Qt.Tool | Qt.FramelessWindowHint)
-        self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.configurations(content(self, *args, **kwargs))
-        self.setAttribute(Qt.WA_TranslucentBackground, True)
 
     def configurations(self, content: QWidget):
         widget = QWidget(self)
@@ -38,13 +37,13 @@ class WindowGraphics(QWidget):
         main_layout.addWidget(widget)
         self.setLayout(main_layout)
 
-        mw = makeResizingLayout(widget) # Fix misparenting target
-        mw.setObjectName("Window")
-        layout: QVBoxLayout = createLayout(QVBoxLayout, mw)
-        tlayout: QHBoxLayout = createLayout(QHBoxLayout, mw)
-        mlayout: QHBoxLayout = createLayout(QHBoxLayout, mw)
+        # mw = makeResizingLayout(widget) # Fix misparenting target
+        self.setObjectName("Window")
+        layout: QVBoxLayout = createLayout(QVBoxLayout, self)
+        tlayout: QHBoxLayout = createLayout(QHBoxLayout, self)
+        mlayout: QHBoxLayout = createLayout(QHBoxLayout, self)
 
-        tlayout.addWidget(Title(mw, self))
+        tlayout.addWidget(Title(self))
         tlayout.addWidget(CloseButton(self, self._reason))
 
         tlayout.setStretch(0, 5)
@@ -65,7 +64,6 @@ class WindowGraphics(QWidget):
 
     def defineWindowSize(self):
         self.setMinimumSize(Desktop.sizeHint(2 / 5, 2 / 4))
-        self.setWindowFlag(Qt.FramelessWindowHint)
         self.centerOnScreen()
 
     def centerOnScreen(self):

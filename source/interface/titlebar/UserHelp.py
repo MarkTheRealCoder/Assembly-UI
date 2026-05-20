@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QMenu
+from PyQt5.QtWidgets import QMenu, QSizePolicy
 
 from source.filesystem import find_path
 from source.interface.modals import createSubWindow, Renderer
@@ -9,6 +9,7 @@ from source.platform import Desktop
 class HelpMenu(GenericButton):
     def __init__(self, parent):
         super().__init__(parent)
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Minimum)
         self.setText("Help")
         self.setObjectName("Help")
         self.setupFontAndAlignment()
