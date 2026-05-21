@@ -41,3 +41,6 @@ if __name__ == "__main__":
 # todo: Create a JPype impl for using Antonio's Java code
 
 # todo: Modify titlebar and main window to match OS signals
+
+# todo: Implement differentiation for OSs: Layout maker for the Titlebar
+#  and Unix-like Window handling for MacOS and Linux

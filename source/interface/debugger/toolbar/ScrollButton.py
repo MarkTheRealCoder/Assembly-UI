@@ -15,7 +15,7 @@ class ScrollButtonGraphics(GenericButton):
         # Additional UI setup can be done here
         icon = QIcon(find_path(f"scroll-{direction}.svg"))
         self.setIcon(self.rerenderIcon(icon, "#569CD6"))
-        self.setIconSize(QSize(15, 15))
+        self.setIconSize(QSize(16, 16))
 
         self.tooltip = Tooltip(self, f"Scroll {direction} the terminal view.")
         self.tooltip.setPosition("below", "center")

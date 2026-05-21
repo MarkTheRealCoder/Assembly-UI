@@ -7,7 +7,9 @@ from source.comms.events import ReadyEvent
 from source.comms.handlers import EventRegister
 from source.interface.MainWidget import MainWidget
 from source.interface.shared import Settings
-from source.interface.templates.window import BaseWindow
+from source.interface.templates import run_toast_config
+from source.interface.templates.window import BaseWindow, native_minimize
+from source.interface.templates.window import native_maximize, native_restore
 
 
 class MainWindowGraphics(QMainWindow, BaseWindow):
@@ -20,11 +22,21 @@ class MainWindowGraphics(QMainWindow, BaseWindow):
         self.setCentralWidget(mwt)
         mwt.update()
         mwt.repaint()
+        run_toast_config(self)
 
 
 class MainWindowLogic(MainWindowGraphics):
     def __init__(self):
         super().__init__()
+
+    def showMaximized(self):
+        native_maximize(self)
+
+    def showNormal(self):
+        native_restore(self)
+
+    def showMinimized(self):
+        native_minimize(self)
 
 
 @EventRegister.register(ClosingEvent, priority=EventRegister.LOW)
@@ -53,6 +65,7 @@ class MainWindow(MainWindowLogic):
             EventRegister.send(ReadyEvent(), arg="Main")
         else:
             super().showEvent(event)
+            self.setFocus()
 
     def event(self, event):
         return super().event(event)

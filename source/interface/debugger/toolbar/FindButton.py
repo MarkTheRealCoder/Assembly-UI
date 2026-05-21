@@ -16,7 +16,7 @@ class FindButtonGraphics(GenericButton):
         #self.hide_icon = self.rerenderIcon(QIcon(find_path("close.svg")), "#DA3633")
         # Additional UI setup can be done here
         self.setIcon(self.show_icon)
-        self.setIconSize(QSize(15, 15))
+        self.setIconSize(QSize(16, 16))
 
         self.tooltip = Tooltip(self, "Search inside the terminal.")
         self.tooltip.setPosition("below", "center")

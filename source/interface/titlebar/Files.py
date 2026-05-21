@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QMenu, QSizePolicy
 
 from source.interface.modals import modalOpen, FilePicker, DirectoryPicker, FileCreator, FileSaver
-from source.interface.templates import GenericButton
+from source.interface.templates import GenericButton, create_toast
 from source.platform import Desktop
 
 
@@ -25,5 +25,12 @@ class FileMenu(GenericButton):
         menu.addSeparator()
         menu.addAction("Open", lambda: modalOpen(self.window(), FilePicker(), "Open a File"))
         menu.addAction("New", lambda: modalOpen(self.window(), FileCreator(), "Create a New File"))
-        menu.addAction("Save as...", lambda: modalOpen(self.window(), FileSaver(), "Save the current file as ..."))
+        menu.addAction("Save as...", self.___filesaver)
         self.setMenu(menu)
+
+    def ___filesaver(self):
+        fs = FileSaver()
+        if fs is None:
+            create_toast(self.window(), "There is no file to save!", "error")
+            return
+        modalOpen(self.window(), fs, "Save the current file as ...")

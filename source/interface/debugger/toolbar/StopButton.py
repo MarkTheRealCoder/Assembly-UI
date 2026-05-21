@@ -11,7 +11,7 @@ class StopButtonGraphics(GenericButton):
         super().__init__(parent)
         self.setObjectName("StopButton")
         self.setIcon(self.rerenderIcon(QIcon(find_path("stop.svg")), "#FFFFFF"))
-        self.setIconSize(QSize(15, 15))
+        self.setIconSize(QSize(16, 16))
         self.setVisible(False)
 
         self.tooltip = Tooltip(self, "Stop current execution.")

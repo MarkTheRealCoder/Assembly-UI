@@ -32,7 +32,7 @@ class Container(QFrame):
         layout.addWidget(Icon(self, icon))
         layout.addWidget(Label(self, name))
         close_button = CloseButton(self, "Tab", {"tab": True}).setEventIdentifiers(id=_id)
-        close_button.setFixedSize(QSize(15, 15))
+        close_button.setFixedSize(QSize(16, 16))
         layout.addWidget(close_button)
         self.setLayout(layout)
 

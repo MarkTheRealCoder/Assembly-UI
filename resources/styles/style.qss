@@ -124,18 +124,18 @@ QMenu#HiddenTabList {
     background-color: var(---generic-background-color);
 }
 
-Container, Tab {
+#Container, #Tab {
     color: var(---generic-extras-color);
     background-color: var(---generic-tab-color);
     padding: 0 5px;
 }
 
-Container[marked="true"] {
+#Container[marked="true"] {
     background-color: var(---generic-light-tab-color);
     border-left: 2px solid var(---generic-light-tab-border-color);
 }
 
-Tab[marked="true"] {
+#Tab[marked="true"] {
     color: var(---generic-text-color);
     background-color: var(---generic-light-tab-color);
     border-bottom: 5px solid var(---generic-light-tab-border-color);

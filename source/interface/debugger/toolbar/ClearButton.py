@@ -14,7 +14,7 @@ class ClearButtonGraphics(GenericButton):
         self.std_icon = self.rerenderIcon(QIcon(find_path("clear.svg")), "#569CD6")
         self.confirmation_icon = self.rerenderIcon(QIcon(find_path("confirm.svg")), "#FFFFFF")
         self.setIcon(self.std_icon)
-        self.setIconSize(QSize(15, 15))
+        self.setIconSize(QSize(16, 16))
 
         self.tooltip = Tooltip(self, "Clear terminal output.")
         self.tooltip.setPosition("below", "center")

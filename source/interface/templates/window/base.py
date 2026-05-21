@@ -1,3 +1,4 @@
+import ctypes
 from ctypes import cast
 from ctypes.wintypes import LPRECT, MSG
 
@@ -7,6 +8,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QWidget
 from _ctypes import POINTER
+from win32con import SW_MAXIMIZE, SW_RESTORE, SW_MINIMIZE
 
 from source.interface.templates.window.effecthelper import WindowsEffectHelper
 from source.interface.templates.window.types import getResizeBorderThickness, isMaximized, \
@@ -119,3 +121,16 @@ class BaseWindow(QWidget):
             # elif msg.message == win32con.WM_STYLECHANGING:
             #     self.___resizable = not isMaximized(msg.hWnd)
         return super().nativeEvent(e, message)
+
+
+def _hwnd(widget: QWidget) -> int:
+    return int(widget.winId())
+
+def native_maximize(widget: QWidget):
+    ctypes.windll.user32.ShowWindow(_hwnd(widget), SW_MAXIMIZE)
+
+def native_restore(widget: QWidget):
+    ctypes.windll.user32.ShowWindow(_hwnd(widget), SW_RESTORE)
+
+def native_minimize(widget: QWidget):
+    ctypes.windll.user32.ShowWindow(_hwnd(widget), SW_MINIMIZE)

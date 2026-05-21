@@ -14,7 +14,7 @@ class RunButtonGraphics(GenericButton):
         self.not_active = self.rerenderIcon(QIcon(find_path(icon_path)), "#3FB950")
         self.active = self.rerenderIcon(QIcon(find_path(icon_path)), "#FFFFFF")
         self.setIcon(self.not_active)
-        self.setIconSize(QSize(15, 15))
+        self.setIconSize(QSize(16, 16))
 
         self.tooltip = Tooltip(self, "Run current program.")
         self.tooltip.setPosition("below", "center")

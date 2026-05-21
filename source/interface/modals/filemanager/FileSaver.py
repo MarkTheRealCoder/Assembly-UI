@@ -9,6 +9,11 @@ from source.interface.shared import Settings
 
 
 class FileSaver(FileDialog):
+    def __new__(cls, *args, **kwargs):
+        if Settings.get("editor/current", None):
+            return super().__new__(cls)
+        return None
+
     def __init__(self):
         if path := Settings.get("editor/current", None):
             self.cd: Document = Document(path)

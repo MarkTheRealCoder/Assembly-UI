@@ -33,7 +33,7 @@ class GenericFindButton(GenericButton):
         # Additional UI setup can be done here
         self.show_icon = self.rerenderIcon(QIcon(find_path(icon_path)), "#569CD6")
         self.setIcon(self.show_icon)
-        self.setIconSize(QSize(15, 15))
+        self.setIconSize(QSize(16, 16))
 
         self.tooltip = Tooltip(self, tooltip_text)
         self.tooltip.setPosition("below", "center")
