@@ -12,25 +12,40 @@ class FileMenu(GenericButton):
         self.setText("File")
         self.setObjectName("File")
         self.setupFontAndAlignment()
-        self.configure()
+        menu = self.file_menu(self)
+        menu.aboutToShow.connect(lambda: self.menuOpen())
+        menu.aboutToHide.connect(lambda: self.menuClose())
+        self.setMenu(menu)
 
     def setupFontAndAlignment(self):
         # Set scalable font
         font = Desktop.createScalableFont("Anonymous Pro", 12, False)
         self.setFont(font)
 
-    def configure(self):
-        menu = QMenu(self)
-        menu.addAction("Change Working Path", lambda: modalOpen(self.window(), DirectoryPicker(), "Setup Working Directory"))
-        menu.addSeparator()
-        menu.addAction("Open", lambda: modalOpen(self.window(), FilePicker(), "Open a File"))
-        menu.addAction("New", lambda: modalOpen(self.window(), FileCreator(), "Create a New File"))
-        menu.addAction("Save as...", self.___filesaver)
-        self.setMenu(menu)
+    def menuOpen(self):
+        self.setProperty("menuOpen", True)
+        self.style().unpolish(self)
+        self.style().polish(self)
 
-    def ___filesaver(self):
+    def menuClose(self):
+        self.setProperty("menuOpen", False)
+        self.style().unpolish(self)
+        self.style().polish(self)
+
+    @staticmethod
+    def file_menu(hndl):
+        menu = QMenu(hndl)
+        menu.addAction("Change Working Path", lambda: modalOpen(hndl.window(), DirectoryPicker(), "Setup Working Directory"))
+        menu.addSeparator()
+        menu.addAction("Open", lambda: modalOpen(hndl.window(), FilePicker(), "Open a File"))
+        menu.addAction("New", lambda: modalOpen(hndl.window(), FileCreator(), "Create a New File"))
+        menu.addAction("Save as...", lambda: FileMenu._filesaver(hndl.window()))
+        return menu
+
+    @staticmethod
+    def _filesaver(window):
         fs = FileSaver()
         if fs is None:
-            create_toast(self.window(), "There is no file to save!", "error")
+            create_toast(window, "There is no file to save!", "error")
             return
-        modalOpen(self.window(), fs, "Save the current file as ...")
+        modalOpen(window, fs, "Save the current file as ...")

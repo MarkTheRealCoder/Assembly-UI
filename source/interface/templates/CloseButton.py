@@ -28,6 +28,7 @@ class CloseButtonGraphics(GenericButton):
             for k, v in properties.items():
                 self.setProperty(k, v)
 
+
 class CloseButtonLogic(CloseButtonGraphics):
     def __init__(self, parent, properties: dict[str, bool] = None):
         super().__init__(parent, properties=properties)

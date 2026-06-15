@@ -4,7 +4,7 @@ from ctypes.wintypes import LPRECT, MSG
 
 import win32con
 import win32gui
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QRect, QPoint
 from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import QWidget
 from _ctypes import POINTER
@@ -20,6 +20,8 @@ class BaseWindow(QWidget):
         super().__init__(*args, **kwargs)
         self._windowEffect = None
         self.___border_width = 5
+        self.MAXBUTTON_RECT = lambda: (100, 100, 10, 10)  # dummy value
+        self._mouse_on_max_btn = False
 
     def setFrameless(self, hint=None, flags: list = []):
         if hint is None:
@@ -33,7 +35,6 @@ class BaseWindow(QWidget):
             newFlags |= flag
         self.setWindowFlags(newFlags)
 
-
         self._windowEffect.setBasicEffect(self.winId(), hint)
 
         self.windowHandle().screenChanged.connect(self._onScreenChanged)
@@ -45,28 +46,36 @@ class BaseWindow(QWidget):
 
     def nativeEvent(self, e, message):
         msg = MSG.from_address(message.__int__())
-        # check if it is message from Windows OS
         if msg.hWnd:
-            # update cursor shape to resize/resize feature
-            # get WM_NCHITTEST message
-            # more info - https://learn.microsoft.com/ko-kr/windows/win32/inputdev/wm-nchittest
             if msg.message == win32con.WM_NCHITTEST:
+                # 1. Coordinate locali tramite Qt
+                global_pos = QCursor.pos()
+                local_pos = self.mapFromGlobal(global_pos)
+                x, y = local_pos.x(), local_pos.y()
+
+                # Controllo se il mouse è nell'area del pulsante di massimizzazione
+                if QRect(*self.MAXBUTTON_RECT()).contains(QPoint(x, y)):
+                    self._mouse_on_max_btn = True
+                    # Comunichiamo a Windows che questo è il pulsante Maximize per attivare lo Snap Layout
+                    return True, win32con.HTMAXBUTTON
+                else:
+                    if self._mouse_on_max_btn:
+                        self._mouse_on_max_btn = False
+                        # Ripristina lo stato normale del pulsante Qt quando il mouse esce
+                        from source.interface.titlebar.Maximize import MaximizeButton
+                        btn = self.findChild(MaximizeButton)
+                        if btn:
+                            btn.setAttribute(Qt.WA_UnderMouse, False)
+                            btn.update()
+
+                # Gestione dei bordi di ridimensionamento (solo se non massimizzata)
                 if not isMaximized(msg.hWnd):
-                    pos = QCursor.pos()
-                    x = pos.x() - self.x()
-                    y = pos.y() - self.y()
-
                     w, h = self.width(), self.height()
-
                     left = x < self.___border_width
                     top = y < self.___border_width
                     right = x > w - self.___border_width
                     bottom = y > h - self.___border_width
 
-                    # to support snap layouts
-                    # more info - https://learn.microsoft.com/en-us/windows/apps/desktop/modernize/apply-snap-layout-menu
-                    # if win32gui.PtInRect((10, 10, 100, 100), (x, y)):
-                    #     return True, win32con.HTMAXBUTTON
                     v = None
                     if top and left:
                         v = win32con.HTTOPLEFT
@@ -84,11 +93,44 @@ class BaseWindow(QWidget):
                         v = win32con.HTRIGHT
                     elif bottom:
                         v = win32con.HTBOTTOM
-                    return True, v if v is not None else win32con.HTCLIENT
 
-            # maximize/minimize/full screen feature
-            # get WM_NCCALCSIZE message
-            # more info - https://learn.microsoft.com/ko-kr/windows/win32/winmsg/wm-nccalcsize
+                    if v is not None:
+                        return True, v
+
+                return True, win32con.HTCLIENT
+
+            # --- CORREZIONE HOVERING ---
+            elif msg.message == win32con.WM_NCMOUSEMOVE:
+                # Poiché Windows intercetta il mouse, forziamo l'effetto hover sul pulsante PyQt
+                if msg.wParam == win32con.HTMAXBUTTON and self._mouse_on_max_btn:
+                    from source.interface.titlebar.Maximize import MaximizeButton
+                    btn = self.findChild(MaximizeButton)
+                    if btn and not btn.underMouse():
+                        btn.setAttribute(Qt.WA_UnderMouse, True)
+                        btn.update()
+
+            # --- CORREZIONE CLICK (Pressione) ---
+            elif msg.message == win32con.WM_NCLBUTTONDOWN:
+                if msg.wParam == win32con.HTMAXBUTTON and self._mouse_on_max_btn:
+                    # Intercettiamo il click PRIMA che Windows provi a disegnare il quadratino rosa nativo
+                    from source.interface.titlebar.Maximize import MaximizeButton
+                    btn = self.findChild(MaximizeButton)
+                    if btn:
+                        # Simula il click sul pulsante Qt
+                        btn.on_press()
+                        # Ritorniamo True per dire a Windows: "Gestito da me, non fare nulla (non disegnare robe)"
+                    return True, 0
+
+            # --- CORREZIONE RILASCIO CLICK ---
+            elif msg.message == win32con.WM_NCLBUTTONUP:
+                if msg.wParam == win32con.HTMAXBUTTON:
+                    # Blocca l'evento nativo per evitare comportamenti anomali di Windows
+                    return True, 0
+
+            # --- RIMOZIONE PULSANTINO ROSA/NATIVO (DWM Paint) ---
+            elif msg.message == 0x00AE:  # WM_NCUAHDRAWCAPTION (Messaggio non documentato di Windows per la topbar)
+                return True, 0
+
             elif msg.message == win32con.WM_NCCALCSIZE:
                 if msg.wParam:
                     rect = cast(msg.lParam, POINTER(NCCALCSIZE_PARAMS)).contents.rgrc[0]
@@ -96,7 +138,6 @@ class BaseWindow(QWidget):
                     rect = cast(msg.lParam, LPRECT).contents
 
                 max_f = isMaximized(msg.hWnd)
-                # adjust the size of window
                 if max_f:
                     thickness = getResizeBorderThickness(msg.hWnd)
                     rect.top += thickness
@@ -104,7 +145,6 @@ class BaseWindow(QWidget):
                     rect.right -= thickness
                     rect.bottom -= thickness
 
-                # for auto-hide taskbar
                 if max_f and Taskbar.isAutoHide():
                     position = Taskbar.getPosition(msg.hWnd)
                     if position == Taskbar.TOP:
@@ -118,8 +158,7 @@ class BaseWindow(QWidget):
 
                 result = 0 if not msg.wParam else win32con.WVR_REDRAW
                 return True, result
-            # elif msg.message == win32con.WM_STYLECHANGING:
-            #     self.___resizable = not isMaximized(msg.hWnd)
+
         return super().nativeEvent(e, message)
 
 

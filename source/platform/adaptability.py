@@ -6,6 +6,12 @@ import random
 def isWindows():
     return os.name == "nt"
 
+def isMac():
+    return os.name == "posix" and os.uname().sysname == "Darwin"
+
+def isLinux():
+    return os.name == "posix" and os.uname().sysname == "Linux"
+
 
 def randomColor():
         return "#"+''.join([random.choice('0123456789ABCDEF') for _ in range(6)])

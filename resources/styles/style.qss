@@ -211,7 +211,7 @@ QPushButton#File:hover, QPushButton#Help:hover {
     background-color: rgba(255, 255, 255, 0.1);
 }
 
-QPushButton#File::focus, QPushButton#Help::focus {
+QPushButton#File[menuOpen="true"], QPushButton#Help[menuOpen="true"] {
     color: var(---generic-highlight-text-color);
     background-color: rgba(255, 255, 255, 0.1);
 }
