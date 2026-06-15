@@ -1,6 +1,11 @@
 import faulthandler
 import os
 import sys
+from pathlib import Path
+
+_ROOT = Path(__file__).resolve().parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
 
 from PyQt5.QtWidgets import QApplication, QDesktopWidget
 
@@ -9,6 +14,7 @@ from source.comms.handlers import EventRegister
 from source.filesystem import find_path
 from source.interface import MainWindow
 from source.interface.assets import add_fonts, translateQSS
+from source.interface.shared import Settings
 from source.platform import Desktop
 
 if __name__ == "__main__":
@@ -31,6 +37,7 @@ if __name__ == "__main__":
         app.setStyleSheet(translateQSS(f.read()))
     Desktop.setDesktopSize(QDesktopWidget().screenGeometry().size())
     add_fonts()
+    Settings.application_cwd()
     window: MainWindow = MainWindow()
     window.show()
     window.raise_()
