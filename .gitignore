@@ -6,3 +6,5 @@ AssemblyStdio.spec
 .idea/*
 *.ini
 uv.lock
+*.ijvm
+*.a8088

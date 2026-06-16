@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import os
 import re
+import stat
 from pathlib import Path
 
 import psutil
 from PyQt5.QtCore import QUrl
 from PyQt5.QtGui import QDesktopServices
 
-from source.platform import isWindows
+from source.platform import isWindows, isMac
 
 if isWindows():
     import win32api
@@ -79,6 +80,8 @@ def open_dir(path: str):
 
 
 def is_file_hidden(file: str, path: str) -> bool:
+    if file.startswith("."):
+        return True
     if isWindows():
         try:
             attribute = win32api.GetFileAttributes(path)
@@ -86,7 +89,12 @@ def is_file_hidden(file: str, path: str) -> bool:
         except Exception as e:
             del e
             return False
-    return file.startswith(".")
+    if isMac():
+        try:
+            return bool(os.lstat(path).st_flags & stat.UF_HIDDEN)
+        except OSError:
+            return False
+    return False
 
 
 def ls(path: str, exts: tuple = ()):

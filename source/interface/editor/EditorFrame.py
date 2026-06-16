@@ -3,10 +3,7 @@ from PyQt5.QtWidgets import QLabel, QVBoxLayout, QSizePolicy, QFrame
 
 from source.comms import Database
 from source.interface.editor.Editor import Editor
-from source.interface.modals import DirectoryPicker
-from source.interface.modals import FileCreator
-from source.interface.modals import FilePicker
-from source.interface.modals import modalOpen
+from source.interface.modals.filemanager import pick_file, pick_new_file, pick_working_directory
 from source.interface.shared import createLayout
 
 
@@ -28,11 +25,11 @@ class DefaultFrame(QLabel):
 
     def linkHandler(self, link: str):
         if link == "cwd":
-            modalOpen(self, DirectoryPicker(), "Setup Working Directory")
+            pick_working_directory(self.window())
         elif link == "open":
-            modalOpen(self, FilePicker(), "Open a File")
+            pick_file(self.window())
         else:
-            modalOpen(self, FileCreator(), "Create a New File")
+            pick_new_file(self.window())
 
 
 class EditorFrameGraphics(QFrame):

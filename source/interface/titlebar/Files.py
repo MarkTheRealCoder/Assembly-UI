@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QMenu, QSizePolicy
 
-from source.interface.modals import modalOpen, FilePicker, DirectoryPicker, FileCreator, FileSaver
-from source.interface.templates import GenericButton, create_toast, toast_safe_exec
+from source.interface.modals.filemanager import pick_file, pick_new_file, pick_working_directory, save_file_as
+from source.interface.templates import GenericButton, toast_safe_exec
 from source.platform import Desktop
 
 
@@ -35,22 +35,14 @@ class FileMenu(GenericButton):
     @staticmethod
     def file_menu(hndl):
         menu = QMenu(hndl)
-        menu.addAction("Change Working Path", toast_safe_exec(hndl.window(), lambda: modalOpen(hndl.window(), DirectoryPicker(), "Setup Working Directory")))
+        menu.addAction("Change Working Path", toast_safe_exec(hndl.window(), lambda: pick_working_directory(hndl.window())))
         menu.addSeparator()
         menu.addAction("Open",
                     toast_safe_exec(
                         hndl.window(),
-                        lambda: modalOpen(hndl.window(), FilePicker(), "Open a File")
+                        lambda: pick_file(hndl.window())
                         )
                     )
-        menu.addAction("New", toast_safe_exec(hndl.window(), lambda: modalOpen(hndl.window(), FileCreator(), "Create a New File")))
-        menu.addAction("Save as...", toast_safe_exec(hndl.window(), lambda: FileMenu._filesaver(hndl.window())))
+        menu.addAction("New", toast_safe_exec(hndl.window(), lambda: pick_new_file(hndl.window())))
+        menu.addAction("Save as...", toast_safe_exec(hndl.window(), lambda: save_file_as(hndl.window())))
         return menu
-
-    @staticmethod
-    def _filesaver(window):
-        fs = FileSaver()
-        if fs is None:
-            create_toast(window, "There is no file to save!", "error")
-            return
-        modalOpen(window, fs, "Save the current file as ...")

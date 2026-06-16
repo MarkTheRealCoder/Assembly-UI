@@ -1,9 +1,32 @@
-from PyQt5.QtWidgets import QFrame, QSizePolicy, QVBoxLayout
+import os
+
+from PyQt5.QtWidgets import QFrame, QFileDialog, QSizePolicy, QVBoxLayout
 
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
+from source.filesystem.documents import FT
 from source.interface.modals.filemanager.paths import PathTree
 from source.interface.shared import createLayout, Settings
+from source.platform import isMac
+
+
+def pick_file(parent):
+    if isMac():
+        current = Settings.get("application/cwd", "")
+        start = current if current and os.path.isdir(current) else os.path.expanduser("~")
+        path, _ = QFileDialog.getOpenFileName(
+            parent,
+            "Open a File",
+            start,
+            f"Assembly Files (*.{FT.FIJVM} *.{FT.F8088});;All Files (*)",
+        )
+        if path:
+            Settings.set("editor/current", path)
+        return
+
+    from source.interface.modals import modalOpen
+
+    modalOpen(parent, FilePicker(), "Open a File")
 
 
 class FilePicker(QFrame):

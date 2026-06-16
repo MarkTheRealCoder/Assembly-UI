@@ -1,10 +1,9 @@
 import os
 
-from PyQt5.QtCore import QModelIndex
+from PyQt5.QtCore import QModelIndex, QTimer
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtWidgets import QAbstractItemView, QTreeView, QSizePolicy
 
-from source.asyncro import Scheduler
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
 from source.filesystem import IconManager
@@ -13,7 +12,6 @@ from source.filesystem.documents import Document
 from source.filesystem.documents import FT
 from source.interface.assets import translateQSS
 from source.interface.shared import Settings
-from source.platform import isWindows
 
 
 class Item(QStandardItem):
@@ -117,34 +115,36 @@ class PathTreeLogic(PathTreeGraphic):
             return
         model: QStandardItemModel = self.model()
         item: Item = model.itemFromIndex(index)
-        dummy = item.child(0, 0)
-        if dummy.text() == "dummy":
-            item_names = ls(self.genPathFromItem(item), self.___exts)
-            items = [Item(*i) for i in item_names]
-            if items:
-                item.appendRows(items)
-            item.setData(len(items))
-            item.removeRow(0)
+        if item is None or item.is_file():
+            return
+        if item.rowCount() == 0 or item.child(0) is None or item.child(0).text() != "dummy":
+            return
+        item_names = ls(self.genPathFromItem(item), self.___exts)
+        items = [Item(*entry) for entry in item_names]
+        item.removeRow(0)
+        if items:
+            item.appendRows(items)
+        item.setData(item.rowCount())
 
     def genPathFromItem(self, item: Item):
         parts: list[str] = []
         copy = item
-        while copy is not None:
+        root = self.model().invisibleRootItem()
+        while copy is not None and copy is not root:
             parts.append(copy.text())
             copy = copy.parent()
-        parts.reverse()
+
+        if not parts:
+            return Document.SEP
 
         if self.___exts == ():
-            if not isWindows() and parts:
-                parts[0] = ""
-            joined = Document.SEP.join(parts)
-            return os.path.normpath(joined) + (Document.SEP if not item.is_file() else "")
+            path = os.path.join(*parts)
+            path = os.path.normpath(path)
+            return path + (Document.SEP if not item.is_file() else "")
 
         base = GET_CWD()
-        joined = Document.SEP.join(parts)
-        return os.path.normpath(os.path.join(base, joined.lstrip(Document.SEP))) + (
-            Document.SEP if not item.is_file() else ""
-        )
+        path = os.path.normpath(os.path.join(base, *parts))
+        return path + (Document.SEP if not item.is_file() else "")
 
 
 @EventRegister.register(ClosingEvent, "Tool", EventRegister.URGENT)
@@ -152,16 +152,20 @@ class PathTree(PathTreeLogic):
     def __init__(self, parent, is_file: bool = False):
         super().__init__(parent, is_file)
 
-        self.___scheduler: Scheduler = Scheduler(1, self.update)
         self.___placeholder_dc: callable = lambda x, y: None # double click
         self.___placeholder_c: callable = lambda x, y: None # click
+
+        self.___refresh_timer = QTimer(self)
+        self.___refresh_timer.setInterval(1000)
+        self.___refresh_timer.timeout.connect(self.update)
+        self.___refresh_timer.start()
 
         self.expanded.connect(self.add_subdirectories)
         self.doubleClicked.connect(lambda x: self.___placeholder_dc(*self.get_path(x))) # double click
         self.clicked.connect(lambda x: self.___placeholder_c(*self.get_path(x))) # click
 
     def onClosingEvent(self, event):
-        self.___scheduler.terminate()
+        self.___refresh_timer.stop()
 
     def onDoubleClick(self, func: callable):
         if not callable(func):
