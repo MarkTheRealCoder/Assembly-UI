@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from weakref import WeakKeyDictionary
 
 from PyQt5.QtCore import QDateTime

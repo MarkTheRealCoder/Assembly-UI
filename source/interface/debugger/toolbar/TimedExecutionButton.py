@@ -49,6 +49,9 @@ class TimedExecutionButtonGraphics(GenericButton):
         self.setVisible(True)
 
     def disable(self):
+        if self.___active:
+            self.tooltip.setText(self.___tooltip_text)
+            self.___anim.stop()
         self.setVisible(False)
 
 

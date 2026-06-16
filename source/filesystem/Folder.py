@@ -38,7 +38,7 @@ def resolve_app_path(ui_path: str) -> str:
     from source.filesystem.documents import Document
     from source.interface.shared import Settings
 
-    root = os.path.normpath(Settings.application_cwd())
+    root = os.path.normpath(Settings.get("application/cwd"))
     path = ui_path or ""
 
     if path.startswith(root + os.sep) or path == root:
@@ -54,7 +54,7 @@ def to_ui_path(absolute_path: str) -> str:
     from source.filesystem.documents import Document
     from source.interface.shared import Settings
 
-    root = os.path.normpath(Settings.application_cwd())
+    root = os.path.normpath(Settings.get("application/cwd"))
     abs_norm = os.path.normpath(absolute_path.rstrip("/\\"))
     if abs_norm == root:
         return Document.SEP
@@ -75,9 +75,7 @@ def find_dir(directory: str) -> str:
 
 
 def open_dir(path: str):
-    print("DIDIT")
     QDesktopServices.openUrl(QUrl.fromLocalFile(path))
-    print("DIDIT")
 
 
 def is_file_hidden(file: str, path: str) -> bool:

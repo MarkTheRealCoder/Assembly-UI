@@ -42,6 +42,7 @@ class PathTreeGraphic(QTreeView):
         self.setAnimated(True)
         self.setModel(QStandardItemModel(self))
 
+GET_CWD = lambda: Settings.getOrExcept("application/cwd", error_message="A Working Directory must be set in order to use this component in file mode!")
 
 class PathTreeLogic(PathTreeGraphic):
     def __init__(self, parent, is_file: bool = False):
@@ -55,7 +56,7 @@ class PathTreeLogic(PathTreeGraphic):
         if not is_file:
             items += [(i, "") for i in get_available_disks()]
         else:
-            items += ls(Settings.application_cwd(), self.___exts)
+            items += ls(GET_CWD(), self.___exts)
         for i in items:
             item = Item(*i)
             model.appendRow(item)
@@ -77,7 +78,7 @@ class PathTreeLogic(PathTreeGraphic):
         items = []
         if root:
             if is_file:
-                items += ls(Settings.application_cwd(), self.___exts)
+                items += ls(GET_CWD(), self.___exts)
             else:
                 items += [(i, "") for i in get_available_disks()]
         else:
@@ -139,7 +140,7 @@ class PathTreeLogic(PathTreeGraphic):
             joined = Document.SEP.join(parts)
             return os.path.normpath(joined) + (Document.SEP if not item.is_file() else "")
 
-        base = Settings.application_cwd()
+        base = GET_CWD()
         joined = Document.SEP.join(parts)
         return os.path.normpath(os.path.join(base, joined.lstrip(Document.SEP))) + (
             Document.SEP if not item.is_file() else ""
