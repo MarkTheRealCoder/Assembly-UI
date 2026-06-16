@@ -1,4 +1,5 @@
 from typing import Literal
+import os
 
 from PyQt5.QtCore import Qt, QPoint, QSettings
 from PyQt5.QtGui import QMouseEvent, QPainter, QColor, QPixmap, QIcon
@@ -48,6 +49,14 @@ class Settings:
     def addNotificationGroup(name: str, callback: callable):
         """ Calls the callback when a setting with the given name (or starting with it) changes """
         Settings.SIGNAL.connect(lambda: callback() if Settings.SIGNAL.getValue() == name else None)
+
+    @staticmethod
+    def application_cwd() -> str:
+        path = Settings.SETTINGS.value("application/cwd")
+        if not path:
+            path = os.path.expanduser("~")
+            Settings.silentSet("application/cwd", path)
+        return path
 
     @staticmethod
     def sync():

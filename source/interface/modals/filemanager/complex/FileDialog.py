@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QFrame, QSizePolicy, QVBoxLayout, QHBoxLayout
 from regex import regex
 
-from source.filesystem import create_dir, open_dir
+from source.filesystem import create_dir, open_dir, resolve_app_path, to_ui_path
 from source.filesystem.documents import Document
 from source.interface.modals import Dialog
 from source.interface.modals.filemanager.complex.Button import Button
@@ -72,12 +72,11 @@ class FileDialogLogic(FileDialogGraphics):
             name = regex.match(f".*\\{Document.SEP}(\\w+)\\.\\w+", path).group(1)
             self._name.setText(name)
         else:
-            rp = Document.SEP + path.removeprefix(Settings.get("application/cwd")) # Referred path
-            self._box.setText(rp)
+            self._box.setText(to_ui_path(path))
 
     def create_folder(self):
         def create_folder(name: str) -> bool:
-            return create_dir(Settings.get("application/cwd") + self._box.text().removeprefix(Document.SEP), name)
+            return create_dir(resolve_app_path(self._box.text()), name)
 
         self._dialog = Dialog(self, "Create Folder", "Insert the folder name", create_folder)
 
@@ -85,7 +84,7 @@ class FileDialogLogic(FileDialogGraphics):
         self._box.setText(Document.SEP)
 
     def open_folder(self):
-        open_dir(Settings.get("application/cwd") + self._box.text().removeprefix(Document.SEP))
+        open_dir(resolve_app_path(self._box.text()))
 
     def get_path(self) -> str:
         return self._box.text()

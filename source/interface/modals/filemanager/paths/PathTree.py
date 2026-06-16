@@ -1,3 +1,5 @@
+import os
+
 from PyQt5.QtCore import QModelIndex
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtWidgets import QAbstractItemView, QTreeView, QSizePolicy
@@ -53,7 +55,7 @@ class PathTreeLogic(PathTreeGraphic):
         if not is_file:
             items += [(i, "") for i in get_available_disks()]
         else:
-            items += ls(Settings.get("application/cwd"), self.___exts)
+            items += ls(Settings.application_cwd(), self.___exts)
         for i in items:
             item = Item(*i)
             model.appendRow(item)
@@ -75,7 +77,7 @@ class PathTreeLogic(PathTreeGraphic):
         items = []
         if root:
             if is_file:
-                items += ls(Settings.get("application/cwd"), self.___exts)
+                items += ls(Settings.application_cwd(), self.___exts)
             else:
                 items += [(i, "") for i in get_available_disks()]
         else:
@@ -83,20 +85,25 @@ class PathTreeLogic(PathTreeGraphic):
 
         items = {n: e for n, e in items}
 
-        num = items_num
-        for i in range(num):
+        num = starting_item.rowCount()
+        i = 0
+        while i < num:
             it = starting_item.child(i)
+            if it is None:
+                i += 1
+                continue
             item_text = it.text()
             v = items.pop(item_text, None)
             if v is None:
                 starting_item.removeRow(i)
-                items_num -= 1
-            elif self.isExpanded(it.index()):
-                self.update(it)  # noqas
+                num -= 1
+                continue
+            if self.isExpanded(it.index()):
+                self.update(it)
+            i += 1
         for n, e in items.items():
             starting_item.appendRow(Item(n, e))
-            items_num += 1
-        starting_item.setData(items_num)
+        starting_item.setData(starting_item.rowCount())
 
     def get_path(self, index: QModelIndex) -> tuple[str, bool]:
         item: Item = self.model().itemFromIndex(index)
@@ -119,19 +126,24 @@ class PathTreeLogic(PathTreeGraphic):
             item.removeRow(0)
 
     def genPathFromItem(self, item: Item):
-        result = ""
+        parts: list[str] = []
         copy = item
-        items: list[str] = [copy.text()]
-        while copy.parent() is not None:
-            parent = copy.parent()
-            items.append(parent.text())
-            copy = parent
+        while copy is not None:
+            parts.append(copy.text())
+            copy = copy.parent()
+        parts.reverse()
+
         if self.___exts == ():
-            if not isWindows():
-                items[-1] = ""  # For fixing main directory issue
-        else:
-            result += Settings.get("application/cwd")
-        return result + Document.SEP.join(items[::-1]) + (Document.SEP if not item.is_file() else "")
+            if not isWindows() and parts:
+                parts[0] = ""
+            joined = Document.SEP.join(parts)
+            return os.path.normpath(joined) + (Document.SEP if not item.is_file() else "")
+
+        base = Settings.application_cwd()
+        joined = Document.SEP.join(parts)
+        return os.path.normpath(os.path.join(base, joined.lstrip(Document.SEP))) + (
+            Document.SEP if not item.is_file() else ""
+        )
 
 
 @EventRegister.register(ClosingEvent, "Tool", EventRegister.URGENT)

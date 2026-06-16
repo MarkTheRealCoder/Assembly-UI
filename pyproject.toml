@@ -1,0 +1,19 @@
+[project]
+name = "assembly-ui"
+version = "1.0.0"
+description = "Assembly UI for UniCA's ARE course"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "PyQt5>=5.15.0",
+    "QScintilla>=2.13.0",
+    "PyQtWebEngine>=5.15.0",
+    "pyqt-toast-notification>=1.3.0",
+    "jpype1>=1.4.0",
+    "psutil>=5.9.0",
+    "regex>=2023.0.0",
+    "pywin32>=306; sys_platform == 'win32'",
+]
+
+[tool.uv]
+package = false
