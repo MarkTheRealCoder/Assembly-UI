@@ -85,8 +85,11 @@ class Title(TitleLogic):
         return super().mousePressEvent(e)
 
     def _move(self):
-        window = self.window().windowHandle()
-        window.startSystemMove()
+        window = self.window()
+        if hasattr(window, "startSystemMove"):
+            window.startSystemMove()
+        else:
+            window.windowHandle().startSystemMove()
 
     # def eventFilter(self, o: QObject, e: QEvent) -> bool:
     #
