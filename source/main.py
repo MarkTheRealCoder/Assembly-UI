@@ -37,7 +37,7 @@ if __name__ == "__main__":
         app.setStyleSheet(translateQSS(f.read()))
     Desktop.setDesktopSize(QDesktopWidget().screenGeometry().size())
     add_fonts()
-    Settings.application_cwd()
+    Settings.base_dir()
     window: MainWindow = MainWindow()
     window.show()
     window.raise_()

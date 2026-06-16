@@ -55,6 +55,7 @@ class BaseWindow(QWidget):
 
                 # Controllo se il mouse è nell'area del pulsante di massimizzazione
                 if QRect(*self.MAXBUTTON_RECT()).contains(QPoint(x, y)):
+                    # todo fix button rect interaction after new window opening and closing
                     self._mouse_on_max_btn = True
                     # Comunichiamo a Windows che questo è il pulsante Maximize per attivare lo Snap Layout
                     return True, win32con.HTMAXBUTTON

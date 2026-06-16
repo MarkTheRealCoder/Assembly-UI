@@ -24,3 +24,13 @@ def create_toast(parent, text: str, _type: Literal["success", "error", "warning"
     toast.applyPreset(preset)
     toast.setText(text)
     toast.show()
+
+def toast_safe_exec(window, call: callable, *args, **kwargs) -> callable:
+    def safe_exec():
+        try:
+            return call(*args, **kwargs)
+        except Exception as e:
+            create_toast(window, f"An error occurred: {str(e)}", "error")
+            return None
+    return safe_exec
+

@@ -1,5 +1,5 @@
-from typing import Literal
 import os
+from typing import Literal
 
 from PyQt5.QtCore import Qt, QPoint, QSettings
 from PyQt5.QtGui import QMouseEvent, QPainter, QColor, QPixmap, QIcon
@@ -16,7 +16,18 @@ class Settings:
 
     @staticmethod
     def get(key: str, default=None, _type: type = None):
-                return Settings.SETTINGS.value(key, default) if _type is None else Settings.SETTINGS.value(key, default, _type)
+        return Settings.SETTINGS.value(key, default) if _type is None else Settings.SETTINGS.value(key, default, _type)
+
+    @staticmethod
+    def getOrExcept(key: str, _type: type = None, error_message: str = None):
+        """ Gets a value or raises an exception if it doesn't exist """
+        value = Settings.get(key, None, _type)
+        if value is None:
+            if error_message is None:
+                raise KeyError(f"Setting '{key}' not found")
+            else:
+                raise Exception(f"{error_message}")
+        return value
 
     @staticmethod
     def set(key: str, value):
@@ -51,11 +62,11 @@ class Settings:
         Settings.SIGNAL.connect(lambda: callback() if Settings.SIGNAL.getValue() == name else None)
 
     @staticmethod
-    def application_cwd() -> str:
-        path = Settings.SETTINGS.value("application/cwd")
+    def base_dir() -> str:
+        path = Settings.SETTINGS.value("application/basedir")
         if not path:
             path = os.path.expanduser("~")
-            Settings.silentSet("application/cwd", path)
+            Settings.silentSet("application/basedir", path)
         return path
 
     @staticmethod
