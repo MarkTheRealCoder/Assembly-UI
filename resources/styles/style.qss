@@ -30,6 +30,14 @@ QMainWindow#MainWindow {
     background-color: var(---generic-background-color);
 }
 
+QMainWindow#MainWindow[linuxFrame="true"] {
+    background-color: transparent;
+}
+
+QWidget#LinuxResizeFrame {
+    qproperty-frameColor: var(---generic-background-color);
+}
+
 
 #MainWidget {
     background-color: var(---generic-background-color);

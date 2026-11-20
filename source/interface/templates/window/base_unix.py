@@ -1,8 +1,11 @@
-from PyQt5.QtCore import QEvent, Qt
+from PyQt5.QtCore import QEvent, QRectF, Qt, pyqtProperty
+from PyQt5.QtGui import QColor, QPainter, QPen
 from PyQt5.QtWidgets import QGridLayout, QWidget
 
 
-_RESIZE_BORDER_WIDTH = 5
+_RESIZE_BORDER_WIDTH = 10
+_CORNER_RADIUS = 12
+_SHADOW_WIDTH = 4
 
 
 class _ResizeHandle(QWidget):
@@ -27,6 +30,8 @@ class _ResizeHandle(QWidget):
 class LinuxResizeFrame(QWidget):
     def __init__(self, window, content):
         super().__init__(window)
+        self.setObjectName("LinuxResizeFrame")
+        self._frame_color = QColor("#1E1E1E")
         layout = QGridLayout(self)
         layout.setOriginCorner(Qt.TopRightCorner if self.isRightToLeft() else Qt.TopLeftCorner)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -53,11 +58,41 @@ class LinuxResizeFrame(QWidget):
         self._update_handle_visibility()
         window.installEventFilter(self)
 
+    @pyqtProperty(QColor)
+    def frameColor(self):
+        return self._frame_color
+
+    @frameColor.setter
+    def frameColor(self, color):
+        self._frame_color = color
+        self.update()
+
     def _update_handle_visibility(self):
         state = self.window().windowState()
-        can_resize = not (state & (Qt.WindowMaximized | Qt.WindowFullScreen | Qt.WindowMinimized))
+        self._has_border = not (state & (Qt.WindowMaximized | Qt.WindowFullScreen | Qt.WindowMinimized))
         for handle in self._handles:
-            handle.setVisible(can_resize)
+            handle.setVisible(self._has_border)
+        self.update()
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        bounds = QRectF(self.rect())
+        if not self._has_border:
+            painter.fillRect(bounds, self._frame_color)
+            return
+
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setPen(Qt.NoPen)
+        face = bounds.adjusted(_SHADOW_WIDTH, _SHADOW_WIDTH, -_SHADOW_WIDTH, -_SHADOW_WIDTH)
+        for spread in range(_SHADOW_WIDTH, 0, -1):
+            shadow = face.adjusted(-spread, -spread, spread, spread)
+            radius = _CORNER_RADIUS + spread
+            painter.setBrush(QColor(0, 0, 0, 12 + 7 * (_SHADOW_WIDTH - spread)))
+            painter.drawRoundedRect(shadow, radius, radius)
+
+        painter.setPen(QPen(QColor(255, 255, 255, 30)))
+        painter.setBrush(self._frame_color)
+        painter.drawRoundedRect(face, _CORNER_RADIUS, _CORNER_RADIUS)
 
     def eventFilter(self, watched, event):
         if event.type() == QEvent.WindowStateChange and watched is self.window():
