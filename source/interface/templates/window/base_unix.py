@@ -1,53 +1,101 @@
 from PyQt5.QtCore import QEvent, QPoint, QRectF, Qt, pyqtProperty
-from PyQt5.QtGui import QBrush, QColor, QPainter, QPainterPath, QPen
-from PyQt5.QtWidgets import QFrame, QGridLayout, QWidget
+from PyQt5.QtGui import QBrush, QColor, QEnterEvent, QPainter, QPainterPath, QPen
+from PyQt5.QtWidgets import QFrame, QVBoxLayout, QWidget
 
 from .resize_cursor_linux import LinuxResizeCursors
 
 
 _RESIZE_BORDER_WIDTH = 10
+_RESIZE_CORNER_EXTENT = 20
 _CORNER_RADIUS = 12
 _SHADOW_WIDTH = 4
 
 
-class _ResizeHandle(QWidget):
-    def __init__(self, parent, edges, cursors, cursor_name, fallback_cursor):
-        super().__init__(parent)
-        self._edges = edges
-        self._cursors = cursors
-        self._cursor_name = cursor_name
-        self._fallback_cursor = fallback_cursor
-        self.setMouseTracking(True)
-        if edges & (Qt.TopEdge | Qt.BottomEdge):
-            self.setFixedHeight(_RESIZE_BORDER_WIDTH)
-        if edges & (Qt.LeftEdge | Qt.RightEdge):
-            self.setFixedWidth(_RESIZE_BORDER_WIDTH)
+class _ResizeBorder(QWidget):
+    _CURSOR_SPECS = (
+        (Qt.TopEdge | Qt.LeftEdge, "nw-resize", Qt.SizeFDiagCursor),
+        (Qt.TopEdge, "n-resize", Qt.SizeVerCursor),
+        (Qt.TopEdge | Qt.RightEdge, "ne-resize", Qt.SizeBDiagCursor),
+        (Qt.LeftEdge, "w-resize", Qt.SizeHorCursor),
+        (Qt.RightEdge, "e-resize", Qt.SizeHorCursor),
+        (Qt.BottomEdge | Qt.LeftEdge, "sw-resize", Qt.SizeBDiagCursor),
+        (Qt.BottomEdge, "s-resize", Qt.SizeVerCursor),
+        (Qt.BottomEdge | Qt.RightEdge, "se-resize", Qt.SizeFDiagCursor),
+    )
 
-    def _show_resize_cursor(self):
-        cursor = self._cursors.cursor(self._cursor_name, self._fallback_cursor, self.devicePixelRatioF())
+    def __init__(self, parent):
+        super().__init__(parent)
+        self._cursors = LinuxResizeCursors()
+        self._direction_cursors = {}
+        self._cursor_scale = None
+        self._active_cursor = None
+        self.setMouseTracking(True)
+
+    def _edges_at(self, pos):
+        border = _RESIZE_BORDER_WIDTH
+        bounds = self.rect()
+        edges = Qt.Edges()
+        if not bounds.contains(pos) or bounds.adjusted(border, border, -border, -border).contains(pos):
+            return edges
+
+        horizontal_corner = min(_RESIZE_CORNER_EXTENT, bounds.width() // 2)
+        vertical_corner = min(_RESIZE_CORNER_EXTENT, bounds.height() // 2)
+        if pos.x() < horizontal_corner:
+            edges |= Qt.LeftEdge
+        elif pos.x() >= bounds.width() - horizontal_corner:
+            edges |= Qt.RightEdge
+        if pos.y() < vertical_corner:
+            edges |= Qt.TopEdge
+        elif pos.y() >= bounds.height() - vertical_corner:
+            edges |= Qt.BottomEdge
+        return edges
+
+    def _prepare_cursors(self):
+        scale = self.devicePixelRatioF()
+        if scale != self._cursor_scale:
+            self._direction_cursors = {
+                int(edges): self._cursors.cursor(name, fallback, scale)
+                for edges, name, fallback in self._CURSOR_SPECS
+            }
+            self._cursor_scale = scale
+
+    def _update_resize_cursor(self, pos):
+        edges = self._edges_at(pos)
+        if not edges:
+            self._clear_resize_cursor()
+            return
+        self._prepare_cursors()
+        cursor = self._direction_cursors[int(edges)]
+        if cursor is self._active_cursor:
+            return
+        self._active_cursor = cursor
         self.setCursor(cursor)
-        # The first pointer move can arrive before Qt marks the handle as hovered.
-        window = self.window().windowHandle()
-        if window is not None:
-            window.setCursor(cursor)
+        if not self.underMouse():
+            # Qt can deliver the first move before marking the border as hovered.
+            window = self.window().windowHandle()
+            if window is not None:
+                window.setCursor(cursor)
 
     def _clear_resize_cursor(self):
-        if not self.testAttribute(Qt.WA_SetCursor):
+        if self._active_cursor is None:
             return
+        self._active_cursor = None
         self.unsetCursor()
         window = self.window().windowHandle()
         if window is not None:
             window.unsetCursor()
 
+    def showEvent(self, event):
+        self._prepare_cursors()
+        super().showEvent(event)
+
     def enterEvent(self, event):
-        self._show_resize_cursor()
+        if isinstance(event, QEnterEvent):
+            self._update_resize_cursor(event.pos())
         super().enterEvent(event)
 
     def mouseMoveEvent(self, event):
-        if not self.rect().contains(event.pos()):
-            self._clear_resize_cursor()
-        elif not self.testAttribute(Qt.WA_SetCursor):
-            self._show_resize_cursor()
+        self._update_resize_cursor(event.pos())
         super().mouseMoveEvent(event)
 
     def leaveEvent(self, event):
@@ -60,9 +108,9 @@ class _ResizeHandle(QWidget):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            handle = self.window().windowHandle()
-            if handle is not None and handle.startSystemResize(self._edges):
-                self._clear_resize_cursor()
+            edges = self._edges_at(event.pos())
+            window = self.window().windowHandle()
+            if edges and window is not None and window.startSystemResize(edges):
                 event.accept()
                 return
         super().mousePressEvent(event)
@@ -75,31 +123,16 @@ class LinuxResizeFrame(QWidget):
         self._frame_color = QColor("#1E1E1E")
         self._header_brush = QBrush(self._frame_color)
         self._toolbar = content.findChild(QFrame, "Toolbar", Qt.FindDirectChildrenOnly)
-        layout = QGridLayout(self)
-        layout.setOriginCorner(Qt.TopRightCorner if self.isRightToLeft() else Qt.TopLeftCorner)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout = QVBoxLayout(self)
         layout.setSpacing(0)
-        layout.setRowStretch(1, 1)
-        layout.setColumnStretch(1, 1)
-        layout.addWidget(content, 1, 1)
+        layout.addWidget(content)
 
-        self._handles = []
-        cursors = LinuxResizeCursors()
-        for row, column, edges, cursor_name, fallback_cursor in (
-            (0, 0, Qt.TopEdge | Qt.LeftEdge, "nw-resize", Qt.SizeFDiagCursor),
-            (0, 1, Qt.TopEdge, "n-resize", Qt.SizeVerCursor),
-            (0, 2, Qt.TopEdge | Qt.RightEdge, "ne-resize", Qt.SizeBDiagCursor),
-            (1, 0, Qt.LeftEdge, "w-resize", Qt.SizeHorCursor),
-            (1, 2, Qt.RightEdge, "e-resize", Qt.SizeHorCursor),
-            (2, 0, Qt.BottomEdge | Qt.LeftEdge, "sw-resize", Qt.SizeBDiagCursor),
-            (2, 1, Qt.BottomEdge, "s-resize", Qt.SizeVerCursor),
-            (2, 2, Qt.BottomEdge | Qt.RightEdge, "se-resize", Qt.SizeFDiagCursor),
-        ):
-            handle = _ResizeHandle(self, edges, cursors, cursor_name, fallback_cursor)
-            layout.addWidget(handle, row, column)
-            self._handles.append(handle)
+        # The content covers the center, leaving one continuous mouse target on the rim.
+        self._resize_border = _ResizeBorder(self)
+        self._resize_border.stackUnder(content)
+        self._resize_border.setGeometry(self.rect())
 
-        self._update_handle_visibility()
+        self._update_frame_state()
         window.installEventFilter(self)
         if self._toolbar is not None:
             self._toolbar.installEventFilter(self)
@@ -122,12 +155,17 @@ class LinuxResizeFrame(QWidget):
         self._header_brush = brush
         self.update()
 
-    def _update_handle_visibility(self):
+    def _update_frame_state(self):
         state = self.window().windowState()
         self._has_border = not (state & (Qt.WindowMaximized | Qt.WindowFullScreen | Qt.WindowMinimized))
-        for handle in self._handles:
-            handle.setVisible(self._has_border)
+        margin = _RESIZE_BORDER_WIDTH if self._has_border else 0
+        self.layout().setContentsMargins(margin, margin, margin, margin)
+        self._resize_border.setVisible(self._has_border)
         self.update()
+
+    def resizeEvent(self, event):
+        self._resize_border.setGeometry(self.rect())
+        super().resizeEvent(event)
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -158,7 +196,7 @@ class LinuxResizeFrame(QWidget):
 
     def eventFilter(self, watched, event):
         if event.type() == QEvent.WindowStateChange and watched is self.window():
-            self._update_handle_visibility()
+            self._update_frame_state()
         elif watched is self._toolbar and event.type() in (QEvent.Move, QEvent.Resize, QEvent.Show, QEvent.Hide):
             self.update()
         return super().eventFilter(watched, event)
