@@ -1,6 +1,6 @@
-from PyQt5.QtCore import QEvent, QRectF, Qt, pyqtProperty
-from PyQt5.QtGui import QColor, QPainter, QPen
-from PyQt5.QtWidgets import QGridLayout, QWidget
+from PyQt5.QtCore import QEvent, QPoint, QRectF, Qt, pyqtProperty
+from PyQt5.QtGui import QBrush, QColor, QPainter, QPainterPath, QPen
+from PyQt5.QtWidgets import QFrame, QGridLayout, QWidget
 
 
 _RESIZE_BORDER_WIDTH = 10
@@ -32,6 +32,8 @@ class LinuxResizeFrame(QWidget):
         super().__init__(window)
         self.setObjectName("LinuxResizeFrame")
         self._frame_color = QColor("#1E1E1E")
+        self._header_brush = QBrush(self._frame_color)
+        self._toolbar = content.findChild(QFrame, "Toolbar", Qt.FindDirectChildrenOnly)
         layout = QGridLayout(self)
         layout.setOriginCorner(Qt.TopRightCorner if self.isRightToLeft() else Qt.TopLeftCorner)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -57,6 +59,8 @@ class LinuxResizeFrame(QWidget):
 
         self._update_handle_visibility()
         window.installEventFilter(self)
+        if self._toolbar is not None:
+            self._toolbar.installEventFilter(self)
 
     @pyqtProperty(QColor)
     def frameColor(self):
@@ -65,6 +69,15 @@ class LinuxResizeFrame(QWidget):
     @frameColor.setter
     def frameColor(self, color):
         self._frame_color = color
+        self.update()
+
+    @pyqtProperty(QBrush)
+    def headerBrush(self):
+        return self._header_brush
+
+    @headerBrush.setter
+    def headerBrush(self, brush):
+        self._header_brush = brush
         self.update()
 
     def _update_handle_visibility(self):
@@ -76,27 +89,36 @@ class LinuxResizeFrame(QWidget):
 
     def paintEvent(self, event):
         painter = QPainter(self)
-        bounds = QRectF(self.rect())
-        if not self._has_border:
-            painter.fillRect(bounds, self._frame_color)
-            return
+        face = QRectF(self.rect())
+        radius = 0
+        if self._has_border:
+            painter.setRenderHint(QPainter.Antialiasing)
+            painter.setPen(Qt.NoPen)
+            face.adjust(_SHADOW_WIDTH, _SHADOW_WIDTH, -_SHADOW_WIDTH, -_SHADOW_WIDTH)
+            radius = _CORNER_RADIUS
+            for spread in range(_SHADOW_WIDTH, 0, -1):
+                shadow = face.adjusted(-spread, -spread, spread, spread)
+                painter.setBrush(QColor(0, 0, 0, 12 + 7 * (_SHADOW_WIDTH - spread)))
+                painter.drawRoundedRect(shadow, radius + spread, radius + spread)
 
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(Qt.NoPen)
-        face = bounds.adjusted(_SHADOW_WIDTH, _SHADOW_WIDTH, -_SHADOW_WIDTH, -_SHADOW_WIDTH)
-        for spread in range(_SHADOW_WIDTH, 0, -1):
-            shadow = face.adjusted(-spread, -spread, spread, spread)
-            radius = _CORNER_RADIUS + spread
-            painter.setBrush(QColor(0, 0, 0, 12 + 7 * (_SHADOW_WIDTH - spread)))
-            painter.drawRoundedRect(shadow, radius, radius)
-
-        painter.setPen(QPen(QColor(255, 255, 255, 30)))
-        painter.setBrush(self._frame_color)
-        painter.drawRoundedRect(face, _CORNER_RADIUS, _CORNER_RADIUS)
+        outline = QPainterPath()
+        outline.addRoundedRect(face, radius, radius)
+        painter.fillPath(outline, self._frame_color)
+        if self._toolbar is not None and not self._toolbar.isHidden():
+            bottom = self._toolbar.mapTo(self, QPoint(0, self._toolbar.height() - 1)).y()
+            header = QRectF(face.left(), face.top(), face.width(), bottom - face.top())
+            painter.save()
+            painter.setClipRect(header)
+            painter.fillPath(outline, self._header_brush)
+            painter.restore()
+        if self._has_border:
+            painter.strokePath(outline, QPen(QColor(255, 255, 255, 30)))
 
     def eventFilter(self, watched, event):
         if event.type() == QEvent.WindowStateChange and watched is self.window():
             self._update_handle_visibility()
+        elif watched is self._toolbar and event.type() in (QEvent.Move, QEvent.Resize, QEvent.Show, QEvent.Hide):
+            self.update()
         return super().eventFilter(watched, event)
 
 
