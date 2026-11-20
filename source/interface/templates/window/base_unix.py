@@ -8,7 +8,7 @@ from .resize_cursor_linux import LinuxResizeCursors
 _RESIZE_BORDER_WIDTH = 10
 _RESIZE_CORNER_EXTENT = 20
 _CORNER_RADIUS = 12
-_SHADOW_WIDTH = 4
+_INNER_SHADOW_WIDTH = 4
 
 
 class _ResizeBorder(QWidget):
@@ -66,23 +66,22 @@ class _ResizeBorder(QWidget):
             return
         self._prepare_cursors()
         cursor = self._direction_cursors[int(edges)]
-        if cursor is self._active_cursor:
-            return
-        self._active_cursor = cursor
-        self.setCursor(cursor)
-        if not self.underMouse():
-            # Qt can deliver the first move before marking the border as hovered.
-            window = self.window().windowHandle()
-            if window is not None:
-                window.setCursor(cursor)
+        if cursor is not self._active_cursor:
+            self._active_cursor = cursor
+            self.setCursor(cursor)
+        # Qt can change the window cursor even when the pointer stays on the same edge.
+        window = self.window().windowHandle()
+        if window is not None and window.cursor() != cursor:
+            window.setCursor(cursor)
 
     def _clear_resize_cursor(self):
-        if self._active_cursor is None:
+        cursor = self._active_cursor
+        if cursor is None:
             return
         self._active_cursor = None
         self.unsetCursor()
         window = self.window().windowHandle()
-        if window is not None:
+        if window is not None and window.cursor() == cursor:
             window.unsetCursor()
 
     def showEvent(self, event):
@@ -170,17 +169,8 @@ class LinuxResizeFrame(QWidget):
     def paintEvent(self, event):
         painter = QPainter(self)
         face = QRectF(self.rect())
-        radius = 0
-        if self._has_border:
-            painter.setRenderHint(QPainter.Antialiasing)
-            painter.setPen(Qt.NoPen)
-            face.adjust(_SHADOW_WIDTH, _SHADOW_WIDTH, -_SHADOW_WIDTH, -_SHADOW_WIDTH)
-            radius = _CORNER_RADIUS
-            for spread in range(_SHADOW_WIDTH, 0, -1):
-                shadow = face.adjusted(-spread, -spread, spread, spread)
-                painter.setBrush(QColor(0, 0, 0, 12 + 7 * (_SHADOW_WIDTH - spread)))
-                painter.drawRoundedRect(shadow, radius + spread, radius + spread)
-
+        radius = _CORNER_RADIUS if self._has_border else 0
+        painter.setRenderHint(QPainter.Antialiasing, self._has_border)
         outline = QPainterPath()
         outline.addRoundedRect(face, radius, radius)
         painter.fillPath(outline, self._frame_color)
@@ -192,6 +182,14 @@ class LinuxResizeFrame(QWidget):
             painter.fillPath(outline, self._header_brush)
             painter.restore()
         if self._has_border:
+            painter.setClipPath(outline)
+            painter.setBrush(Qt.NoBrush)
+            for depth in range(_INNER_SHADOW_WIDTH):
+                inset = depth + 0.5
+                shade = face.adjusted(inset, inset, -inset, -inset)
+                shade_radius = radius - inset
+                painter.setPen(QPen(QColor(0, 0, 0, 56 - 12 * depth)))
+                painter.drawRoundedRect(shade, shade_radius, shade_radius)
             painter.strokePath(outline, QPen(QColor(255, 255, 255, 30)))
 
     def eventFilter(self, watched, event):
