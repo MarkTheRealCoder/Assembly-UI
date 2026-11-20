@@ -12,7 +12,7 @@ class Watcher:
     def updateDocument(self, document: Document) -> None:
         self.___doc_map[document] = QDateTime.currentDateTime()
 
-    def getDocumentUpdates(self, document: Document) -> str | None:
+    def getDocumentUpdates(self, document: Document) -> str or None:
         text = None
         if document not in self.___doc_map:
             self.updateDocument(document)
