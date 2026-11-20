@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import re
 from pathlib import Path
 
 import psutil
@@ -91,23 +90,19 @@ def is_file_hidden(file: str, path: str) -> bool:
 
 def ls(path: str, exts: tuple = ()):
     results: list[tuple[str, str]] = []
+    extensions = {ext.lower() for ext in exts}
     try:
-        dirs = os.listdir(path)
-        for i in dirs:
-            file = None
-            valid = False
-            if exts != ():
-                file = re.match(fr"\b\w+\.({'|'.join(exts)})\b", i)
-                valid = file is not None
-            if not valid:
-                fp = os.path.join(path, i)  # full path
-                valid = os.path.isdir(fp) and not is_file_hidden(i, fp)
-            if valid:
-                ext = "" if file is None else file.group(1)
-                results.append((i, ext))
-    except Exception:
-        pass
-    finally:
+        with os.scandir(path) as entries:
+            for entry in entries:
+                if is_file_hidden(entry.name, entry.path):
+                    continue
+                if entry.is_dir():
+                    results.append((entry.name, ""))
+                else:
+                    extension = os.path.splitext(entry.name)[1][1:].lower()
+                    if extension in extensions and entry.is_file():
+                        results.append((entry.name, extension))
+    except OSError:
         pass
     return results
 

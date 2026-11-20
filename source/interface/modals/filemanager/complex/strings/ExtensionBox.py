@@ -1,10 +1,12 @@
+from collections.abc import Sequence
+
 from PyQt5.QtWidgets import QComboBox, QSizePolicy
 
 from source.filesystem import IconManager
 
 
 class ExtensionBox(QComboBox):
-    def __init__(self, parent, extensions: list[str]):
+    def __init__(self, parent, extensions: Sequence[str]):
         super().__init__(parent)
         self.setObjectName("ExtensionBox")
 

@@ -249,7 +249,7 @@ QMenu::item:hover, QMenu::item:selected {
 }
 
 
-QWidget#Window, QWidget#Trash {
+QWidget#Window, QWidget#Trash, QDialog#Popup {
     background-color: var(---generic-background-color);
     border: 1px solid var(---generic-highlight-background-color);
 }
@@ -266,16 +266,20 @@ QLineEdit#TextBox {
     width: 150px;
 }
 
-QPushButton#FileButton {
+QPushButton#FileButton, QDialog#Popup QPushButton {
     background-color: var(---generic-light-background-color);
     color: var(---generic-highlight-text-color);
     border: 1px solid var(---generic-background-color);
     border-radius: 10px;
 }
 
-QPushButton#FileButton:hover {
+QPushButton#FileButton:hover, QDialog#Popup QPushButton:hover, QDialog#Popup QPushButton:focus {
     background-color: var(---generic-highlight-background-color);
     border: 1px solid var(---generic-highlight-text-color);
+}
+
+QLabel#PopupMessage {
+    color: var(---generic-text-color);
 }
 
 QComboBox#ExtensionBox {

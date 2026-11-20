@@ -5,8 +5,8 @@ from source.comms import Database
 from source.interface.editor.Editor import Editor
 from source.interface.modals import DirectoryPicker
 from source.interface.modals import FileCreator
-from source.interface.modals import FilePicker
 from source.interface.modals import modalOpen
+from source.interface.modals.filemanager.FilePicker import open_file
 from source.interface.shared import createLayout
 
 
@@ -30,7 +30,7 @@ class DefaultFrame(QLabel):
         if link == "cwd":
             modalOpen(self, DirectoryPicker(), "Setup Working Directory")
         elif link == "open":
-            modalOpen(self, FilePicker(), "Open a File")
+            open_file(self.window())
         else:
             modalOpen(self, FileCreator(), "Create a New File")
 

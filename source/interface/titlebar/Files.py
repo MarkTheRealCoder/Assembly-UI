@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QMenu, QSizePolicy
 
-from source.interface.modals import modalOpen, FilePicker, DirectoryPicker, FileCreator, FileSaver
+from source.interface.modals import modalOpen, DirectoryPicker, FileCreator, FileSaver
+from source.interface.modals.filemanager.FilePicker import open_file
 from source.interface.templates import GenericButton, create_toast, toast_safe_exec
 from source.platform import Desktop
 
@@ -37,12 +38,7 @@ class FileMenu(GenericButton):
         menu = QMenu(hndl)
         menu.addAction("Change Working Path", toast_safe_exec(hndl.window(), lambda: modalOpen(hndl.window(), DirectoryPicker(), "Setup Working Directory")))
         menu.addSeparator()
-        menu.addAction("Open",
-                    toast_safe_exec(
-                        hndl.window(),
-                        lambda: modalOpen(hndl.window(), FilePicker(), "Open a File")
-                        )
-                    )
+        menu.addAction("Open", lambda: open_file(hndl.window()))
         menu.addAction("New", toast_safe_exec(hndl.window(), lambda: modalOpen(hndl.window(), FileCreator(), "Create a New File")))
         menu.addAction("Save as...", toast_safe_exec(hndl.window(), lambda: FileMenu._filesaver(hndl.window())))
         return menu

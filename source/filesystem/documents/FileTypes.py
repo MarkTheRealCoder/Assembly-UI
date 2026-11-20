@@ -1,8 +1,9 @@
 class Filetypes:
 
-    def __init__(self, v0: int, v1: str):
+    def __init__(self, v0: int, v1: str, *aliases: str):
         self.___numeric: int = v0
         self.___extension: str = v1
+        self.extensions = (v1, *aliases)
 
     def __eq__(self, other):
         if isinstance(other, Filetypes):
@@ -25,20 +26,21 @@ class Filetypes:
 
 class FT(Filetypes):
     FFOLD: Filetypes = Filetypes(0, "")
-    FIJVM: Filetypes = Filetypes(1, "ijvm")
-    F8088: Filetypes = Filetypes(2, "a8088")
+    FIJVM: Filetypes = Filetypes(1, "ijvm", "jas")
+    F8088: Filetypes = Filetypes(2, "a8088", "asm")
+    SOURCE_EXTENSIONS = F8088.extensions + FIJVM.extensions
+    _TYPES = (FFOLD, FIJVM, F8088)
 
     @staticmethod
     def findByExt(ext: str) -> Filetypes:
-        for i in [ft for ft in dir(FT) if ft.startswith("F")]:
-            attr = getattr(FT, i)
-            if attr == ext:
-                return attr
+        ext = ext.lower()
+        for file_type in FT._TYPES:
+            if ext in file_type.extensions:
+                return file_type
 
     @staticmethod
     def findById(num: int) -> Filetypes:
-        for i in [ft for ft in dir(FT) if ft.startswith("F")]:
-            attr = getattr(FT, i)
-            if int(attr) == num:
-                return attr
+        for file_type in FT._TYPES:
+            if int(file_type) == num:
+                return file_type
 

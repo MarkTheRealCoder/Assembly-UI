@@ -1,5 +1,7 @@
+import os
+from collections.abc import Sequence
+
 from PyQt5.QtWidgets import QFrame, QSizePolicy, QVBoxLayout, QHBoxLayout
-from regex import regex
 
 from source.filesystem import create_dir, open_dir, resolve_app_path, to_ui_path
 from source.filesystem.documents import Document
@@ -13,7 +15,7 @@ from source.interface.shared import createLayout, Settings
 
 
 class FileDialogGraphics(QFrame):
-    def __init__(self, extensions: list[str], **kwargs):
+    def __init__(self, extensions: Sequence[str], **kwargs):
         super().__init__(None)
 
         self._dialog = None
@@ -57,7 +59,7 @@ class FileDialogGraphics(QFrame):
 
 
 class FileDialogLogic(FileDialogGraphics):
-    def __init__(self, extensions: list[str], **kwargs):
+    def __init__(self, extensions: Sequence[str], **kwargs):
         super().__init__(extensions, **kwargs)
 
     def validate(self, path: str):
@@ -69,10 +71,11 @@ class FileDialogLogic(FileDialogGraphics):
 
     def set_current_path(self, path: str, is_file: bool):
         if is_file:
-            name = regex.match(f".*\\{Document.SEP}(\\w+)\\.\\w+", path).group(1)
+            path, filename = os.path.split(path)
+            name, extension = os.path.splitext(filename)
             self._name.setText(name)
-        else:
-            self._box.setText(to_ui_path(path))
+            self._ext_picker.setCurrentText(extension[1:].upper())
+        self._box.setText(to_ui_path(path))
 
     def create_folder(self):
         def create_folder(name: str) -> bool:
@@ -97,7 +100,7 @@ class FileDialogLogic(FileDialogGraphics):
 
 
 class FileDialog(FileDialogLogic):
-    def __init__(self, extensions: list[str], **kwargs):
+    def __init__(self, extensions: Sequence[str], **kwargs):
         super().__init__(extensions, **kwargs)
         self._tree.onClick(self.set_current_path)
         self._box.onEditing(self.validate)

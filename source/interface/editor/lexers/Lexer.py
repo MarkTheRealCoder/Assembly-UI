@@ -1,6 +1,8 @@
 from PyQt5.Qsci import QsciLexerCustom, QsciScintilla
 from PyQt5.QtGui import QColor, QFont
 
+from source.filesystem.documents import FT
+
 from .Asm8088Lexer import Asm8088Lexer
 from .IJVMLexer import IJVMLexer
 
@@ -21,10 +23,10 @@ class LexerFactory:
             Appropriate lexer instance (Asm8088Lexer, IJVMLexer, or DefaultLexer)
         """
         
-        # Get current document from Database
-        if ext == 'a8088':
+        file_type = FT.findByExt(ext)
+        if file_type == FT.F8088:
             return Asm8088Lexer(parent)
-        elif ext == 'ijvm':
+        if file_type == FT.FIJVM:
             return IJVMLexer(parent)
         
         # Default lexer if no specific match

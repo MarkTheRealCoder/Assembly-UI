@@ -1,11 +1,9 @@
 import os
-import re
 import threading
 
 
 class Document:
     SEP = "\\" if os.name == "nt" else "/"
-    ___SEP = r"\\" if os.name == "nt" else "/"
 
     def __init__(self, path: str):
         self.___path: str = path
@@ -20,10 +18,9 @@ class Document:
         self.___setText()
 
     def ___fill_data(self, path: str):
-        match = re.match(fr"(?P<folder>.*){Document.___SEP}(?P<name>[A-Za-z0-9_]+)\.(?P<extension>[A-Za-z0-9.]+)", path)
-        self.___name = match.group(self.___name)
-        self.___folder = match.group(self.___folder)
-        self.___extension = match.group(self.___extension)
+        self.___folder, filename = os.path.split(path)
+        self.___name, extension = os.path.splitext(filename)
+        self.___extension = extension[1:]
 
     def ___setText(self):
         self.___sem.acquire()

@@ -1,10 +1,9 @@
 import os
 
-from PyQt5.QtCore import QModelIndex
+from PyQt5.QtCore import QModelIndex, QTimer
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtWidgets import QAbstractItemView, QTreeView, QSizePolicy
 
-from source.asyncro import Scheduler
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
 from source.filesystem import IconManager
@@ -47,7 +46,7 @@ GET_CWD = lambda: Settings.getOrExcept("application/cwd", error_message="A Worki
 class PathTreeLogic(PathTreeGraphic):
     def __init__(self, parent, is_file: bool = False):
         super().__init__(parent)
-        self.___exts = () if not is_file else (str(FT.FIJVM), str(FT.F8088))
+        self.___exts = FT.SOURCE_EXTENSIONS if is_file else ()
         self.starting_point(is_file)
 
     def starting_point(self, is_file: bool):
@@ -94,11 +93,12 @@ class PathTreeLogic(PathTreeGraphic):
                 i += 1
                 continue
             item_text = it.text()
-            v = items.pop(item_text, None)
-            if v is None:
+            extension = items.get(item_text)
+            if extension is None or not isinstance(it, Item) or it.is_file() != bool(extension):
                 starting_item.removeRow(i)
                 num -= 1
                 continue
+            items.pop(item_text)
             if self.isExpanded(it.index()):
                 self.update(it)
             i += 1
@@ -109,8 +109,7 @@ class PathTreeLogic(PathTreeGraphic):
     def get_path(self, index: QModelIndex) -> tuple[str, bool]:
         item: Item = self.model().itemFromIndex(index)
         path: str = self.genPathFromItem(item)
-        is_file = self.___exts != () and ("." in item.text())
-        return path, is_file
+        return path, item.is_file()
 
     def add_subdirectories(self, index: QModelIndex):
         if not index.isValid():
@@ -118,7 +117,7 @@ class PathTreeLogic(PathTreeGraphic):
         model: QStandardItemModel = self.model()
         item: Item = model.itemFromIndex(index)
         dummy = item.child(0, 0)
-        if dummy.text() == "dummy":
+        if dummy is not None and not isinstance(dummy, Item):
             item_names = ls(self.genPathFromItem(item), self.___exts)
             items = [Item(*i) for i in item_names]
             if items:
@@ -152,7 +151,9 @@ class PathTree(PathTreeLogic):
     def __init__(self, parent, is_file: bool = False):
         super().__init__(parent, is_file)
 
-        self.___scheduler: Scheduler = Scheduler(1, self.update)
+        self.___timer = QTimer(self)
+        self.___timer.timeout.connect(self.update)
+        self.___timer.start(1000)
         self.___placeholder_dc: callable = lambda x, y: None # double click
         self.___placeholder_c: callable = lambda x, y: None # click
 
@@ -161,7 +162,7 @@ class PathTree(PathTreeLogic):
         self.clicked.connect(lambda x: self.___placeholder_c(*self.get_path(x))) # click
 
     def onClosingEvent(self, event):
-        self.___scheduler.terminate()
+        self.___timer.stop()
 
     def onDoubleClick(self, func: callable):
         if not callable(func):
