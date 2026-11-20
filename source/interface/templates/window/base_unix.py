@@ -2,6 +2,8 @@ from PyQt5.QtCore import QEvent, QPoint, QRectF, Qt, pyqtProperty
 from PyQt5.QtGui import QBrush, QColor, QPainter, QPainterPath, QPen
 from PyQt5.QtWidgets import QFrame, QGridLayout, QWidget
 
+from .resize_cursor_linux import LinuxResizeCursors
+
 
 _RESIZE_BORDER_WIDTH = 10
 _CORNER_RADIUS = 12
@@ -9,19 +11,58 @@ _SHADOW_WIDTH = 4
 
 
 class _ResizeHandle(QWidget):
-    def __init__(self, parent, edges, cursor):
+    def __init__(self, parent, edges, cursors, cursor_name, fallback_cursor):
         super().__init__(parent)
         self._edges = edges
-        self.setCursor(cursor)
+        self._cursors = cursors
+        self._cursor_name = cursor_name
+        self._fallback_cursor = fallback_cursor
+        self.setMouseTracking(True)
         if edges & (Qt.TopEdge | Qt.BottomEdge):
             self.setFixedHeight(_RESIZE_BORDER_WIDTH)
         if edges & (Qt.LeftEdge | Qt.RightEdge):
             self.setFixedWidth(_RESIZE_BORDER_WIDTH)
 
+    def _show_resize_cursor(self):
+        cursor = self._cursors.cursor(self._cursor_name, self._fallback_cursor, self.devicePixelRatioF())
+        self.setCursor(cursor)
+        # The first pointer move can arrive before Qt marks the handle as hovered.
+        window = self.window().windowHandle()
+        if window is not None:
+            window.setCursor(cursor)
+
+    def _clear_resize_cursor(self):
+        if not self.testAttribute(Qt.WA_SetCursor):
+            return
+        self.unsetCursor()
+        window = self.window().windowHandle()
+        if window is not None:
+            window.unsetCursor()
+
+    def enterEvent(self, event):
+        self._show_resize_cursor()
+        super().enterEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if not self.rect().contains(event.pos()):
+            self._clear_resize_cursor()
+        elif not self.testAttribute(Qt.WA_SetCursor):
+            self._show_resize_cursor()
+        super().mouseMoveEvent(event)
+
+    def leaveEvent(self, event):
+        self._clear_resize_cursor()
+        super().leaveEvent(event)
+
+    def hideEvent(self, event):
+        self._clear_resize_cursor()
+        super().hideEvent(event)
+
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             handle = self.window().windowHandle()
             if handle is not None and handle.startSystemResize(self._edges):
+                self._clear_resize_cursor()
                 event.accept()
                 return
         super().mousePressEvent(event)
@@ -43,17 +84,18 @@ class LinuxResizeFrame(QWidget):
         layout.addWidget(content, 1, 1)
 
         self._handles = []
-        for row, column, edges, cursor in (
-            (0, 0, Qt.TopEdge | Qt.LeftEdge, Qt.SizeFDiagCursor),
-            (0, 1, Qt.TopEdge, Qt.SizeVerCursor),
-            (0, 2, Qt.TopEdge | Qt.RightEdge, Qt.SizeBDiagCursor),
-            (1, 0, Qt.LeftEdge, Qt.SizeHorCursor),
-            (1, 2, Qt.RightEdge, Qt.SizeHorCursor),
-            (2, 0, Qt.BottomEdge | Qt.LeftEdge, Qt.SizeBDiagCursor),
-            (2, 1, Qt.BottomEdge, Qt.SizeVerCursor),
-            (2, 2, Qt.BottomEdge | Qt.RightEdge, Qt.SizeFDiagCursor),
+        cursors = LinuxResizeCursors()
+        for row, column, edges, cursor_name, fallback_cursor in (
+            (0, 0, Qt.TopEdge | Qt.LeftEdge, "nw-resize", Qt.SizeFDiagCursor),
+            (0, 1, Qt.TopEdge, "n-resize", Qt.SizeVerCursor),
+            (0, 2, Qt.TopEdge | Qt.RightEdge, "ne-resize", Qt.SizeBDiagCursor),
+            (1, 0, Qt.LeftEdge, "w-resize", Qt.SizeHorCursor),
+            (1, 2, Qt.RightEdge, "e-resize", Qt.SizeHorCursor),
+            (2, 0, Qt.BottomEdge | Qt.LeftEdge, "sw-resize", Qt.SizeBDiagCursor),
+            (2, 1, Qt.BottomEdge, "s-resize", Qt.SizeVerCursor),
+            (2, 2, Qt.BottomEdge | Qt.RightEdge, "se-resize", Qt.SizeFDiagCursor),
         ):
-            handle = _ResizeHandle(self, edges, cursor)
+            handle = _ResizeHandle(self, edges, cursors, cursor_name, fallback_cursor)
             layout.addWidget(handle, row, column)
             self._handles.append(handle)
 
