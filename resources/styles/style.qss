@@ -232,6 +232,43 @@ QPushButton#Minimize:pressed, QPushButton#Maximize:pressed {
     background-color: var(---generic-light-background-color);
 }
 
+QFrame#Toolbar #WindowControls[platform="linux"] QPushButton {
+    min-width: 24px;
+    max-width: 24px;
+    min-height: 24px;
+    max-height: 24px;
+    border-radius: 12px;
+    background-color: #2D3440;
+}
+
+QFrame#Toolbar #WindowControls[platform="linux"] QPushButton:hover {
+    background-color: #394657;
+}
+
+QFrame#Toolbar #WindowControls[platform="linux"] QPushButton:pressed {
+    background-color: #46566B;
+}
+
+QFrame#Toolbar #WindowControls[platform="mac"] QPushButton {
+    min-width: 14px;
+    max-width: 14px;
+    min-height: 14px;
+    max-height: 14px;
+    border-radius: 7px;
+}
+
+QFrame#Toolbar #WindowControls[platform="mac"] QPushButton#Close {
+    background-color: #FF5F57;
+}
+
+QFrame#Toolbar #WindowControls[platform="mac"] QPushButton#Minimize {
+    background-color: #FEBC2E;
+}
+
+QFrame#Toolbar #WindowControls[platform="mac"] QPushButton#Maximize {
+    background-color: #28C840;
+}
+
 
 QPushButton#File::menu-indicator, QPushButton#Help::menu-indicator {
     image: none;
