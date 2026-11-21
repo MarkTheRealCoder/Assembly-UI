@@ -1,6 +1,6 @@
 from PyQt5.QtCore import QEvent, QPoint, QRectF, Qt, pyqtProperty
 from PyQt5.QtGui import QBrush, QColor, QEnterEvent, QPainter, QPainterPath, QPen
-from PyQt5.QtWidgets import QFrame, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QApplication, QFrame, QVBoxLayout, QWidget
 
 from .resize_cursor_linux import LinuxResizeCursors
 
@@ -192,11 +192,35 @@ class LinuxResizeFrame(QWidget):
                 painter.drawRoundedRect(shade, shade_radius, shade_radius)
             painter.strokePath(outline, QPen(QColor(255, 255, 255, 30)))
 
+    def _sync_content_cursor(self, native_window, pos):
+        if QApplication.overrideCursor() is not None or QApplication.activePopupWidget() is not None:
+            return
+        if QWidget.mouseGrabber() is not None:
+            return
+        widget = self.window().childAt(pos)
+        if widget is None or widget is self._resize_border:
+            return
+
+        # Pointer events also arrive when another window has keyboard focus.
+        cursor = widget.cursor()
+        if native_window.cursor() != cursor:
+            native_window.setCursor(cursor)
+
     def eventFilter(self, watched, event):
-        if event.type() == QEvent.WindowStateChange and watched is self.window():
-            self._update_frame_state()
-        elif watched is self._toolbar and event.type() in (QEvent.Move, QEvent.Resize, QEvent.Show, QEvent.Hide):
+        event_type = event.type()
+        window = self.window()
+        if watched is window:
+            if event_type == QEvent.WindowStateChange:
+                self._update_frame_state()
+            elif event_type in (QEvent.WinIdChange, QEvent.Show):
+                native_window = window.windowHandle()
+                if native_window is not None:
+                    native_window.installEventFilter(self)
+        elif watched is self._toolbar and event_type in (QEvent.Move, QEvent.Resize, QEvent.Show, QEvent.Hide):
             self.update()
+        elif event_type in (QEvent.Enter, QEvent.MouseMove) and watched is window.windowHandle():
+            if isinstance(event, QEnterEvent) or (event_type == QEvent.MouseMove and event.buttons() == Qt.NoButton):
+                self._sync_content_cursor(watched, event.pos())
         return super().eventFilter(watched, event)
 
 
