@@ -42,8 +42,8 @@ class ModalWindowGraphics(BaseWindow):
         content.setParent(self)
 
         layout: QVBoxLayout = createLayout(QVBoxLayout, self)
-        tlayout: QHBoxLayout = createLayout(QHBoxLayout, self)
-        mlayout: QHBoxLayout = createLayout(QHBoxLayout, self)
+        tlayout: QHBoxLayout = createLayout(QHBoxLayout)
+        mlayout: QHBoxLayout = createLayout(QHBoxLayout)
 
         top = Title(self)
         top.setText(title)

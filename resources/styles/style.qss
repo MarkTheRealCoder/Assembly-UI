@@ -203,7 +203,6 @@ QFrame#Toolbar QPushButton#Icon {
 
 QFrame#Toolbar QPushButton, QWidget#Trash QPushButton#Close, QWidget#Window QPushButton#Close {
     text-align: center;
-    qproperty-alignment: AlignCenter;
     color: var(---generic-highlightable-text);
     background-color: transparent;
     border: none;
@@ -497,7 +496,6 @@ QFrame#ToolbarExecution QComboBox {
     max-width: 90px;
     padding-left: 10px;
     text-align: center;
-    qproperty-alignment: AlignCenter;
     font-size: 12px;
     color: #1D9E75;
 }

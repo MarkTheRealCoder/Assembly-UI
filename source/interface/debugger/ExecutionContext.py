@@ -22,13 +22,13 @@ class ExecutionContextGraphics(QFrame):
         layout: QHBoxLayout = createLayout(QHBoxLayout, self)
 
         # vlayout for terminal and its toolbar
-        vlayout: QVBoxLayout = createLayout(QVBoxLayout, self)
+        vlayout: QVBoxLayout = createLayout(QVBoxLayout)
         vlayout.addWidget(self.toolbar_t)
         vlayout.addWidget(FindWidget(self,  "terminal"), 1)
         vlayout.addWidget(self.terminal, 3)
 
         # vlayout for execution toolbar and its memory viewer
-        vlayout2: QVBoxLayout = createLayout(QVBoxLayout, self)
+        vlayout2: QVBoxLayout = createLayout(QVBoxLayout)
         vlayout2.addWidget(self.toolbar_e)
         vlayout2.addWidget(self.memory_viewer, 1)
 

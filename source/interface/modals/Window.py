@@ -39,9 +39,9 @@ class WindowGraphics(BaseWindow):
 
         # mw = makeResizingLayout(widget) # Fix misparenting target
         self.setObjectName("Window")
-        layout: QVBoxLayout = createLayout(QVBoxLayout, self)
-        tlayout: QHBoxLayout = createLayout(QHBoxLayout, self)
-        mlayout: QHBoxLayout = createLayout(QHBoxLayout, self)
+        layout: QVBoxLayout = createLayout(QVBoxLayout, widget)
+        tlayout: QHBoxLayout = createLayout(QHBoxLayout)
+        mlayout: QHBoxLayout = createLayout(QHBoxLayout)
 
         tlayout.addWidget(Title(self))
         tlayout.addWidget(CloseButton(self, self._reason))

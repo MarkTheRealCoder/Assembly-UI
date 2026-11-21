@@ -38,7 +38,7 @@ class CompoundMemoryChunkGraphics(_MemoryChunk):
         layout: QVBoxLayout = createLayout(QVBoxLayout, self)
         layout.setAlignment(Qt.AlignTop)
         layout.addWidget(CompoundMemoryChunkHeader(name, color=color), 1)
-        inner_layout: QVBoxLayout = createLayout(QVBoxLayout, self)
+        inner_layout: QVBoxLayout = createLayout(QVBoxLayout)
         inner_layout.setContentsMargins(8, 8, 8, 8)
         inner_layout.setSpacing(4)
         layout.addLayout(inner_layout, 2)

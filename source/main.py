@@ -41,7 +41,8 @@ if __name__ == "__main__":
     window: MainWindow = MainWindow()
     window.show()
     window.raise_()
-    window.activateWindow()
+    if not app.platformName().startswith("wayland"):
+        window.activateWindow()
     window.setFocus()
     sys.exit(app.exec_())
 

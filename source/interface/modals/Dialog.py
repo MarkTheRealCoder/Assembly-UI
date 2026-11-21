@@ -1,6 +1,6 @@
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QKeyEvent, QPalette
-from PyQt5.QtWidgets import QLabel, QVBoxLayout, QSizePolicy, QLineEdit
+from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout, QSizePolicy, QLineEdit
 
 from source.interface.shared import createLayout
 
@@ -106,7 +106,8 @@ class Dialog(DialogLogic):
         super().__init__(parent, title, prompt, action)
         self.focus.connect(self.onFocusLose)
         self.show()
-        self.activateWindow()
+        if not QApplication.platformName().startswith("wayland"):
+            self.activateWindow()
         self.setFocus()
 
     def onFocusLose(self):

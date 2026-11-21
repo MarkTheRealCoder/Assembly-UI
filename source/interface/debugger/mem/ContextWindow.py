@@ -36,7 +36,7 @@ class ContextWindowGraphics(QFrame):
         layout: QVBoxLayout = createLayout(QVBoxLayout, self)
         layout.setAlignment(Qt.AlignTop)
         layout.addWidget(ContextHeader(name.upper(), color=roundColors("CONTEXTS")), 1)
-        inner_layout: QVBoxLayout = createLayout(QVBoxLayout, self)
+        inner_layout: QVBoxLayout = createLayout(QVBoxLayout)
         inner_layout.setContentsMargins(8, 8, 8, 8)
         inner_layout.setSpacing(4)
         layout.addLayout(inner_layout, 2)
