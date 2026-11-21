@@ -6,9 +6,9 @@ from .gnome_tiling import TILED_RESIZE_EDGES_PROPERTY, watch_gnome_tiling
 from .resize_cursor_linux import LinuxResizeCursors
 
 
-_RESIZE_BORDER_WIDTH = 10
+_RESIZE_BORDER_WIDTH = 5
 _RESIZE_CORNER_EXTENT = 20
-_FLOATING_RESIZE_OUTSET = 3
+_FLOATING_RESIZE_OUTSET = 8
 _CORNER_RADIUS = 12
 _INNER_SHADOW_WIDTH = 4
 _ALL_RESIZE_EDGES = Qt.LeftEdge | Qt.TopEdge | Qt.RightEdge | Qt.BottomEdge
