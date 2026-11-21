@@ -2,6 +2,7 @@ from PyQt5.QtCore import QEvent, QPoint, QRectF, Qt, pyqtProperty
 from PyQt5.QtGui import QBrush, QColor, QEnterEvent, QPainter, QPainterPath, QPen
 from PyQt5.QtWidgets import QApplication, QFrame, QVBoxLayout, QWidget
 
+from .gnome_tiling import TILED_PROPERTY, watch_gnome_tiling
 from .resize_cursor_linux import LinuxResizeCursors
 
 
@@ -155,8 +156,11 @@ class LinuxResizeFrame(QWidget):
         self.update()
 
     def _update_frame_state(self):
-        state = self.window().windowState()
-        self._has_border = not (state & (Qt.WindowMaximized | Qt.WindowFullScreen | Qt.WindowMinimized))
+        window = self.window()
+        state = window.windowState()
+        native_window = window.windowHandle()
+        tiled = native_window is not None and native_window.property(TILED_PROPERTY)
+        self._has_border = not (tiled or state & (Qt.WindowMaximized | Qt.WindowFullScreen | Qt.WindowMinimized))
         margin = _RESIZE_BORDER_WIDTH if self._has_border else 0
         self.layout().setContentsMargins(margin, margin, margin, margin)
         self._resize_border.setVisible(self._has_border)
@@ -216,10 +220,13 @@ class LinuxResizeFrame(QWidget):
                 native_window = window.windowHandle()
                 if native_window is not None:
                     native_window.installEventFilter(self)
+                    watch_gnome_tiling(native_window)
         elif watched is self._toolbar and event_type in (QEvent.Move, QEvent.Resize, QEvent.Show, QEvent.Hide):
             self.update()
-        elif event_type in (QEvent.Enter, QEvent.MouseMove) and watched is window.windowHandle():
-            if isinstance(event, QEnterEvent) or (event_type == QEvent.MouseMove and event.buttons() == Qt.NoButton):
+        elif watched is window.windowHandle():
+            if event_type == QEvent.DynamicPropertyChange and event.propertyName() == TILED_PROPERTY.encode("ascii"):
+                self._update_frame_state()
+            elif isinstance(event, QEnterEvent) or (event_type == QEvent.MouseMove and event.buttons() == Qt.NoButton):
                 self._sync_content_cursor(watched, event.pos())
         return super().eventFilter(watched, event)
 
