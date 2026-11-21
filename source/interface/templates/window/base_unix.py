@@ -8,6 +8,7 @@ from .resize_cursor_linux import LinuxResizeCursors
 
 _RESIZE_BORDER_WIDTH = 10
 _RESIZE_CORNER_EXTENT = 20
+_FLOATING_RESIZE_OUTSET = 3
 _CORNER_RADIUS = 12
 _INNER_SHADOW_WIDTH = 4
 _ALL_RESIZE_EDGES = Qt.LeftEdge | Qt.TopEdge | Qt.RightEdge | Qt.BottomEdge
@@ -33,13 +34,16 @@ class _ResizeBorder(QWidget):
         self._active_cursor = None
         self._resize_edges = Qt.Edges()
         self.resize_margins = QMargins()
+        self.outset = 0
         self.setMouseTracking(True)
 
-    def set_resize_edges(self, edges):
-        if self._resize_edges != edges:
+    def set_resize_edges(self, edges, outset):
+        if self._resize_edges != edges or self.outset != outset:
             self._resize_edges = edges
+            self.outset = outset
+            width = _RESIZE_BORDER_WIDTH + outset
             self.resize_margins = QMargins(*(
-                _RESIZE_BORDER_WIDTH if edges & side else 0
+                width if edges & side else 0
                 for side in (Qt.LeftEdge, Qt.TopEdge, Qt.RightEdge, Qt.BottomEdge)
             ))
             self._clear_resize_cursor()
@@ -51,8 +55,9 @@ class _ResizeBorder(QWidget):
         if not bounds.contains(pos) or bounds.marginsRemoved(self.resize_margins).contains(pos):
             return edges
 
-        horizontal_corner = min(_RESIZE_CORNER_EXTENT, bounds.width() // 2)
-        vertical_corner = min(_RESIZE_CORNER_EXTENT, bounds.height() // 2)
+        corner_extent = _RESIZE_CORNER_EXTENT + self.outset
+        horizontal_corner = min(corner_extent, bounds.width() // 2)
+        vertical_corner = min(corner_extent, bounds.height() // 2)
         if pos.x() < horizontal_corner:
             edges |= Qt.LeftEdge
         elif pos.x() >= bounds.width() - horizontal_corner:
@@ -175,7 +180,8 @@ class LinuxResizeFrame(QWidget):
         restored = not (state & (Qt.WindowMaximized | Qt.WindowFullScreen | Qt.WindowMinimized))
         self._rounded = restored and tiled_edges is None
         resize_edges = _ALL_RESIZE_EDGES if tiled_edges is None else Qt.Edges(tiled_edges)
-        self._resize_border.set_resize_edges(resize_edges if restored else Qt.Edges())
+        outset = _FLOATING_RESIZE_OUTSET if self._rounded else 0
+        self._resize_border.set_resize_edges(resize_edges if restored else Qt.Edges(), outset)
         self.layout().setContentsMargins(self._resize_border.resize_margins)
         self.update()
 
@@ -185,7 +191,9 @@ class LinuxResizeFrame(QWidget):
 
     def paintEvent(self, event):
         painter = QPainter(self)
-        face = QRectF(self.rect())
+        # Keep the transparent resize band inside the surface that receives input.
+        outset = self._resize_border.outset
+        face = QRectF(self.rect()).adjusted(outset, outset, -outset, -outset)
         radius = _CORNER_RADIUS if self._rounded else 0
         painter.setRenderHint(QPainter.Antialiasing, self._rounded)
         outline = QPainterPath()
