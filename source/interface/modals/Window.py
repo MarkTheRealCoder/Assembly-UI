@@ -7,7 +7,7 @@ from source.interface.shared import createLayout
 from source.interface.templates import CloseButton
 from source.interface.templates import Title
 from source.interface.templates.window import BaseWindow
-from source.platform import Desktop
+from source.platform import Desktop, isLinux
 
 WINDOWS = []
 
@@ -23,6 +23,19 @@ def createSubWindow(reason: str, parent, wclass, *args, **kwargs):
     window.show()
 
 
+def create_window_content(window: BaseWindow) -> QWidget:
+    content = QWidget(window)
+    container = content
+    if isLinux():
+        from source.interface.templates.window.base_linux import LinuxResizeFrame
+
+        window.setProperty("linuxFrame", True)
+        window.setAttribute(Qt.WA_TranslucentBackground)
+        container = LinuxResizeFrame(window, content)
+    createLayout(QVBoxLayout, window).addWidget(container)
+    return content
+
+
 class WindowGraphics(BaseWindow):
     def __init__(self, reason: str, parent, content, *args, **kwargs):
         super().__init__(parent)
@@ -32,13 +45,8 @@ class WindowGraphics(BaseWindow):
         self.configurations(content(self, *args, **kwargs))
 
     def configurations(self, content: QWidget):
-        widget = QWidget(self)
-        main_layout = createLayout(QVBoxLayout, self)
-        main_layout.addWidget(widget)
-        self.setLayout(main_layout)
-
-        # mw = makeResizingLayout(widget) # Fix misparenting target
         self.setObjectName("Window")
+        widget = create_window_content(self)
         layout: QVBoxLayout = createLayout(QVBoxLayout, widget)
         tlayout: QHBoxLayout = createLayout(QHBoxLayout)
         mlayout: QHBoxLayout = createLayout(QHBoxLayout)

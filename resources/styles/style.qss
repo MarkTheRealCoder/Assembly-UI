@@ -310,6 +310,11 @@ QWidget#Window, QWidget#Trash, QDialog#Popup {
     border: 1px solid var(---generic-highlight-background-color);
 }
 
+QWidget#Window[linuxFrame="true"], QWidget#Trash[linuxFrame="true"] {
+    background-color: transparent;
+    border: none;
+}
+
 QLineEdit#TextBox {
     border: 1px solid var(---generic-background-color);
     border-radius: 10px;
