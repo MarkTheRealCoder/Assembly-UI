@@ -1,4 +1,4 @@
-from PyQt5.QtCore import QEvent, QMargins, QPoint, QRectF, Qt, pyqtProperty
+from PyQt5.QtCore import QEvent, QMargins, QPoint, QRectF, Qt, QTimer, pyqtProperty
 from PyQt5.QtGui import QBrush, QColor, QEnterEvent, QPainter, QPainterPath, QPen
 from PyQt5.QtWidgets import QApplication, QFrame, QVBoxLayout, QWidget
 
@@ -140,6 +140,11 @@ class LinuxResizeFrame(QWidget):
         self._frame_color = QColor("#1E1E1E")
         self._header_brush = QBrush(self._frame_color)
         self._toolbar = content.findChild(QFrame, "Toolbar", Qt.FindDirectChildrenOnly)
+        self._tiled_resize_edges = None
+        self._tiling_update_pending = False
+        self._tiling_update_timer = QTimer(self)
+        self._tiling_update_timer.setSingleShot(True)
+        self._tiling_update_timer.timeout.connect(self._update_frame_state)
         layout = QVBoxLayout(self)
         layout.setSpacing(0)
         layout.addWidget(content)
@@ -173,10 +178,8 @@ class LinuxResizeFrame(QWidget):
         self.update()
 
     def _update_frame_state(self):
-        window = self.window()
-        state = window.windowState()
-        native_window = window.windowHandle()
-        tiled_edges = native_window.property(TILED_RESIZE_EDGES_PROPERTY) if native_window is not None else None
+        state = self.window().windowState()
+        tiled_edges = self._tiled_resize_edges
         restored = not (state & (Qt.WindowMaximized | Qt.WindowFullScreen | Qt.WindowMinimized))
         self._rounded = restored and tiled_edges is None
         resize_edges = _ALL_RESIZE_EDGES if tiled_edges is None else Qt.Edges(tiled_edges)
@@ -184,6 +187,15 @@ class LinuxResizeFrame(QWidget):
         self._resize_border.set_resize_edges(resize_edges if restored else Qt.Edges(), outset)
         self.layout().setContentsMargins(self._resize_border.resize_margins)
         self.update()
+
+    def _queue_tiling_update(self, native_window):
+        if not self._tiling_update_pending:
+            return
+        self._tiling_update_pending = False
+        tiled_edges = native_window.property(TILED_RESIZE_EDGES_PROPERTY) if native_window is not None else None
+        if tiled_edges != self._tiled_resize_edges:
+            self._tiled_resize_edges = tiled_edges
+            self._tiling_update_timer.start(0)
 
     def resizeEvent(self, event):
         self._resize_border.setGeometry(self.rect())
@@ -237,7 +249,10 @@ class LinuxResizeFrame(QWidget):
         if watched is window:
             if event_type == QEvent.WindowStateChange:
                 self._update_frame_state()
+            elif event_type == QEvent.Resize:
+                self._queue_tiling_update(window.windowHandle())
             elif event_type in (QEvent.WinIdChange, QEvent.Show):
+                self._tiling_update_pending = True
                 native_window = window.windowHandle()
                 if native_window is not None:
                     native_window.installEventFilter(self)
@@ -247,7 +262,10 @@ class LinuxResizeFrame(QWidget):
         elif watched is window.windowHandle():
             if (event_type == QEvent.DynamicPropertyChange and
                     event.propertyName() == TILED_RESIZE_EDGES_PROPERTY.encode("ascii")):
-                self._update_frame_state()
+                # GTK sends the edges before Qt can apply the XDG surface geometry.
+                self._tiling_update_pending = True
+            elif event_type == QEvent.Expose and not event.region().isEmpty():
+                self._queue_tiling_update(watched)
             elif isinstance(event, QEnterEvent) or (event_type == QEvent.MouseMove and event.buttons() == Qt.NoButton):
                 self._sync_content_cursor(watched, event.pos())
         return super().eventFilter(watched, event)
