@@ -10,7 +10,6 @@ from source.interface.shared import Settings
 from source.interface.templates import run_toast_config
 from source.interface.templates.window import BaseWindow, native_minimize
 from source.interface.templates.window import native_maximize, native_restore
-from source.interface.templates.window.base_unix import LinuxResizeFrame
 from source.platform import isLinux
 
 
@@ -25,7 +24,12 @@ class MainWindowGraphics(QMainWindow, BaseWindow):
             self.setAttribute(Qt.WA_TranslucentBackground)
         self.setFrameless()
         mwt: MainWidget = MainWidget(self)
-        self.setCentralWidget(LinuxResizeFrame(self, mwt) if linux else mwt)
+        if linux:
+            from source.interface.templates.window.base_linux import LinuxResizeFrame
+
+            self.setCentralWidget(LinuxResizeFrame(self, mwt))
+        else:
+            self.setCentralWidget(mwt)
         mwt.update()
         mwt.repaint()
         run_toast_config(self)
