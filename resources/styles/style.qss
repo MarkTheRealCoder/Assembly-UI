@@ -251,20 +251,27 @@ QPushButton#Minimize:pressed, QPushButton#Maximize:pressed {
     background-color: var(---generic-light-background-color);
 }
 
-QFrame#Toolbar #WindowControls[platform="linux"] QPushButton {
+QFrame#Toolbar #WindowControls[platform="linux"] QPushButton,
+QWidget#Window[linuxFrame="true"] QPushButton#Close,
+QWidget#Trash[linuxFrame="true"] QPushButton#Close {
     min-width: 24px;
     max-width: 24px;
     min-height: 24px;
     max-height: 24px;
     border-radius: 12px;
     background-color: #2D3440;
+    qproperty-iconSize: 14px 14px;
 }
 
-QFrame#Toolbar #WindowControls[platform="linux"] QPushButton:hover {
+QFrame#Toolbar #WindowControls[platform="linux"] QPushButton:hover,
+QWidget#Window[linuxFrame="true"] QPushButton#Close:hover,
+QWidget#Trash[linuxFrame="true"] QPushButton#Close:hover {
     background-color: #394657;
 }
 
-QFrame#Toolbar #WindowControls[platform="linux"] QPushButton:pressed {
+QFrame#Toolbar #WindowControls[platform="linux"] QPushButton:pressed,
+QWidget#Window[linuxFrame="true"] QPushButton#Close:pressed,
+QWidget#Trash[linuxFrame="true"] QPushButton#Close:pressed {
     background-color: #46566B;
 }
 
