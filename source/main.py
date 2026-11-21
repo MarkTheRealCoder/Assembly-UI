@@ -15,7 +15,7 @@ from source.filesystem import find_path
 from source.interface import MainWindow
 from source.interface.assets import add_fonts, translateQSS
 from source.interface.shared import Settings
-from source.platform import Desktop
+from source.platform import Desktop, isLinux
 
 if __name__ == "__main__":
     # Verifica se l'applicazione è in modalità frozen (eseguibile)
@@ -31,6 +31,13 @@ if __name__ == "__main__":
     QApplication.setOrganizationName("Assembly Stdio")
     QApplication.setOrganizationDomain("assemblystdio.dev")
     QApplication.setQuitOnLastWindowClosed(True)
+
+    # Use native Wayland to receive GNOME's window tiling events.
+    if isLinux() and os.environ.get("XDG_SESSION_TYPE") == "wayland":
+        desktops = os.environ.get("XDG_CURRENT_DESKTOP", "").lower().split(":")
+        if "gnome" in desktops:
+            os.environ.setdefault("QT_QPA_PLATFORM", "wayland;xcb")
+
     app = QApplication(sys.argv)
     app.aboutToQuit.connect(lambda: EventRegister.send(ClosingEvent(), "Main"))
     with open(find_path("style.qss"), "r") as f:
