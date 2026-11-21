@@ -24,10 +24,24 @@ variables {
     ---generic-tab-color: #2D2D30;
     ---generic-light-tab-color: #37373D;
     ---old-high-contrast-text-highlight: #FFC83D;
+    ---toolbar-start-color: #0F2A4F;
+    ---toolbar-end-color: #1C1C19;
 }
 
 QMainWindow#MainWindow {
     background-color: var(---generic-background-color);
+}
+
+QMainWindow#MainWindow[linuxFrame="true"] {
+    background-color: transparent;
+}
+
+QWidget#LinuxResizeFrame {
+    qproperty-frameColor: var(---generic-background-color);
+    qproperty-headerBrush: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0,
+        stop: 0 var(---toolbar-start-color),
+        stop: 0.72 var(---toolbar-end-color)
+    );
 }
 
 
@@ -167,12 +181,18 @@ QPushButton#TabIcon {
 
 QFrame#Toolbar {
     background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0,
-                          stop: 0 rgba(15, 42, 79, 255),
-                          stop: 0.72 rgba(28, 28, 25, 255));
+        stop: 0 var(---toolbar-start-color),
+        stop: 0.72 var(---toolbar-end-color)
+    );
     border: none;
     border-bottom: 1px solid var(---generic-highlight-background-color);
     font-size: 15px;
     font-family: "Anonymous Pro";
+}
+
+QWidget#LinuxResizeFrame QFrame#Toolbar {
+    background-color: transparent;
+    border-bottom-color: transparent;
 }
 
 QFrame#Toolbar QPushButton#Icon {
@@ -183,7 +203,6 @@ QFrame#Toolbar QPushButton#Icon {
 
 QFrame#Toolbar QPushButton, QWidget#Trash QPushButton#Close, QWidget#Window QPushButton#Close {
     text-align: center;
-    qproperty-alignment: AlignCenter;
     color: var(---generic-highlightable-text);
     background-color: transparent;
     border: none;
@@ -232,6 +251,50 @@ QPushButton#Minimize:pressed, QPushButton#Maximize:pressed {
     background-color: var(---generic-light-background-color);
 }
 
+QFrame#Toolbar #WindowControls[platform="linux"] QPushButton,
+QWidget#Window[linuxFrame="true"] QPushButton#Close,
+QWidget#Trash[linuxFrame="true"] QPushButton#Close {
+    min-width: 24px;
+    max-width: 24px;
+    min-height: 24px;
+    max-height: 24px;
+    border-radius: 12px;
+    background-color: #2D3440;
+    qproperty-iconSize: 14px 14px;
+}
+
+QFrame#Toolbar #WindowControls[platform="linux"] QPushButton:hover,
+QWidget#Window[linuxFrame="true"] QPushButton#Close:hover,
+QWidget#Trash[linuxFrame="true"] QPushButton#Close:hover {
+    background-color: #394657;
+}
+
+QFrame#Toolbar #WindowControls[platform="linux"] QPushButton:pressed,
+QWidget#Window[linuxFrame="true"] QPushButton#Close:pressed,
+QWidget#Trash[linuxFrame="true"] QPushButton#Close:pressed {
+    background-color: #46566B;
+}
+
+QFrame#Toolbar #WindowControls[platform="mac"] QPushButton {
+    min-width: 14px;
+    max-width: 14px;
+    min-height: 14px;
+    max-height: 14px;
+    border-radius: 7px;
+}
+
+QFrame#Toolbar #WindowControls[platform="mac"] QPushButton#Close {
+    background-color: #FF5F57;
+}
+
+QFrame#Toolbar #WindowControls[platform="mac"] QPushButton#Minimize {
+    background-color: #FEBC2E;
+}
+
+QFrame#Toolbar #WindowControls[platform="mac"] QPushButton#Maximize {
+    background-color: #28C840;
+}
+
 
 QPushButton#File::menu-indicator, QPushButton#Help::menu-indicator {
     image: none;
@@ -252,6 +315,11 @@ QMenu::item:hover, QMenu::item:selected {
 QWidget#Window, QWidget#Trash, QDialog#Popup {
     background-color: var(---generic-background-color);
     border: 1px solid var(---generic-highlight-background-color);
+}
+
+QWidget#Window[linuxFrame="true"], QWidget#Trash[linuxFrame="true"] {
+    background-color: transparent;
+    border: none;
 }
 
 QLineEdit#TextBox {
@@ -440,7 +508,6 @@ QFrame#ToolbarExecution QComboBox {
     max-width: 90px;
     padding-left: 10px;
     text-align: center;
-    qproperty-alignment: AlignCenter;
     font-size: 12px;
     color: #1D9E75;
 }

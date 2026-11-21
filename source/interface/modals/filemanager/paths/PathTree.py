@@ -134,10 +134,11 @@ class PathTreeLogic(PathTreeGraphic):
         parts.reverse()
 
         if self.___exts == ():
-            if not isWindows() and parts:
-                parts[0] = ""
-            joined = Document.SEP.join(parts)
-            return os.path.normpath(joined) + (Document.SEP if not item.is_file() else "")
+            joined = Document.SEP.join(parts) if isWindows() else os.path.join(*parts)
+            path = os.path.normpath(joined)
+            if not item.is_file() and not path.endswith(Document.SEP):
+                path += Document.SEP
+            return path
 
         base = GET_CWD()
         joined = Document.SEP.join(parts)

@@ -21,7 +21,8 @@ class CloseButtonGraphics(GenericButton):
             icon_size = (10, 10)
 
         self.setIconSize(QSize(*icon_size))
-        self.setIcon(self.rerenderIcon(QIcon(find_path("close.svg")), "#569CD6"))
+        icon_color = "#202020" if properties and properties.get("mac") else "#569CD6"
+        self.setIcon(self.rerenderIcon(QIcon(find_path("close.svg")), icon_color))
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
         if properties:

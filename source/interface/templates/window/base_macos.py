@@ -6,7 +6,6 @@ class BaseWindow(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._windowEffect = None
-        self.___border_width = 5
         self.MAXBUTTON_RECT = lambda: (100, 100, 10, 10)
         self._mouse_on_max_btn = False
 

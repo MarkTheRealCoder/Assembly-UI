@@ -10,7 +10,8 @@ class MinimizeButton(GenericButton):
     def __init__(self, parent, properties: dict[str, bool] = None):
         super().__init__(parent)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Minimum)
-        self.setIcon(self.rerenderIcon(QIcon(find_path("minimize.svg")), "#569CD6"))
+        icon_color = "#202020" if properties and properties.get("mac") else "#569CD6"
+        self.setIcon(self.rerenderIcon(QIcon(find_path("minimize.svg")), icon_color))
         self.setIconSize(QSize(20, 20))
         self.setObjectName("Minimize")
 

@@ -10,6 +10,7 @@ from source.interface.shared import Settings
 from source.interface.templates import run_toast_config
 from source.interface.templates.window import BaseWindow, native_minimize
 from source.interface.templates.window import native_maximize, native_restore
+from source.platform import isLinux
 
 
 class MainWindowGraphics(QMainWindow, BaseWindow):
@@ -17,9 +18,18 @@ class MainWindowGraphics(QMainWindow, BaseWindow):
         super(QMainWindow, self).__init__(None)
         self.setObjectName("MainWindow")
         self.setWindowTitle("Assembly Stdio")
+        linux = isLinux()
+        if linux:
+            self.setProperty("linuxFrame", True)
+            self.setAttribute(Qt.WA_TranslucentBackground)
         self.setFrameless()
         mwt: MainWidget = MainWidget(self)
-        self.setCentralWidget(mwt)
+        if linux:
+            from source.interface.templates.window.base_linux import LinuxResizeFrame
+
+            self.setCentralWidget(LinuxResizeFrame(self, mwt))
+        else:
+            self.setCentralWidget(mwt)
         mwt.update()
         mwt.repaint()
         run_toast_config(self)

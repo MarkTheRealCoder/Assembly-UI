@@ -11,8 +11,9 @@ class MaximizeButton(GenericButton):
     def __init__(self, parent, properties: dict[str, bool] = None):
         super().__init__(parent)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Minimum)
-        self.maximize_icon = self.rerenderIcon(QIcon(find_path("maximize.svg")), "#569CD6")
-        self.restore_icon = self.rerenderIcon(QIcon(find_path("restore.svg")), "#569CD6")
+        icon_color = "#202020" if properties and properties.get("mac") else "#569CD6"
+        self.maximize_icon = self.rerenderIcon(QIcon(find_path("maximize.svg")), icon_color)
+        self.restore_icon = self.rerenderIcon(QIcon(find_path("restore.svg")), icon_color)
         self.window().MAXBUTTON_RECT = lambda: self.get_rect()
 
         self.setIcon(self.maximize_icon)

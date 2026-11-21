@@ -1,5 +1,5 @@
 import os
-from typing import Literal
+from typing import Literal, Optional
 
 from PyQt5.QtCore import Qt, QPoint, QSettings
 from PyQt5.QtGui import QMouseEvent, QPainter, QColor, QPixmap, QIcon
@@ -76,7 +76,7 @@ class Settings:
 
 
 
-def createLayout(l: type, parent: QWidget):
+def createLayout(l: type, parent: Optional[QWidget] = None):
     layout = l(parent)
     layout.setContentsMargins(0, 0, 0, 0)
     layout.setSpacing(0)

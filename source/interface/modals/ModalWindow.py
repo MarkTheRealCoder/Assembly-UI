@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QDesktopWidget, QHBoxLayout, QVBoxLayout, QSpacerIte
 
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
+from source.interface.modals.Window import create_window_content
 from source.interface.shared import createLayout
 from source.interface.templates import CloseButton
 from source.interface.templates import Title
@@ -34,16 +35,12 @@ class ModalWindowGraphics(BaseWindow):
         self.centerOnScreen()
 
     def setMainWidget(self, content, title: str):
-        # widget = QWidget(self)
-        # main_layout = createLayout(QVBoxLayout, self)
-        # main_layout.addWidget(widget)
         self.setObjectName("Trash")
-        # self.setLayout(main_layout)
-        content.setParent(self)
+        widget = create_window_content(self)
 
-        layout: QVBoxLayout = createLayout(QVBoxLayout, self)
-        tlayout: QHBoxLayout = createLayout(QHBoxLayout, self)
-        mlayout: QHBoxLayout = createLayout(QHBoxLayout, self)
+        layout: QVBoxLayout = createLayout(QVBoxLayout, widget)
+        tlayout: QHBoxLayout = createLayout(QHBoxLayout)
+        mlayout: QHBoxLayout = createLayout(QHBoxLayout)
 
         top = Title(self)
         top.setText(title)
@@ -64,7 +61,7 @@ class ModalWindowGraphics(BaseWindow):
         layout.addSpacerItem(QSpacerItem(0, 7, QSizePolicy.Fixed, QSizePolicy.Expanding))
 
         layout.setStretch(1, 1)
-        self.setLayout(layout)
+        widget.setLayout(layout)
 
     def centerOnScreen(self):
         desktop = QDesktopWidget()

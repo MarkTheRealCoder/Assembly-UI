@@ -38,8 +38,8 @@ class FileDialogGraphics(QFrame):
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         layout: QVBoxLayout = createLayout(QVBoxLayout, self)
-        tlayout: QHBoxLayout = createLayout(QHBoxLayout, self)
-        blayout: QHBoxLayout = createLayout(QHBoxLayout, self)
+        tlayout: QHBoxLayout = createLayout(QHBoxLayout)
+        blayout: QHBoxLayout = createLayout(QHBoxLayout)
 
         tlayout.addWidget(self._home, 1)
         tlayout.addWidget(self._box)
