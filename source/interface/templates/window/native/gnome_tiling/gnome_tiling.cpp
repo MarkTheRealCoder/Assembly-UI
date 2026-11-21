@@ -12,7 +12,7 @@
 
 namespace {
 constexpr auto monitorName = "AssemblyGnomeTiling";
-constexpr auto tiledProperty = "gnomeTiled";
+constexpr auto tiledResizeEdgesProperty = "gnomeTiledResizeEdges";
 
 class GnomeTilingMonitor final : public QObject {
 public:
@@ -43,7 +43,7 @@ private:
                     static_cast<QPlatformSurfaceEvent *>(event)->surfaceEventType() ==
                         QPlatformSurfaceEvent::SurfaceAboutToBeDestroyed)) {
             releaseSurface();
-            setTiled(false);
+            setTiledResizeEdges(QVariant());
         }
         return false;
     }
@@ -58,23 +58,24 @@ private:
 
         surface_ = gtk_shell1_get_gtk_surface(shell_, surface);
         if (surface_) {
-            static const gtk_surface1_listener listener = {configured, ignoreEdges};
+            static const gtk_surface1_listener listener = {configured, edgesConfigured};
             gtk_surface1_add_listener(surface_, &listener, this);
         }
     }
 
     void releaseSurface()
     {
+        tiled_ = false;
         if (surface_) {
             gtk_surface1_release(surface_);
             surface_ = nullptr;
         }
     }
 
-    void setTiled(bool tiled)
+    void setTiledResizeEdges(const QVariant &edges)
     {
-        if (window_->property(tiledProperty).toBool() != tiled)
-            window_->setProperty(tiledProperty, tiled);
+        if (window_->property(tiledResizeEdgesProperty) != edges)
+            window_->setProperty(tiledResizeEdgesProperty, edges);
     }
 
     static void globalAdded(void *data, wl_registry *registry, uint32_t name, const char *interface, uint32_t version)
@@ -100,7 +101,7 @@ private:
             monitor->releaseSurface();
             gtk_shell1_destroy(monitor->shell_);
             monitor->shell_ = nullptr;
-            monitor->setTiled(false);
+            monitor->setTiledResizeEdges(QVariant());
         }
     }
 
@@ -108,17 +109,46 @@ private:
     {
         auto *monitor = static_cast<GnomeTilingMonitor *>(data);
         const auto *values = static_cast<const uint32_t *>(states->data);
+        monitor->tiled_ = false;
         for (std::size_t i = 0; i < states->size / sizeof(*values); ++i) {
             if (values[i] >= GTK_SURFACE1_STATE_TILED && values[i] <= GTK_SURFACE1_STATE_TILED_LEFT) {
-                monitor->setTiled(true);
+                monitor->tiled_ = true;
                 return;
             }
         }
-        monitor->setTiled(false);
     }
 
     static void ignoreCapabilities(void *, gtk_shell1 *, uint32_t) {}
-    static void ignoreEdges(void *, gtk_surface1 *, wl_array *) {}
+
+    static void edgesConfigured(void *data, gtk_surface1 *, wl_array *constraints)
+    {
+        // Mutter sends configure immediately before configure_edges. Publish the two together.
+        auto *monitor = static_cast<GnomeTilingMonitor *>(data);
+        if (!monitor->tiled_) {
+            monitor->setTiledResizeEdges(QVariant());
+            return;
+        }
+
+        Qt::Edges edges;
+        const auto *values = static_cast<const uint32_t *>(constraints->data);
+        for (std::size_t i = 0; i < constraints->size / sizeof(*values); ++i) {
+            switch (values[i]) {
+            case GTK_SURFACE1_EDGE_CONSTRAINT_RESIZABLE_TOP:
+                edges |= Qt::TopEdge;
+                break;
+            case GTK_SURFACE1_EDGE_CONSTRAINT_RESIZABLE_RIGHT:
+                edges |= Qt::RightEdge;
+                break;
+            case GTK_SURFACE1_EDGE_CONSTRAINT_RESIZABLE_BOTTOM:
+                edges |= Qt::BottomEdge;
+                break;
+            case GTK_SURFACE1_EDGE_CONSTRAINT_RESIZABLE_LEFT:
+                edges |= Qt::LeftEdge;
+                break;
+            }
+        }
+        monitor->setTiledResizeEdges(static_cast<int>(edges));
+    }
 
     QWindow *const window_;
     QPlatformNativeInterface *const native_;
@@ -126,10 +156,11 @@ private:
     gtk_shell1 *shell_ = nullptr;
     gtk_surface1 *surface_ = nullptr;
     uint32_t shellName_ = 0;
+    bool tiled_ = false;
 };
 }
 
-extern "C" Q_DECL_EXPORT void assembly_watch_gnome_tiling(QWindow *window)
+extern "C" Q_DECL_EXPORT void assembly_watch_gnome_tiling_v2(QWindow *window)
 {
     if (window->findChild<QObject *>(QLatin1String(monitorName), Qt::FindDirectChildrenOnly))
         return;

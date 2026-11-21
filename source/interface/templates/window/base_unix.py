@@ -1,8 +1,8 @@
-from PyQt5.QtCore import QEvent, QPoint, QRectF, Qt, pyqtProperty
+from PyQt5.QtCore import QEvent, QMargins, QPoint, QRectF, Qt, pyqtProperty
 from PyQt5.QtGui import QBrush, QColor, QEnterEvent, QPainter, QPainterPath, QPen
 from PyQt5.QtWidgets import QApplication, QFrame, QVBoxLayout, QWidget
 
-from .gnome_tiling import TILED_PROPERTY, watch_gnome_tiling
+from .gnome_tiling import TILED_RESIZE_EDGES_PROPERTY, watch_gnome_tiling
 from .resize_cursor_linux import LinuxResizeCursors
 
 
@@ -10,6 +10,7 @@ _RESIZE_BORDER_WIDTH = 10
 _RESIZE_CORNER_EXTENT = 20
 _CORNER_RADIUS = 12
 _INNER_SHADOW_WIDTH = 4
+_ALL_RESIZE_EDGES = Qt.LeftEdge | Qt.TopEdge | Qt.RightEdge | Qt.BottomEdge
 
 
 class _ResizeBorder(QWidget):
@@ -30,13 +31,24 @@ class _ResizeBorder(QWidget):
         self._direction_cursors = {}
         self._cursor_scale = None
         self._active_cursor = None
+        self._resize_edges = Qt.Edges()
+        self.resize_margins = QMargins()
         self.setMouseTracking(True)
 
+    def set_resize_edges(self, edges):
+        if self._resize_edges != edges:
+            self._resize_edges = edges
+            self.resize_margins = QMargins(*(
+                _RESIZE_BORDER_WIDTH if edges & side else 0
+                for side in (Qt.LeftEdge, Qt.TopEdge, Qt.RightEdge, Qt.BottomEdge)
+            ))
+            self._clear_resize_cursor()
+        self.setVisible(bool(edges))
+
     def _edges_at(self, pos):
-        border = _RESIZE_BORDER_WIDTH
         bounds = self.rect()
         edges = Qt.Edges()
-        if not bounds.contains(pos) or bounds.adjusted(border, border, -border, -border).contains(pos):
+        if not bounds.contains(pos) or bounds.marginsRemoved(self.resize_margins).contains(pos):
             return edges
 
         horizontal_corner = min(_RESIZE_CORNER_EXTENT, bounds.width() // 2)
@@ -49,7 +61,7 @@ class _ResizeBorder(QWidget):
             edges |= Qt.TopEdge
         elif pos.y() >= bounds.height() - vertical_corner:
             edges |= Qt.BottomEdge
-        return edges
+        return edges & self._resize_edges
 
     def _prepare_cursors(self):
         scale = self.devicePixelRatioF()
@@ -159,11 +171,12 @@ class LinuxResizeFrame(QWidget):
         window = self.window()
         state = window.windowState()
         native_window = window.windowHandle()
-        tiled = native_window is not None and native_window.property(TILED_PROPERTY)
-        self._has_border = not (tiled or state & (Qt.WindowMaximized | Qt.WindowFullScreen | Qt.WindowMinimized))
-        margin = _RESIZE_BORDER_WIDTH if self._has_border else 0
-        self.layout().setContentsMargins(margin, margin, margin, margin)
-        self._resize_border.setVisible(self._has_border)
+        tiled_edges = native_window.property(TILED_RESIZE_EDGES_PROPERTY) if native_window is not None else None
+        restored = not (state & (Qt.WindowMaximized | Qt.WindowFullScreen | Qt.WindowMinimized))
+        self._rounded = restored and tiled_edges is None
+        resize_edges = _ALL_RESIZE_EDGES if tiled_edges is None else Qt.Edges(tiled_edges)
+        self._resize_border.set_resize_edges(resize_edges if restored else Qt.Edges())
+        self.layout().setContentsMargins(self._resize_border.resize_margins)
         self.update()
 
     def resizeEvent(self, event):
@@ -173,8 +186,8 @@ class LinuxResizeFrame(QWidget):
     def paintEvent(self, event):
         painter = QPainter(self)
         face = QRectF(self.rect())
-        radius = _CORNER_RADIUS if self._has_border else 0
-        painter.setRenderHint(QPainter.Antialiasing, self._has_border)
+        radius = _CORNER_RADIUS if self._rounded else 0
+        painter.setRenderHint(QPainter.Antialiasing, self._rounded)
         outline = QPainterPath()
         outline.addRoundedRect(face, radius, radius)
         painter.fillPath(outline, self._frame_color)
@@ -185,7 +198,7 @@ class LinuxResizeFrame(QWidget):
             painter.setClipRect(header)
             painter.fillPath(outline, self._header_brush)
             painter.restore()
-        if self._has_border:
+        if self._rounded:
             painter.setClipPath(outline)
             painter.setBrush(Qt.NoBrush)
             for depth in range(_INNER_SHADOW_WIDTH):
@@ -224,7 +237,8 @@ class LinuxResizeFrame(QWidget):
         elif watched is self._toolbar and event_type in (QEvent.Move, QEvent.Resize, QEvent.Show, QEvent.Hide):
             self.update()
         elif watched is window.windowHandle():
-            if event_type == QEvent.DynamicPropertyChange and event.propertyName() == TILED_PROPERTY.encode("ascii"):
+            if (event_type == QEvent.DynamicPropertyChange and
+                    event.propertyName() == TILED_RESIZE_EDGES_PROPERTY.encode("ascii")):
                 self._update_frame_state()
             elif isinstance(event, QEnterEvent) or (event_type == QEvent.MouseMove and event.buttons() == Qt.NoButton):
                 self._sync_content_cursor(watched, event.pos())

@@ -1,6 +1,6 @@
 # GNOME Wayland tiling
 
-This component reads the tiled state GNOME reports for the IDE's Wayland surface. Build it once per checkout to enable square corners when GNOME tiles the window. Maximized and fullscreen windows use the window states reported by Qt.
+This component reads the tiled state and resizable edges GNOME reports for the IDE's Wayland surface. Build it to enable square corners and resize only on the edges GNOME allows while the window is tiled. Maximized and fullscreen windows use the window states reported by Qt.
 
 On Ubuntu 22.04, install the build dependencies if needed.
 

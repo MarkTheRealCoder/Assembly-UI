@@ -41,6 +41,12 @@
       <entry name="tiled_bottom" value="4" since="2"/>
       <entry name="tiled_left" value="5" since="2"/>
     </enum>
+    <enum name="edge_constraint" since="2">
+      <entry name="resizable_top" value="1"/>
+      <entry name="resizable_right" value="2"/>
+      <entry name="resizable_bottom" value="3"/>
+      <entry name="resizable_left" value="4"/>
+    </enum>
     <event name="configure">
       <arg name="states" type="array"/>
     </event>

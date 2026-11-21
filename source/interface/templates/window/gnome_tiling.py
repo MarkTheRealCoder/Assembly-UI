@@ -7,7 +7,7 @@ from PyQt5 import sip
 from PyQt5.QtGui import QGuiApplication
 
 
-TILED_PROPERTY = "gnomeTiled"
+TILED_RESIZE_EDGES_PROPERTY = "gnomeTiledResizeEdges"
 
 
 @lru_cache(maxsize=1)
@@ -18,7 +18,7 @@ def _load_monitor():
         return None
     try:
         library = ctypes.CDLL(str(library_path))
-        monitor = library.assembly_watch_gnome_tiling
+        monitor = library.assembly_watch_gnome_tiling_v2
     except (OSError, AttributeError) as error:
         logging.getLogger(__name__).warning("Could not load GNOME tiling support: %s", error)
         return None
