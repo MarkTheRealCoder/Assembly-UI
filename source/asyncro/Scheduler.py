@@ -19,20 +19,19 @@ class Scheduler:
     def ___run(self, action):
         while True:
             self.___event.wait(self.___time)
+            # Clear before the action so that a trigger during the action causes another run.
+            self.___event.clear()
             if self.___terminated:
                 break
             action.run()
-            self.___event.clear()
 
     def terminate(self):
         self.___terminated = True
-        if not self.___event.is_set():
-            self.___event.set()
+        self.___event.set()
         self.___thread.join()
 
     def trigger(self):
-        if not self.___event.is_set():
-            self.___event.set()
+        self.___event.set()
 
 
 class _CallableWrapper:

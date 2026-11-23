@@ -1,11 +1,10 @@
 from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtWidgets import QDesktopWidget, QHBoxLayout, QVBoxLayout, QSpacerItem, QSizePolicy
+from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QSpacerItem, QSizePolicy
 
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
-from source.interface.modals.Window import create_window_content
+from source.interface.modals.Window import add_title_controls, create_window_content
 from source.interface.shared import createLayout
-from source.interface.templates import CloseButton
 from source.interface.templates import Title
 from source.interface.templates.window import BaseWindow
 from source.platform import Desktop
@@ -44,11 +43,7 @@ class ModalWindowGraphics(BaseWindow):
 
         top = Title(self)
         top.setText(title)
-        tlayout.addWidget(top)
-        tlayout.addWidget(CloseButton(self, "Tool"))
-
-        tlayout.setStretch(0, 5)
-        tlayout.setStretch(1, 1)
+        add_title_controls(self, tlayout, top, "Tool")
 
         mlayout.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Expanding, QSizePolicy.Fixed))
         mlayout.addWidget(content)
@@ -64,11 +59,7 @@ class ModalWindowGraphics(BaseWindow):
         widget.setLayout(layout)
 
     def centerOnScreen(self):
-        desktop = QDesktopWidget()
-        screen_geometry = desktop.screenGeometry()
-        x = (screen_geometry.width() - self.width()) // 2
-        y = (screen_geometry.height() - self.height()) // 2
-        self.move(x, y)
+        Desktop.centerWidget(self, self.parentWidget())
 
 
 class ModalWindowLogic(ModalWindowGraphics):

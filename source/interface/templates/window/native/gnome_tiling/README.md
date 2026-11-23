@@ -16,3 +16,5 @@ cmake --build build/gnome-tiling
 ```
 
 The IDE loads `build/gnome-tiling/libassembly-gnome-tiling.so` in a Qt 5 Wayland session. The build uses Qt's platform interface from the Qt 5.15 private headers. Compositors without `gtk_shell1` version 4 and checkouts without the built component use the standard Qt window states.
+
+The module must be built against the same Qt version that runs the IDE. If the versions differ, the IDE logs a warning, does not use the module, and uses the standard Qt window states. A module built before this check also stays off until you rebuild it.

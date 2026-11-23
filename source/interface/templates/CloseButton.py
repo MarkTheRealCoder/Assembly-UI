@@ -64,3 +64,13 @@ class CloseButton(CloseButtonLogic):
             ClosingEvent(*self.getArgs()), self.___subclass, **self.getIden()
         ))
 
+    def enterEvent(self, event):
+        if self.property("standalone"):
+            self.setIconSize(QSize(10, 10))
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        if self.property("standalone"):
+            self.setIconSize(QSize(0, 0))
+        super().leaveEvent(event)
+

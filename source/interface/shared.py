@@ -7,11 +7,12 @@ from PyQt5.QtSvg import QSvgRenderer
 from PyQt5.QtWidgets import QWidget, QLayout, QFrame, QSizePolicy, QGridLayout
 
 from source.comms import Variable
+from source.filesystem.Folder import settings_path
 from source.interface import MainWindow
 
 
 class Settings:
-    SETTINGS = QSettings("settings.ini", QSettings.IniFormat)
+    SETTINGS = QSettings(settings_path(), QSettings.IniFormat)
     SIGNAL = Variable(str)
 
     @staticmethod
@@ -110,7 +111,7 @@ class DraggableFrame(QFrame):
 
         self.position = self.getPositionValue(position)
         self.drag_position = None
-        self.main_window: MainWindow = parent.parent()
+        self.main_window: MainWindow = parent if parent.isWindow() else parent.parent()
         if hasattr(self.main_window, "registerCorner"):
             self.main_window.registerCorner(self)
 

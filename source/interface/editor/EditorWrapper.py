@@ -1,3 +1,6 @@
+import logging
+import threading
+
 from PyQt5.QtCore import QEvent
 from PyQt5.QtWidgets import QFrame, QSizePolicy, QVBoxLayout
 
@@ -42,7 +45,11 @@ class EditorWrapperLogic(EditorWrapperGraphics):
         super().__init__(parent)
         self._scheduler = None
         self._documents: dict[int: Document] = {}
+        self._closed = False
         self.___consistency_checker = Watcher()
+        self.___pending_saves: dict[int, str] = {}
+        self.___pending_lock = threading.Lock()
+        self.___save_lock = threading.Lock()
 
         self.setupConnections()
 
@@ -87,9 +94,9 @@ class EditorWrapperLogic(EditorWrapperGraphics):
 
     def initializeSchedulers(self, docHash: int):
         if self._scheduler is None:
-            self._scheduler = Scheduler(None, self.___auto_save)
+            self._scheduler = Scheduler(None, self._savePending)
         self._frame.getEditor(docHash).textChanged.connect(
-            self._scheduler.trigger
+            lambda: self.___queue_save(docHash)
         )
 
     def document_uniqueness(self, document: Document):
@@ -109,6 +116,7 @@ class EditorWrapperLogic(EditorWrapperGraphics):
 
     def closeTab(self):
         docHash = Database.ON_TAB_CLOSE.getValue()
+        self._savePending()
         self._documents.pop(docHash)
         if docHash == Database.ON_TAB_SELECTED.getValue():
             self._tab_manager.setActiveTab()
@@ -117,15 +125,38 @@ class EditorWrapperLogic(EditorWrapperGraphics):
     def getFromDisk(self):
         docHash = Database.ON_TAB_SELECTED.getValue()
         doc = self._documents.get(docHash)
-        if doc and (update := self.___consistency_checker.getDocumentUpdates(doc)):
+        if doc is None:
+            return
+        self._savePending()
+        if update := self.___consistency_checker.getDocumentUpdates(doc):
             editor = self._frame.getEditor(docHash)
             editor.setText(update)
 
-    def ___auto_save(self):
-        docHash = Database.ON_TAB_SELECTED.getValue()
-        doc = self._documents.get(docHash)
-        doc.text = self._frame.getEditorText(docHash)
-        self.___consistency_checker.updateDocument(doc)
+    def ___queue_save(self, docHash: int):
+        # Qt widgets are read here, on the GUI thread. The scheduler thread only writes files.
+        if docHash not in self._documents:
+            return
+        text = self._frame.getEditorText(docHash)
+        with self.___pending_lock:
+            self.___pending_saves[docHash] = text
+        if self._scheduler is not None:
+            self._scheduler.trigger()
+
+    def _savePending(self):
+        with self.___save_lock:
+            with self.___pending_lock:
+                pending, self.___pending_saves = self.___pending_saves, {}
+            for docHash, text in pending.items():
+                doc = self._documents.get(docHash)
+                if doc is None:
+                    continue
+                try:
+                    doc.text = text
+                    self.___consistency_checker.updateDocument(doc)
+                except (OSError, UnicodeError) as error:
+                    logging.getLogger(__name__).warning("Could not save %s: %s", doc, error)
+                    with self.___pending_lock:
+                        self.___pending_saves.setdefault(docHash, text)
 
     @staticmethod
     def reset_variables():
@@ -148,11 +179,17 @@ class EditorWrapper(EditorWrapperLogic):
             self._find_widget.toggle()
 
     def onClosingEvent(self, e: ClosingEvent):
+        # The close button and QApplication.aboutToQuit can both send this event.
+        if self._closed:
+            e.accept()
+            return
+        self._closed = True
         if self._scheduler is not None:
             self._scheduler.terminate()
-            del self._scheduler
+            self._scheduler = None
+        self._savePending()
         Settings.silentSet("editor/files", list(map(lambda x: str(x), self._documents.values())))
-        del self._documents
+        self._documents = {}
         e.accept()
 
     def onReadyEvent(self, event):

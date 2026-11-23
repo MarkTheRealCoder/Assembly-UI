@@ -10,7 +10,7 @@ from source.interface.shared import Settings
 from source.interface.templates import run_toast_config
 from source.interface.templates.window import BaseWindow, native_minimize
 from source.interface.templates.window import native_maximize, native_restore
-from source.platform import isLinux
+from source.platform import Desktop, isLinux
 
 
 class MainWindowGraphics(QMainWindow, BaseWindow):
@@ -67,7 +67,12 @@ class MainWindow(MainWindowLogic):
     def showEvent(self, event):
         if self.___first_time:
             self.___first_time = False
-            self.resize(Settings.get("mainwindow/size", self.minimumSize()))
+            size = Settings.get("mainwindow/size", None)
+            if size is None:
+                self.resize(Desktop.sizeHint(3 / 4, 3 / 4).expandedTo(self.minimumSize()))
+                Desktop.centerWidget(self)
+            else:
+                self.resize(size)
             if Settings.get("mainwindow/fullscreen", False, _type=bool):
                 self.showMaximized()
                 Settings.set("mainwindow/fullscreen", True)

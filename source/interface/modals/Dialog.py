@@ -33,6 +33,10 @@ class Box(BoxLogic):
                 self.parent().log("Action failed, try again.")
             else:
                 self.clearFocus()
+        elif event.key() == Qt.Key.Key_Escape:
+            # Release focus first: a focus-out during the parent's deletion cannot reach the signal.
+            self.clearFocus()
+            self.parent().focus.emit("close")
         else:
             super().keyPressEvent(event)
 

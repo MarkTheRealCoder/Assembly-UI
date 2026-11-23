@@ -46,6 +46,22 @@ class NCCALCSIZE_PARAMS(Structure):
         ('lppos', POINTER(PWINDOWPOS))
     ]
 
+class TRACKMOUSEEVENT(Structure):
+    _fields_ = [
+        ('cbSize',      DWORD),
+        ('dwFlags',     DWORD),
+        ('hwndTrack',   HWND),
+        ('dwHoverTime', DWORD),
+    ]
+
+
+def trackNonClientLeave(hWnd):
+    TME_LEAVE = 0x00000002
+    TME_NONCLIENT = 0x00000010
+    event = TRACKMOUSEEVENT(sizeof(TRACKMOUSEEVENT), TME_LEAVE | TME_NONCLIENT, hWnd, 0)
+    windll.user32.TrackMouseEvent(byref(event))
+
+
 def getMonitorInfo(hWnd, dwFlags):
     monitor = win32api.MonitorFromWindow(hWnd, dwFlags)
     if not monitor:

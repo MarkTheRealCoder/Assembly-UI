@@ -49,7 +49,7 @@ class FileSaver(FileDialog):
                 return
 
             text = self.cd.text
-            with destination.open("w" if overwrite else "x", newline="\n") as file:
+            with destination.open("w" if overwrite else "x", newline="\n", encoding="utf-8") as file:
                 file.write(text)
         except (OSError, UnicodeError) as error:
             create_toast(window, str(error), "error")

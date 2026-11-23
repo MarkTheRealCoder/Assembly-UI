@@ -1,3 +1,4 @@
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QLineEdit, QSizePolicy
 
 
@@ -15,6 +16,7 @@ class TextBox(QLineEdit):
         self.setReadOnly(False)
         self.setAcceptDrops(False)
         self.setObjectName("TextBox")
+        self.setAttribute(Qt.WA_LayoutUsesWidgetRect)
         self.setMaxLength(200)
         self.setFixedHeight(30)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)

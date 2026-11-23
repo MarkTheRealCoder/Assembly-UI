@@ -5,7 +5,7 @@ from source.filesystem import open_dir
 from source.interface.shared import Settings
 from source.interface.templates import Title as BaseTitle
 from source.interface.templates import Tooltip
-from source.platform import Desktop
+from source.platform import Desktop, isMac
 
 
 class Title(BaseTitle):
@@ -44,7 +44,8 @@ class Title(BaseTitle):
     def setLabel(self):
         self.___curr_dir = Settings.get("application/cwd", "Select a working directory")
         self.setText(f"Assembly Stdio - {self.___curr_dir}")
-        self._tooltip.setText(f"Current directory: {self.___curr_dir}\n\nDouble Click to Maximize/Restore | Ctrl+Click to Open Folder")
+        modifier = "Cmd" if isMac() else "Ctrl"
+        self._tooltip.setText(f"Current directory: {self.___curr_dir}\n\nDouble Click to Maximize/Restore | {modifier}+Click to Open Folder")
 
     def paintEvent(self, event):
         painter = QPainter(self)

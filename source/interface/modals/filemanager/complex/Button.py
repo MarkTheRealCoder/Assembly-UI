@@ -1,4 +1,4 @@
-from PyQt5.QtCore import QSize
+from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QSizePolicy
 
@@ -11,6 +11,8 @@ class Button(GenericButton):
         super().__init__(parent)
 
         self.setObjectName("FileButton")
+        # The macOS style otherwise removes its layout margins and the fixed-size widgets overlap.
+        self.setAttribute(Qt.WA_LayoutUsesWidgetRect)
         self.setFixedHeight(30)
         self.setFixedWidth(30)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)

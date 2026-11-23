@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import os
+import shutil
+import sys
+from functools import lru_cache
 from pathlib import Path
 
 import psutil
-from PyQt5.QtCore import QUrl
+from PyQt5.QtCore import QCoreApplication, QStandardPaths, QUrl
 from PyQt5.QtGui import QDesktopServices
 
 from source.platform import isWindows
@@ -14,8 +17,37 @@ if isWindows():
     import win32con
 
 
+def app_root() -> str:
+    if getattr(sys, "frozen", False):
+        return getattr(sys, "_MEIPASS", os.path.dirname(sys.executable))
+    return str(Path(__file__).resolve().parents[2])
+
+
+def resources_root() -> str:
+    root = app_root()
+    resources = os.path.join(root, "resources")
+    return resources if os.path.isdir(resources) else root
+
+
+def settings_path() -> str:
+    if not getattr(sys, "frozen", False):
+        return os.path.join(app_root(), "settings.ini")
+
+    # A packaged app can live in a read-only location.
+    QCoreApplication.setOrganizationName("Assembly Stdio")
+    QCoreApplication.setApplicationName("Assembly Stdio")
+    location = QStandardPaths.writableLocation(QStandardPaths.AppConfigLocation)
+    os.makedirs(location, exist_ok=True)
+    path = os.path.join(location, "settings.ini")
+    legacy = os.path.join(os.path.dirname(sys.executable), "settings.ini")
+    if not os.path.exists(path) and os.path.isfile(legacy):
+        shutil.copy2(legacy, path)
+    return path
+
+
+@lru_cache(maxsize=None)
 def find_path(file: str) -> str:
-    location = os.getcwd()
+    location = resources_root()
     result: str = ""
     for root, _dir, files in os.walk(location):
         if file in files:
@@ -64,7 +96,7 @@ def to_ui_path(absolute_path: str) -> str:
 
 
 def find_dir(directory: str) -> str:
-    location = os.getcwd()
+    location = resources_root()
     result: str = ""
     for root, directories, files in os.walk(location):
         if directory in directories:

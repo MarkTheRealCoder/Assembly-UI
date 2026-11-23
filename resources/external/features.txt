@@ -15,7 +15,7 @@ Toolbar
 - Titlebar:
 -- Mostra la directory di lavoro corrente
 -- Con doppio click si può copiare la directory
--- Con ctrl-click si può aprire la directory con il file browser predefinito del sistema
+-- Con ctrl-click (cmd-click su macOS) si può aprire la directory con il file browser predefinito del sistema
 -- Con click + trascinamento si può spostare la finestra
 - Pulsante di minimizzazione
 - Pulsante di espansione e riduzione

@@ -11,6 +11,7 @@ class Document:
         self.___extension: str = "extension"
         self.___folder: str = "folder"
         self.___text: str = ""
+        self.___encoding: str = "utf-8"
 
         self.___sem = threading.Semaphore(1)
 
@@ -23,10 +24,24 @@ class Document:
         self.___extension = extension[1:]
 
     def ___setText(self):
-        self.___sem.acquire()
-        with open(self.___path, "r", newline="\n") as f:
-            self.___text = f.read()
-        self.___sem.release()
+        with self.___sem:
+            with open(self.___path, "rb") as f:
+                raw = f.read()
+            # Files written by older Windows builds use the legacy ANSI code page.
+            for encoding in ("utf-8", "cp1252", "latin-1"):
+                try:
+                    self.___text = raw.decode(encoding)
+                    self.___encoding = encoding
+                    break
+                except UnicodeDecodeError:
+                    continue
+
+    def ___encode(self, text: str) -> bytes:
+        try:
+            return text.encode(self.___encoding)
+        except UnicodeEncodeError:
+            self.___encoding = "utf-8"
+            return text.encode(self.___encoding)
 
     @property
     def text(self):
@@ -36,20 +51,11 @@ class Document:
     def text(self, text: str):
         if not isinstance(text, str):
             raise TypeError("Text value must be a string")
-        self.___sem.acquire()
-        self.___text = text
-        with open(self.___path, "w", newline="\n") as f:
-            f.write(text)
-        self.___sem.release()
-
-    @text.getter
-    def text(self):
-        text = self.___text
-        self.___sem.acquire()
-        with open(self.___path, "w", newline="\n") as f:
-            f.write(text)
-        self.___sem.release()
-        return text
+        with self.___sem:
+            data = self.___encode(text)
+            with open(self.___path, "wb") as f:
+                f.write(data)
+            self.___text = text
 
     def __dict__(self):
         return {

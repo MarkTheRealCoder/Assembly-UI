@@ -41,14 +41,14 @@ class FileDialogGraphics(QFrame):
         tlayout: QHBoxLayout = createLayout(QHBoxLayout)
         blayout: QHBoxLayout = createLayout(QHBoxLayout)
 
-        tlayout.addWidget(self._home, 1)
-        tlayout.addWidget(self._box)
-        tlayout.addWidget(self._open_folder, 1)
-        tlayout.addWidget(self._create_folder, 1)
+        tlayout.addWidget(self._home)
+        tlayout.addWidget(self._box, 1)
+        tlayout.addWidget(self._open_folder)
+        tlayout.addWidget(self._create_folder)
 
-        blayout.addWidget(self._name)
+        blayout.addWidget(self._name, 1)
         blayout.addWidget(self._ext_picker)
-        blayout.addWidget(self.confirm, 1)
+        blayout.addWidget(self.confirm)
 
         layout.setSpacing(10)
         layout.addLayout(tlayout)
