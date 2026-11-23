@@ -11,16 +11,16 @@ class GenericButton(QPushButton):
 
     @staticmethod
     def rerenderIcon(icon, color: str):
-        pixmap = icon.pixmap(32, 32)  # render to 32x32 px pixmap
+        """Return a copy of the icon tinted with the given color."""
+        pixmap = icon.pixmap(32, 32)
 
-        # Create a colored version
         colored = QPixmap(pixmap.size())
         colored.fill(Qt.GlobalColor.transparent)
 
         p = QPainter(colored)
-        p.drawPixmap(0, 0, pixmap)  # draw original
+        p.drawPixmap(0, 0, pixmap)
         p.setCompositionMode(QPainter.CompositionMode.CompositionMode_SourceIn)
-        p.fillRect(colored.rect(), QColor(color))  # your tint color
+        p.fillRect(colored.rect(), QColor(color))
         p.end()
 
         return QIcon(colored)

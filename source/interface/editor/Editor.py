@@ -13,6 +13,8 @@ from source.interface.shared import handleZoomEvent
 
 
 class EditorGraphics(QsciScintilla):
+    """Appearance of the code editor: colors, line number margin and style sheet"""
+
     def __init__(self, mwt: QWidget, ext: str):
         super(QsciScintilla, self).__init__(mwt)
         self.ext = ext
@@ -24,7 +26,6 @@ class EditorGraphics(QsciScintilla):
 
     def setupUI(self):
         """Setup basic UI configurations"""
-        # Widget
         self.setContentsMargins(0, 0, 0, 0)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
@@ -34,7 +35,6 @@ class EditorGraphics(QsciScintilla):
         self.setCaretForegroundColor(QColor("#569CD6"))
         self.setPaper(QColor("#292727"))
 
-        # Margin
         self.configureMargin()
 
     def configureMargin(self):
@@ -59,12 +59,13 @@ class EditorGraphics(QsciScintilla):
 
 
 class EditorLogic(EditorGraphics):
+    """Behavior of the code editor: lexer, text features, shortcuts and search highlighting"""
+
     SEARCH_INDICATOR = 10
     CURRENT_MATCH_INDICATOR = 11
 
     def __init__(self, mwt: QWidget, ext: str):
         super().__init__(mwt, ext)
-        self.content = None
         self.setupLexer(ext)
         self.configureTextFeatures()
         self.configureCommands()
@@ -83,7 +84,7 @@ class EditorLogic(EditorGraphics):
         self.zoomTo(0)
 
     def setupLexer(self, ext: str):
-        """Setup the appropriate lexer based on current file and content"""
+        """Setup the lexer matching the file extension"""
         lexer = LexerFactory.createLexer(self, ext)
         self.setLexer(lexer)
 
@@ -119,12 +120,11 @@ class EditorLogic(EditorGraphics):
         add_command(QsciCommand.MoveSelectedLinesUp, Qt.SHIFT + Qt.CTRL + Qt.Key_Up)
         add_command(QsciCommand.MoveSelectedLinesDown, Qt.SHIFT + Qt.CTRL + Qt.Key_Down)
 
-    def updateLexer(self, content: str = None):
-        """Update lexer when content changes significantly"""
-        if content:
-            self.content = content
-        lexer = LexerFactory.createLexer(self, self.content)
-        self.setLexer(lexer)
+    def updateLexer(self, ext: str = None):
+        """Replace the lexer with the one that matches the file extension"""
+        if ext:
+            self.ext = ext
+        self.setupLexer(self.ext)
 
     def set_font(self):
         """Set editor font from database"""
@@ -132,13 +132,12 @@ class EditorLogic(EditorGraphics):
     
     def _setupSearchIndicator(self):
         """Configure the indicators used for search highlights"""
-        # 1. General matches: Outlined box
+        # General matches: outlined box
         self.indicatorDefine(QsciScintilla.StraightBoxIndicator, self.SEARCH_INDICATOR)
         self.setIndicatorForegroundColor(QColor("#FF8C00"), self.SEARCH_INDICATOR) # Orange
         self.setIndicatorDrawUnder(True, self.SEARCH_INDICATOR)
         
-        # 2. Current match: Filled box (or different color)
-        # We use the same style but can change color or use a different style like FullBoxIndicator if available
+        # Current match: same box style in another color
         self.indicatorDefine(QsciScintilla.StraightBoxIndicator, self.CURRENT_MATCH_INDICATOR)
         self.setIndicatorForegroundColor(QColor("#FF0000"), self.CURRENT_MATCH_INDICATOR) # Red for current
         self.setIndicatorDrawUnder(True, self.CURRENT_MATCH_INDICATOR)
@@ -156,7 +155,6 @@ class EditorLogic(EditorGraphics):
         self._clearSearch()
         if not prompt: return
 
-        # ... (search config: re, cs, wo, wrap, forward) ...
         re = use_regex
         cs = False
         wo = False
@@ -184,7 +182,7 @@ class EditorLogic(EditorGraphics):
             self._jumpToNextMatch(cur_line, cur_index)
 
     def _jumpToNextMatch(self, cur_line, cur_index):
-        # Find next match after current position
+        """Select the first match at or after the cursor, wrapping to the first one"""
         for i, (line, index, end) in enumerate(self._search_matches):
             if line > cur_line or (line == cur_line and index >= cur_index):
                 self._current_match_index = i
@@ -199,34 +197,29 @@ class EditorLogic(EditorGraphics):
 
     def _updateCurrentMatchHighlight(self):
         """Updates the indicators to highlight the current match distinctively"""
-        # Clear any existing current match indicators
         self.clearIndicatorRange(0, 0, self.lines(), self.lineLength(self.lines()-1), self.CURRENT_MATCH_INDICATOR)
         
         if 0 <= self._current_match_index < len(self._search_matches):
             line, start, end = self._search_matches[self._current_match_index]
             
-            # Remove the general "search" indicator for this specific range
             self.clearIndicatorRange(line, start, line, end, self.SEARCH_INDICATOR)
             
-            # Add the "current match" indicator
             self.fillIndicatorRange(line, start, line, end, self.CURRENT_MATCH_INDICATOR)
 
     def _navigate(self, direction):
+        """Move to the next or previous match, wrapping around"""
         if not self._search_matches: return
         
-        # Revert the previous current match to normal search style
         if 0 <= self._current_match_index < len(self._search_matches):
             line, start, end = self._search_matches[self._current_match_index]
             self.clearIndicatorRange(line, start, line, end, self.CURRENT_MATCH_INDICATOR)
             self.fillIndicatorRange(line, start, line, end, self.SEARCH_INDICATOR)
 
-        # Update index
         if direction == "next":
             self._current_match_index = (self._current_match_index + 1) % len(self._search_matches)
         elif direction == "prev":
             self._current_match_index = (self._current_match_index - 1) % len(self._search_matches)
         
-        # Highlight new current match
         self._updateCurrentMatchHighlight()
         self._scrollToMatch(self._current_match_index)
 
@@ -237,12 +230,15 @@ class EditorLogic(EditorGraphics):
             self.ensureLineVisible(line)
 
     def getOccurrenceInfo(self):
+        """Return (current match number, total matches) for the find counter"""
         if not self._search_matches: return (0, 0)
         return (self._current_match_index + 1, len(self._search_matches))
 
 
 @EventRegister.register(FindShortcutEvent, "editor")
 class Editor(EditorLogic):
+    """Code editor of a single tab, driven by the find widget and zoom shortcuts"""
+
     def __init__(self, mwt: QWidget, ext: str, _id: int):
         super().__init__(mwt, ext)
         self._id = _id
@@ -253,7 +249,7 @@ class Editor(EditorLogic):
         self._clearSearch()
 
     def keyPressEvent(self, event):
-        """Handle key press events, particularly Find shortcut"""
+        """Handle the zoom keys and the Find shortcut"""
         if handleZoomEvent(self, event, self.zoomIn, self._resetZoom):
             return
         if event.matches(QKeySequence.Find) or (
@@ -269,6 +265,7 @@ class Editor(EditorLogic):
         return super().viewportEvent(event)
 
     def onFindShortcutEvent(self, event: FindShortcutEvent):
+        """Run the search, navigation or close request of the find widget"""
         # Only process if this editor is the active one
         if Database.ON_TAB_SELECTED.getValue() != self._id:
             return
@@ -290,118 +287,3 @@ class Editor(EditorLogic):
             FindShortcutEvent(False, occurrencies=self.getOccurrenceInfo()),
             "editor/find"
         )
-
-
-
-# from PyQt5.Qsci import QsciScintilla, QsciCommandSet, QsciCommand, QsciDocument
-# from PyQt5.QtCore import Qt
-# from PyQt5.QtGui import QColor, QFont, QKeySequence
-# from PyQt5.QtWidgets import QWidget, QSizePolicy
-#
-# from source.comms import Database
-# from source.comms.events.FindShortcut import FindShortcutEvent
-# from source.comms.handlers import EventRegister
-# from source.filesystem import find_path
-# from source.interface.assets import translateQSS
-# from source.interface.editor.lexers import LexerFactory
-#
-#
-# class Editor(QsciScintilla):
-#     def __init__(self, mwt: QWidget, ext: str):
-#         super(QsciScintilla, self).__init__(mwt)
-#         self.setConfigurations()
-#         self.setObjectName("Editor")
-#         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-#         self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
-#         #Database.FONT.connect(self.set_font)
-#         self.loadStyles()
-#         self.setupLexer(ext)
-#
-#     def setupLexer(self, ext: str):
-#         """Setup the appropriate lexer based on current file and content"""
-#         lexer = LexerFactory.createLexer(self, ext)
-#         self.setLexer(lexer)
-#
-#     def loadStyles(self):
-#         try:
-#             with open(find_path("editor.qss"), "r") as f:
-#                 style = translateQSS(f.read())
-#                 self.setStyleSheet(style)
-#         except FileNotFoundError:
-#             pass
-#
-#     def setConfigurations(self):
-#         # Widget
-#         self.setContentsMargins(0, 0, 0, 0)
-#         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-#         self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-#         self.verticalScrollBar().setObjectName("VScrollCode")
-#         self.setCaretLineVisible(True)
-#         self.setCaretLineBackgroundColor(QColor("#252526"))
-#         self.setCaretForegroundColor(QColor("#569CD6"))
-#         self.setPaper(QColor("#292727"))
-#
-#         # Margin
-#         self.configureMargin()
-#
-#         self.configureTextFeatures()
-#         self.installEventFilter(self)
-#
-#     def configureTextFeatures(self):
-#         self.setAutoCompletionShowSingle(True)
-#         self.setAutoCompletionUseSingle(QsciScintilla.AcusExplicit)
-#         self.setAutoCompletionCaseSensitivity(False)
-#         self.setAutoCompletionReplaceWord(False)
-#         self.setAutoCompletionThreshold(1)
-#
-#         self.setAutoCompletionFillups(" ")
-#         self.setAutoCompletionFillupsEnabled(True)
-#         self.setAutoCompletionSource(QsciScintilla.AcsAll)
-#
-#         self.setAutoIndent(True)
-#         self.setTabIndents(True)
-#         self.setTabWidth(8)
-#         self.setIndentationWidth(8)
-#         self.setIndentationsUseTabs(True)
-#         self.configureCommands()
-#
-#     def configureCommands(self):
-#         commands: QsciCommandSet = self.standardCommands()
-#
-#         def add_command(cmd, seq):
-#             nonlocal commands
-#             if command := commands.find(cmd):
-#                 command.setKey(seq)
-#
-#         add_command(QsciCommand.LineCut, Qt.CTRL + Qt.Key_X)
-#         add_command(QsciCommand.LineCopy, Qt.CTRL + Qt.Key_C)
-#         add_command(QsciCommand.MoveSelectedLinesUp, Qt.SHIFT + Qt.CTRL + Qt.Key_Up)
-#         add_command(QsciCommand.MoveSelectedLinesDown, Qt.SHIFT + Qt.CTRL + Qt.Key_Down)
-#
-#     def keyPressEvent(self, event):
-#         if event.matches(QKeySequence.Find) or (
-#                 event.modifiers() & Qt.ControlModifier and event.key() == Qt.Key_F):
-#             EventRegister.send(FindShortcutEvent(), "editor")
-#             event.ignore()
-#             return
-#         super().keyPressEvent(event)
-#
-#     def configureMargin(self):
-#         self.setMarginType(0, QsciScintilla.NumberMargin)
-#         self.setMarginWidth(0, self.fontMetrics().width('00000'))
-#         self.setMarginOptions(QsciScintilla.TextMarginRightJustified)
-#         self.setMarginSensitivity(0, True)
-#         self.setMarginsFont(QFont("Monospace", 8))
-#         self.setMarginsBackgroundColor(QColor("#2D2D30"))
-#         self.setMarginsForegroundColor(QColor("#569CD6"))
-#         self.setMarginBackgroundColor(1, Qt.red)
-#
-#     def set_font(self):
-#         self.setFont(QFont(Database.FONT.getValue()))
-#
-#     def updateLexer(self, content: str = None):
-#         """Update lexer when content changes significantly"""
-#         if content:
-#             self.content = content
-#         lexer = LexerFactory.createLexer(self, self.content)
-#         self.setLexer(lexer)

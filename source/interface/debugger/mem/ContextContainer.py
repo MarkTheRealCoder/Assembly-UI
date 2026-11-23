@@ -8,7 +8,6 @@ class ContextContainerGraphics(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
         self.setObjectName("ContextContainer")
-        # Additional UI setup can be done here
         layout: QVBoxLayout = createLayout(QVBoxLayout, self)
         self.setLayout(layout)
 
@@ -20,8 +19,7 @@ class ContextContainerGraphics(QFrame):
 class ContextContainerLogic(ContextContainerGraphics):
     def __init__(self, parent):
         super().__init__(parent)
-        # Implementation of context container logic goes here
-        self.___context_windows: dict[str: ContextWindow] = {}
+        self.___context_windows: dict[str, ContextWindow] = {}
 
     def addContext(self, name: str):
         """ Add a new context window to the container with a specific name """
@@ -32,18 +30,17 @@ class ContextContainerLogic(ContextContainerGraphics):
         self.addContextToLayout(context_window)
 
     def findContext(self, name: str):
+        """ Return the context window with the given name, or None """
         return self.___context_windows.get(name, None)
 
     def reset(self):
-        """ Empty the context window """
+        """ Delete all context windows """
+        for context_window in self.___context_windows.values():
+            context_window.hide()
+            context_window.deleteLater()
         self.___context_windows.clear()
-        old_layout = self.layout()
-        old_layout.deleteLater()
-        new_layout = createLayout(QVBoxLayout, self)
-        self.setLayout(new_layout)
 
 
 class ContextContainer(ContextContainerLogic):
     def __init__(self, parent):
         super().__init__(parent)
-        # Additional initialization for ContextContainer

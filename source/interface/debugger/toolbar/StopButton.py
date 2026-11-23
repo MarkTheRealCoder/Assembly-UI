@@ -29,12 +29,9 @@ class StopButtonGraphics(GenericButton):
 class StopButtonLogic(StopButtonGraphics):
     def __init__(self, parent):
         super().__init__(parent)
-        # Implementation of stop button logic goes here
 
 class StopButton(StopButtonLogic):
     def __init__(self, parent):
         super().__init__(parent)
-        # Additional initialization for StopButton
-
 
 

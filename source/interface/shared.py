@@ -76,7 +76,6 @@ class Settings:
         Settings.SETTINGS.sync()
 
 
-
 def createLayout(l: type, parent: Optional[QWidget] = None):
     layout = l(parent)
     layout.setContentsMargins(0, 0, 0, 0)
@@ -187,7 +186,6 @@ class DraggableFrame(QFrame):
             # 8421
             x, y, w, h = geo.topLeft().x(), geo.topLeft().y(), geo.width(), geo.height()
 
-            # Top
             if 1 & self.position:
                 new_height = geo.height() + difference.y()
                 exceding_height = self.exceedingMinimumHeight(new_height)
@@ -199,7 +197,6 @@ class DraggableFrame(QFrame):
                 y = geo.topLeft().y() - difference.y() - border_size
                 h = new_height + border_size
 
-            # Bottom
             elif 2 & self.position:
                 new_height = geo.height() - difference.y()
                 exceding_height = self.exceedingMinimumHeight(new_height)
@@ -209,7 +206,6 @@ class DraggableFrame(QFrame):
 
                 h = new_height + border_size
 
-            # Left
             if 4 & self.position:
                 new_width = geo.width() + difference.x()
                 exceding_width = self.exceedingMinimumWidth(new_width)
@@ -221,7 +217,6 @@ class DraggableFrame(QFrame):
                 x = geo.topLeft().x() - difference.x() - border_size
                 w = new_width + border_size
 
-            # Right
             elif 8 & self.position:
                 new_width = geo.width() - difference.x()
                 exceding_width = self.exceedingMinimumWidth(new_width)

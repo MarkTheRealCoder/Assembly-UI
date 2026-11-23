@@ -31,7 +31,6 @@ class CompoundMemoryChunkGraphics(_MemoryChunk):
     def __init__(self, parent, name: str, color: str = None):
         super().__init__(parent)
         self.setObjectName("CompoundMemoryChunk")
-        # Additional UI setup can be done here
         color = roundColors('Compound') if color is None else color
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setStyleSheet(f"QFrame#CompoundMemoryChunk {{ border-left: 1px solid {color}; }}")
@@ -43,20 +42,28 @@ class CompoundMemoryChunkGraphics(_MemoryChunk):
         inner_layout.setSpacing(4)
         layout.addLayout(inner_layout, 2)
         self.setLayout(layout)
+        self._inner_layout = inner_layout
 
 
 class CompoundMemoryChunkLogic(CompoundMemoryChunkGraphics):
     def __init__(self, parent, name: str, color: str):
         super().__init__(parent, name, color)
-        # Implementation of compound memory chunk logic goes here
         self._key = name
+        self._nodes: dict = {}
 
     def getKey(self) -> str:
         return self._key
+
+    def getNodes(self) -> dict:
+        """ Returns the child nodes indexed by key. """
+        return self._nodes
+
+    def getInnerLayout(self) -> QVBoxLayout:
+        """ Returns the layout that contains the child nodes. """
+        return self._inner_layout
 
 
 class CompoundMemoryChunk(CompoundMemoryChunkLogic):
     def __init__(self, parent, name: str, color: str = None):
         super().__init__(parent, name, roundColors(name) if color is None else color)
-        # Additional initialization for CompoundMemoryChunk
 

@@ -17,6 +17,8 @@ from source.interface.shared import createLayout
 @EventRegister.register(TabListScrollEvent, "Tab", EventRegister.HIGH)
 @EventRegister.register(TabAddedEvent, "Tab", EventRegister.HIGH)
 class TabManager(QFrame):
+    """Tab bar with the tab list and the overflow button for hidden tabs"""
+
     def __init__(self, parent):
         super().__init__(parent)
         self.___layout: QHBoxLayout = None
@@ -70,6 +72,7 @@ class TabManager(QFrame):
         return self.___list.count() == 1
 
     def setActiveTab(self, _id: int = None):
+        """Select the given tab, or a neighbor of the closed one, or clear the selection"""
         if _id is not None:
             Database.ON_TAB_SELECTED.setValue(_id)
         elif self.___list.count() > 1:

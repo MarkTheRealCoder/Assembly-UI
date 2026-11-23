@@ -15,7 +15,6 @@ class TabLabel(QLabel):
         self.installEventFilter(self.parent())
 
     def sizeHint(self):
-        # Calculate size based on actual text width + margins
         metrics = QFontMetrics(self.font())
         text_width = metrics.horizontalAdvance(self.text())
         margins = self.contentsMargins()

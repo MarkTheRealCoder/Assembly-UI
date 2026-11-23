@@ -8,6 +8,8 @@ from source.interface.shared import createLayout
 
 
 class TabList(QScrollArea):
+    """Horizontally scrollable strip of tabs"""
+
     def __init__(self, parent):
         super().__init__(parent)
         self.configurations()
@@ -56,6 +58,7 @@ class _Support(QFrame):
         return self.layout().count()
 
     def moveTab(self, target, v):
+        """Move a tab by v positions towards the start, clamped to the list"""
 
         indx = self.layout().indexOf(target) - v
 

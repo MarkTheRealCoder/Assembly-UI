@@ -1,4 +1,4 @@
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import QHBoxLayout, QSizePolicy, QFrame
 
 from source.interface.debugger import ExecutionContext
@@ -14,7 +14,6 @@ class ToolbarGraphics(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
         self.setObjectName("ToolbarExecution")
-        # Additional UI setup can be done here
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setFrameShape(QFrame.StyledPanel)
         self.setFixedHeight(44)
@@ -90,23 +89,49 @@ class ToolbarGraphics(QFrame):
 class ToolbarLogic(ToolbarGraphics):
     def __init__(self, parent):
         super().__init__(parent)
-        # Implementation of toolbar logic goes here
         self.exec_context: ExecutionContext = parent
+        self._step_timer = QTimer(self)
 
     def run(self, debug: bool = False):
-        self.runGraphic(debug)
-        #EventRegister.send(RunEvent(debug), "Graphic")
+        """ Start the current program and update the buttons if it starts """
+        if self.exec_context.startExecution(debug):
+            self.runGraphic(debug)
 
     def stop(self):
+        """ Request the end of the current program """
+        self.exec_context.stopExecution()
+
+    def step(self, count: int = 1):
+        """ Execute a number of instructions of the paused program """
+        self.exec_context.stepExecution(count)
+
+    def toggleTimedExecution(self):
+        """ Start or stop the automatic execution """
+        if self._start_timedisplay_button.isActive():
+            self._step_timer.start(self._timedisplay_tick.currentData())
+        else:
+            self._step_timer.stop()
+
+    def updateTimedInterval(self):
+        """ Apply the selected interval to the running automatic execution """
+        if self._step_timer.isActive():
+            self._step_timer.setInterval(self._timedisplay_tick.currentData())
+
+    def executionEnded(self):
+        """ Restore the buttons after the end of the program """
+        self._step_timer.stop()
         self.stopGraphic()
 
 
 class Toolbar(ToolbarLogic):
     def __init__(self, parent):
         super().__init__(parent)
-        # Additional initialization for Toolbar
-        # todo : implement toolbar comms to debugger and terminal
 
-        self._run_button.clicked.connect(self.run)
+        self._run_button.clicked.connect(lambda: self.run(False))
         self._debug_button.clicked.connect(lambda: self.run(True))
         self._stop_button.clicked.connect(self.stop)
+        self._step_ahead_button.stepRequested.connect(self.step)
+        self._step_ahead_10_button.stepRequested.connect(self.step)
+        self._start_timedisplay_button.clicked.connect(self.toggleTimedExecution)
+        self._timedisplay_tick.currentIndexChanged.connect(self.updateTimedInterval)
+        self._step_timer.timeout.connect(self.step)

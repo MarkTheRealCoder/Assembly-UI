@@ -69,6 +69,7 @@ class DirectoryPickerLogic(DirectoryPickerGraphics):
 
 
 class DirectoryPicker(DirectoryPickerLogic):
+    """Folder tree where a double click sets the working directory."""
     def __init__(self):
         super().__init__()
         self._tree.selectionModel().selectionChanged.connect(self.sync_selection)

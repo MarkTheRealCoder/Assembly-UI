@@ -11,6 +11,7 @@ from source.interface.templates import create_toast
 
 
 class FileSaver(FileDialog):
+    """Dialog that saves the current editor file under a new name, asking before replacing an existing one. Creating it returns None when no file is open."""
     def __new__(cls, *args, **kwargs):
         if Settings.get("editor/current", None):
             return super().__new__(cls)
@@ -51,7 +52,5 @@ class FileSaver(FileDialog):
         if overwrite:
             Database.ON_FILE_REPLACED.setValue(str(destination))
         EventRegister.send(ClosingEvent(), "Tool")
-
-
 
 

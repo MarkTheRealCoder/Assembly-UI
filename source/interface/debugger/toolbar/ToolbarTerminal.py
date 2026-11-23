@@ -11,7 +11,6 @@ class ToolbarGraphics(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
         self.setObjectName("ToolbarTerminal")
-        # Additional UI setup can be done here
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setFrameShape(QFrame.StyledPanel)
         self.setFixedHeight(44)
@@ -39,7 +38,6 @@ class ToolbarGraphics(QFrame):
 class ToolbarLogic(ToolbarGraphics):
     def __init__(self, parent):
         super().__init__(parent)
-        # Implementation of toolbar logic goes here
         self.exec_context: ExecutionContext = parent
 
     def clearTerminal(self):
@@ -62,15 +60,10 @@ class ToolbarLogic(ToolbarGraphics):
 class Toolbar(ToolbarLogic):
     def __init__(self, parent):
         super().__init__(parent)
-        # Additional initialization for Toolbar
-        # todo : implement toolbar comms to debugger and terminal
         self._find_button.clicked.connect(self.findTerminal)
 
         self._clear_button.clicked.connect(self.clearTerminal)
         self._scroll_down_button.clicked.connect(self.scrollDownTerminal)
         self._scroll_up_button.clicked.connect(self.scrollUpTerminal)
-
-
-
 
 

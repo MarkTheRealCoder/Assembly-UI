@@ -56,6 +56,7 @@ class TRACKMOUSEEVENT(Structure):
 
 
 def trackNonClientLeave(hWnd):
+    """Ask Windows to send WM_NCMOUSELEAVE when the mouse leaves the non-client area."""
     TME_LEAVE = 0x00000002
     TME_NONCLIENT = 0x00000010
     event = TRACKMOUSEEVENT(sizeof(TRACKMOUSEEVENT), TME_LEAVE | TME_NONCLIENT, hWnd, 0)
@@ -103,6 +104,7 @@ def findWindow(hWnd):
 
 
 def getResizeBorderThickness(hWnd):
+    """Return the thickness in pixels of the resize border of the window with the given handle."""
     window = findWindow(hWnd)
     if not window:
         return 0
@@ -116,8 +118,8 @@ def getResizeBorderThickness(hWnd):
     return round(thickness*window.devicePixelRatio())
 
 
-
 class Taskbar:
+    """Queries the Windows taskbar for its auto-hide state and its screen edge."""
     LEFT = 0
     TOP = 1
     RIGHT = 2

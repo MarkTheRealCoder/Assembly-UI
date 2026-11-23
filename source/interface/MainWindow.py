@@ -56,6 +56,7 @@ class MainWindow(MainWindowLogic):
         self.___first_time = True
 
     def onClosingEvent(self, event):
+        """ Store the window state and size in the settings before closing """
         isMaximized = self.isFullScreen() or self.isMaximized()
         Settings.silentSet("mainwindow/fullscreen", isMaximized)
         if not isMaximized:
@@ -65,6 +66,7 @@ class MainWindow(MainWindowLogic):
         self.close()
 
     def showEvent(self, event):
+        """ Restore the saved size and state on the first show, then signal that the main window is ready """
         if self.___first_time:
             self.___first_time = False
             size = Settings.get("mainwindow/size", None)

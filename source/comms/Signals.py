@@ -53,5 +53,4 @@ class DataBase:
 
     # Global events
     ON_FILE_REPLACED: Variable = Variable(str)              # ON FILE REPLACED FROM A FILE DIALOG
-    #ON_SPLITTER_MOVE: Variable = Variable(bool)             # ON SPLITTER MOVE
 

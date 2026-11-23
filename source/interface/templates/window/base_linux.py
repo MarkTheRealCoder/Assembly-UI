@@ -19,6 +19,7 @@ _ALL_RESIZE_EDGES = Qt.LeftEdge | Qt.TopEdge | Qt.RightEdge | Qt.BottomEdge
 
 
 class _ResizeBorder(QWidget):
+    """Transparent rim over the window edges that sets the resize cursors and starts the resize."""
     _CURSOR_SPECS = (
         (Qt.TopEdge | Qt.LeftEdge, "nw-resize", Qt.SizeFDiagCursor),
         (Qt.TopEdge, "n-resize", Qt.SizeVerCursor),
@@ -197,6 +198,7 @@ class _ResizeBorder(QWidget):
 
 
 class ResizeFrame(QWidget):
+    """Frame that paints the rounded window border and hosts the content and the resize border."""
     def __init__(self, window, content):
         super().__init__(window)
         self.setObjectName("ResizeFrame")
@@ -335,6 +337,7 @@ class ResizeFrame(QWidget):
 
 
 class BaseWindow(QWidget):
+    """Frameless window whose resizing is handled by the ResizeFrame."""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._windowEffect = None

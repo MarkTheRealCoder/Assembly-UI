@@ -10,7 +10,6 @@ class ClearButtonGraphics(GenericButton):
     def __init__(self, parent):
         super().__init__(parent)
         self.setObjectName("ClearButton")
-        # Additional UI setup can be done here
         self.std_icon = self.rerenderIcon(QIcon(find_path("clear.svg")), "#569CD6")
         self.confirmation_icon = self.rerenderIcon(QIcon(find_path("confirm.svg")), "#FFFFFF")
         self.setIcon(self.std_icon)
@@ -43,13 +42,11 @@ class ClearButtonGraphics(GenericButton):
 class ClearButtonLogic(ClearButtonGraphics):
     def __init__(self, parent):
         super().__init__(parent)
-        # Implementation of clear button logic goes here
 
 
 class ClearButton(ClearButtonLogic):
     def __init__(self, parent):
         super().__init__(parent)
-        # Additional initialization for ClearButton
 
     def leaveEvent(self, event):
         self.inactiveProtocol()

@@ -1,4 +1,3 @@
-from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QFrame, QSizePolicy, QVBoxLayout
 
 from source.interface.debugger.mem.ContextContainer import ContextContainer
@@ -12,11 +11,9 @@ class MemoryViewerGraphics(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
         self.setObjectName("MemoryViewer")
-        # Additional UI setup can be done here
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.mem_header = MemoryHeader(self)
         self.mem_wrapper = ScrollWrapper(self, ContextContainer, vscrollbar_policy="as_needed")
-
 
         layout: QVBoxLayout = createLayout(QVBoxLayout, self)
         layout.addWidget(self.mem_header, 0)
@@ -27,7 +24,6 @@ class MemoryViewerGraphics(QFrame):
 class MemoryViewerLogic(MemoryViewerGraphics):
     def __init__(self, parent):
         super().__init__(parent)
-        # Implementation of memory viewer logic goes here
 
     def addNewContext(self, name: str):
         """ Add a new context to the memory viewer """
@@ -63,62 +59,32 @@ class MemoryViewerLogic(MemoryViewerGraphics):
         if context_window is not None:
             context_window.popLastNode()
 
+    def loadContexts(self, names: list[str], language: str):
+        """ Replace the contexts with the ones of a new program. """
+        w: ContextContainer = self.mem_wrapper.exposeWidget()
+        w.reset()
+        for name in names:
+            w.addContext(name)
+        self.mem_header.updateLanguage(language)
+
+    def applyUpdate(self, update):
+        """ Apply an interpreter update as one repaint. """
+        if not update.changed and not update.removed and update.instruction is None:
+            return
+        self.setUpdatesEnabled(False)
+        try:
+            for context, path in update.removed:
+                self.removeNodeFromContext(context, path)
+            for context, path, value in update.changed:
+                self.addNodeToContext(context, path, value)
+            if update.instruction is not None:
+                self.mem_header.updateInstruction(update.instruction)
+                self.mem_header.updateScope(update.scope)
+                self.mem_header.updateProgramCounter(max(update.pc, 0))
+        finally:
+            self.setUpdatesEnabled(True)
+
 
 class MemoryViewer(MemoryViewerLogic):
     def __init__(self, parent):
         super().__init__(parent)
-        # Additional initialization for MemoryViewer
-        self.addNewContext("REGISTERS")
-        self.addNewContext("STACK")
-        self.addNewContext("MEMORY")
-        self.addNewContext("FLAGS")
-        self.addNodeToContext("REGISTERS", "AX", None)
-        self.addNodeToContext("REGISTERS", "BX", None)
-        self.addNodeToContext("REGISTERS", "CX", None)
-        self.addNodeToContext("REGISTERS", "DX", None)
-        self.addNodeToContext("REGISTERS", "AX.AH", 0)
-        self.addNodeToContext("REGISTERS", "AX.AL", 0)
-        self.addNodeToContext("REGISTERS", "BX.BH", 0)
-        self.addNodeToContext("REGISTERS", "BX.BL", 0)
-        self.addNodeToContext("REGISTERS", "CX.CH", 0)
-        self.addNodeToContext("REGISTERS", "CX.CL", 0)
-        self.addNodeToContext("REGISTERS", "DX.DH", 0)
-        self.addNodeToContext("REGISTERS", "DX.DL", 0)
-        self.addNodeToContext("REGISTERS", "DX.DL", 2)
-        self.addNodeToContext("STACK", "0x00000000", 0)
-        self.addNodeToContext("STACK", "0x00000004", 0)
-        self.addNodeToContext("STACK", "0x00000008", 0)
-        self.addNodeToContext("STACK", "0x0000000C", 0)
-        self.addNodeToContext("STACK", "0x00000010", 0)
-        self.addNodeToContext("STACK", "0x00000014", 0)
-        self.addNodeToContext("STACK", "0x00000018", 0)
-        self.addNodeToContext("STACK", "0x0000001C", 0)
-        self.addNodeToContext("STACK", "0x00000020", 0)
-        self.addNodeToContext("STACK", "0x00000024", 0)
-        self.addNodeToContext("STACK", "0x00000028", 0)
-        self.addNodeToContext("STACK", "function.function")
-        self.addNodeToContext("STACK", "function.function.0x00000024", 12)
-        self.addNodeToContext("STACK", "function.function.function.function.function.function")
-        self.addNodeToContext("MEMORY", "0x00000000", 0)
-        self.addNodeToContext("MEMORY", "0x00000004", 0)
-        self.addNodeToContext("MEMORY", "0x00000008", 0)
-        self.addNodeToContext("MEMORY", "0x0000000C", 0)
-        self.addNodeToContext("MEMORY", "0x00000010", 0)
-        self.addNodeToContext("MEMORY", "0x00000014", 0)
-        self.addNodeToContext("MEMORY", "0x00000018", 0)
-        self.addNodeToContext("MEMORY", "0x0000001C", 0)
-        self.addNodeToContext("MEMORY", "0x00000020", 0)
-        self.addNodeToContext("FLAGS", "ZF", 0)
-        self.addNodeToContext("FLAGS", "SF", 0)
-        self.addNodeToContext("FLAGS", "OF", 0)
-        self.addNodeToContext("FLAGS", "CF", 0)
-        self.addNodeToContext("FLAGS", "AF", 0)
-
-        QTimer.singleShot(10000, lambda: self.removeNodeFromContext("STACK", "function.function.function.function.function.function"))
-        QTimer.singleShot(11000, lambda: self.removeNodeFromContext("STACK", "function.function.function.function.function"))
-        QTimer.singleShot(12000, lambda: self.removeNodeFromContext("STACK", "function.function.function.function"))
-        QTimer.singleShot(13000, lambda: self.removeNodeFromContext("STACK", "function.function.function"))
-        QTimer.singleShot(14000, lambda: self.removeNodeFromContext("STACK", "function.function"))
-        QTimer.singleShot(15000, lambda: self.removeNodeFromContext("STACK", "function"))
-
-

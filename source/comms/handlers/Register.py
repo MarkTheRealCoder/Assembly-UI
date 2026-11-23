@@ -5,6 +5,9 @@ from source.comms.handlers.Priority import Priority
 
 
 class Register:
+    """
+    Thread-safe store of weakly referenced objects, keyed by event type, identifier and priority
+    """
 
     class ___DictWrapper(WeakKeyDictionary):
         def __init__(self, *args, **kwargs):
@@ -19,8 +22,6 @@ class Register:
     def __init__(self):
         self.___reference: dict[type: dict[str: dict[Priority: Register.___DictWrapper[object: dict]]]] = {}
         self.___sem = Semaphore(1)
-        # logging.basicConfig(filename='register.log', level=logging.DEBUG,
-        #                     format='%(asctime)s:%(levelname)s:%(message)s')
 
     def ___dive(self, event: type, identifier: str = None, priority: Priority = None):
         """
@@ -103,10 +104,8 @@ class Register:
         self.___sem.acquire()
         try:
             d: Register.___DictWrapper = self.___dive(event, identifier, priority)
-            if hasattr(value, '__weakref__'):  # Verifica se l'oggetto può essere referenziato debolmente
+            if hasattr(value, '__weakref__'):
                 d[value] = specifiers
-            # else:
-            #     logging.warning(f"Impossibile creare riferimento debole per {value}")
         finally:
             self.___sem.release()
 
@@ -115,7 +114,6 @@ class Register:
         self.___sem.acquire()
         self.___deep_dive(self.___reference, {"___obj": obj, "___deleted": True})
         self.___sem.release()
-
 
 
 class IRegister:

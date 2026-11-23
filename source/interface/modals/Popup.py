@@ -49,8 +49,10 @@ class PopupLogic(PopupGraphics):
 
 
 class Popup(PopupLogic):
+    """Modal confirmation with Cancel as the default button."""
     @classmethod
     def ask(cls, parent, title: str, message: str, action: str) -> bool:
+        """Show the popup and return True if the user confirms."""
         popup = cls(parent, title, message, action)
         confirmed = popup.exec_() == QDialog.Accepted
         popup.deleteLater()

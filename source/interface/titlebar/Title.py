@@ -30,11 +30,9 @@ class Title(BaseTitle):
         self.setLabel()
 
     def setupFontAndAlignment(self):
-        # Set scalable font
         font = Desktop.createScalableFont("Anonymous Pro", 12, False)
         self.setFont(font)
         
-        # Ensure center alignment
         self.setAlignment(Qt.AlignCenter)
 
     def maximizeWindow(self):

@@ -16,6 +16,7 @@ from source.platform import isWindows
 
 
 class Item(QStandardItem):
+    """Tree item for a folder or a file. Folders hold a dummy child so that they can be expanded."""
 
     def __init__(self, text: str, ext: str = ""):
 
@@ -66,6 +67,7 @@ class PathTreeLogic(PathTreeGraphic):
         model.invisibleRootItem().setData(len(items))
 
     def update(self, item: Item = None):
+        """Sync the children of item, or the root, with the filesystem."""
         root = item is None
         is_file = self.___exts != ()
         starting_item = self.model().invisibleRootItem() if root else item
@@ -112,6 +114,7 @@ class PathTreeLogic(PathTreeGraphic):
         return path, item.is_file()
 
     def add_subdirectories(self, index: QModelIndex):
+        """Replace the dummy child of an expanded folder with its entries."""
         if not index.isValid():
             return
         model: QStandardItemModel = self.model()
@@ -139,6 +142,7 @@ class PathTreeLogic(PathTreeGraphic):
                 return
 
     def genPathFromItem(self, item: Item):
+        """Build the path of the item from the names of its ancestors."""
         parts: list[str] = []
         copy = item
         while copy is not None:
@@ -162,6 +166,7 @@ class PathTreeLogic(PathTreeGraphic):
 
 @EventRegister.register(ClosingEvent, "Tool", EventRegister.URGENT)
 class PathTree(PathTreeLogic):
+    """Tree of disks and folders, or of the files under the working directory when is_file is set. It refreshes every second."""
     def __init__(self, parent, is_file: bool = False):
         super().__init__(parent, is_file)
 
@@ -190,6 +195,5 @@ class PathTree(PathTreeLogic):
 
     def event(self, event):
         return super().event(event)
-
 
 

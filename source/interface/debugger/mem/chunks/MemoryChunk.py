@@ -3,42 +3,46 @@ from PyQt5.QtWidgets import QGraphicsColorizeEffect, QFrame
 
 
 class _MemoryChunk(QFrame):
+    """ Base widget of a memory node, with the spawn and removal animations. """
+
     def __init__(self, parent):
         super().__init__(parent)
-        self.___spawn_effect = QGraphicsColorizeEffect(self)
-        self.___spawn_effect.setColor(Qt.green)
-        self.___spawn_effect.setStrength(0)
-        self.___close_effect = QGraphicsColorizeEffect(self)
-        self.___close_effect.setColor(Qt.red)
-        self.___close_effect.setStrength(0)
+        self.___animation: QPropertyAnimation = None
         self.___first_spawn = True
 
+    def ___flash(self, color, duration: int, end: float, curve) -> QPropertyAnimation:
+        """ Replaces the running animation. The widget owns the new one, so both end together. """
+        if self.___animation is not None:
+            self.___animation.finished.disconnect()
+            self.___animation.stop()
+            self.___animation.deleteLater()
+
+        effect = QGraphicsColorizeEffect(self)
+        effect.setColor(color)
+        effect.setStrength(0.8)
+        self.setGraphicsEffect(effect)
+
+        self.___animation = QPropertyAnimation(effect, b"strength", self)
+        self.___animation.setDuration(duration)
+        self.___animation.setStartValue(0.8)
+        self.___animation.setEndValue(end)
+        self.___animation.setEasingCurve(curve)
+        return self.___animation
+
+    def ___clear_effect(self):
+        self.setGraphicsEffect(None)
+        self.___animation = None
+
     def ___green_flash(self):
-        self.setGraphicsEffect(self.___spawn_effect)
-        self.anim = QPropertyAnimation(self.___spawn_effect, b"strength")
-        self.anim.setDuration(2000)
-        self.anim.setStartValue(0.8)
-        self.anim.setEndValue(0.0)
-        self.anim.setEasingCurve(QEasingCurve.OutCubic)
-
-        # Optional: Clean up the effect when done to save CPU
-        self.anim.finished.connect(lambda: self.setGraphicsEffect(None))
-
-        self.anim.start()
+        animation = self.___flash(Qt.green, 2000, 0.0, QEasingCurve.OutCubic)
+        animation.finished.connect(self.___clear_effect)
+        animation.start()
 
     def ___red_flash(self):
-        self.setGraphicsEffect(self.___close_effect)
-        self.anim2 = QPropertyAnimation(self.___close_effect, b"strength")
-        self.anim2.setDuration(1500)
-        self.anim2.setStartValue(0.8)
-        self.anim2.setEndValue(0.05)
-        self.anim2.setEasingCurve(QEasingCurve.Linear)
-
-        # Optional: Clean up the effect when done to save CPU
-        self.anim2.finished.connect(lambda: self.deleteLater())
-
-        self.anim2.start()
-        return self.anim2.finished
+        animation = self.___flash(Qt.red, 1500, 0.05, QEasingCurve.Linear)
+        animation.finished.connect(self.deleteLater)
+        animation.start()
+        return animation.finished
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -47,4 +51,5 @@ class _MemoryChunk(QFrame):
             self.___green_flash()
 
     def rm(self):
+        """ Starts the removal animation. Qt removes the widget from its layout when it is deleted. """
         return self.___red_flash()

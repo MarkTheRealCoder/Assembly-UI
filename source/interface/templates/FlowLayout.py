@@ -9,6 +9,7 @@ from PyQt5.QtCore import Qt, QMargins, QPoint, QRect, QSize
 from PyQt5.QtWidgets import QLayout, QSizePolicy
 
 class FlowLayout(QLayout):
+    """Layout that places items left to right and wraps them to the next row."""
     def __init__(self, parent=None):
         super().__init__(parent)
 

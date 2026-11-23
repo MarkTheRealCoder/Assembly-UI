@@ -11,7 +11,6 @@ from source.interface.templates import GenericButton, Tooltip
 class _CopyButton(GenericButton):
     def __init__(self, parent):
         super().__init__(parent)
-        # Additional UI setup can be done here
         self.setIcon(self.rerenderIcon(QIcon(find_path("copy.svg")), "#6b6b6b"))
         self.setIconSize(QSize(16, 16))
         self.___tooltip = Tooltip(self, "Copied to clipboard")
@@ -45,7 +44,6 @@ class SingleMemoryChunkLogic(SingleMemoryChunkGraphics):
         super().__init__(parent, key, value)
         self._value = value
         self._key = key
-        # Implementation of memory chunk logic goes here
         button: _CopyButton = self.layout().itemAt(2).widget()
         button.clicked.connect(self.copyToClipboard)
 
@@ -57,7 +55,6 @@ class SingleMemoryChunkLogic(SingleMemoryChunkGraphics):
 
     def setValue(self, value: str or int):
         self._value = value
-        # Update the UI representation of the value if necessary
         value_label: QLabel = self.layout().itemAt(1).widget()
         value_label.setText(value if isinstance(value, str) else hex(value))
 
@@ -69,4 +66,3 @@ class SingleMemoryChunkLogic(SingleMemoryChunkGraphics):
 class SingleMemoryChunk(SingleMemoryChunkLogic):
     def __init__(self, parent, key: str, value: str or int or None = None):
         super().__init__(parent, key, value)
-        # Additional initialization for chunks

@@ -10,6 +10,7 @@ from source.interface.templates import create_toast
 
 
 class FileCreator(FileDialog):
+    """Dialog that creates a file in the chosen folder and opens it, asking before replacing an existing one."""
     def __init__(self):
         super().__init__(["a8088", "ijvm"])
         self.confirm.onClick(self.___confirm)

@@ -8,11 +8,13 @@ from source.platform import Desktop
 
 
 def run_toast_config(parent):
+    """Make toasts appear relative to the parent widget, on its screen."""
     from pyqttoast import Toast
     Toast.setAlwaysOnMainScreen(False)
     Toast.setPositionRelativeToWidget(parent)
 
 def _scale_toast(toast, parent):
+    """Scale the sizes, margins and fonts of the toast by the scale factor of the parent's screen."""
     factor = Desktop.getScaleFactor(parent)
 
     def scaled(value: int) -> int:
@@ -44,6 +46,7 @@ def _scale_toast(toast, parent):
     toast.setTextFont(scaled_font(toast.getTextFont()))
 
 def create_toast(parent, text: str, _type: Literal["success", "error", "warning"] = "success"):
+    """Show a toast with the text and the style of the given type."""
     from pyqttoast import Toast
     toast = Toast(parent)
     preset = ToastPreset.SUCCESS_DARK
@@ -62,6 +65,7 @@ def create_toast(parent, text: str, _type: Literal["success", "error", "warning"
     toast.show()
 
 def toast_safe_exec(window, call: callable, *args, **kwargs) -> callable:
+    """Return a function that runs call and shows an error toast instead of raising."""
     def safe_exec():
         try:
             return call(*args, **kwargs)

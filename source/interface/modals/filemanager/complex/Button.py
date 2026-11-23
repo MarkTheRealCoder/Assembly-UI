@@ -7,6 +7,7 @@ from source.interface.templates import GenericButton, Tooltip
 
 
 class Button(GenericButton):
+    """Square icon button with a tooltip and a settable click action."""
     def __init__(self, parent, icon_path: str, tooltip: str):
         super().__init__(parent)
 

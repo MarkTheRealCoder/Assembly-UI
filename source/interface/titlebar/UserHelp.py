@@ -19,7 +19,6 @@ class HelpMenu(GenericButton):
         self.setMenu(menu)
 
     def setupFontAndAlignment(self):
-        # Set scalable font
         font = Desktop.createScalableFont("Anonymous Pro", 12, False)
         self.setFont(font)
 

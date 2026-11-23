@@ -11,6 +11,8 @@ from source.interface.templates import GenericButton, Tooltip
 
 
 class TabButton(GenericButton):
+    """Overflow button that opens the menu of the hidden tabs"""
+
     def __init__(self, parent):
         super().__init__(parent)
         self.___menu: HiddenTabList = HiddenTabList(self)
@@ -33,6 +35,7 @@ class TabButton(GenericButton):
         return self.___menu.count()
 
     def reload(self, tl: TabList):
+        """Fill the menu with the tabs outside the visible area of the tab list"""
         self.___menu.hide()
         self.___menu.clearActions()
         panel = tl.widget()
@@ -45,12 +48,5 @@ class TabButton(GenericButton):
         count = self.count()
         self.setText(f"+{count}")
         self.tooltip.setText(f"{count} hidden file{'' if count == 1 else 's'}")
-
-
-
-
-
-
-
 
 

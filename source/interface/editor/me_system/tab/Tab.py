@@ -111,6 +111,8 @@ class TabLogic(TabGraphics):
 
 
 class Tab(TabLogic):
+    """Tab of an open file, closed through the ClosingEvent addressed to its id"""
+
     def __init__(self, parent, _id: int, name: str, ext: str):
         super().__init__(parent, _id, name, ext)
         EventRegister.mregister(self, ClosingEvent, "Tab", EventRegister.LOW, id=_id)
@@ -121,7 +123,5 @@ class Tab(TabLogic):
     def onClosingEvent(self, event: ClosingEvent):
         DataBase.ON_TAB_CLOSE.setValue(self.getId())
         self.deleteLater()
-
-
 
 

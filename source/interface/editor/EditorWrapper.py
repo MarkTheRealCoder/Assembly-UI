@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QFrame, QSizePolicy, QVBoxLayout
 
 from source.asyncro import Scheduler
 from source.comms import Database
-from source.comms.events import ClosingEvent, NoTabEvent, ReadyEvent, TabAddedEvent, FindShortcutEvent
+from source.comms.events import ClosingEvent, NoTabEvent, ReadyEvent, RunEvent, TabAddedEvent, FindShortcutEvent
 from source.comms.handlers import EventRegister
 from source.filesystem.documents import Document
 from source.filesystem.documents import Watcher
@@ -42,6 +42,8 @@ class EditorWrapperGraphics(QFrame):
 
 
 class EditorWrapperLogic(EditorWrapperGraphics):
+    """ Keeps open documents, their tabs and their editors in sync, and autosaves edits """
+
     def __init__(self, parent):
         super().__init__(parent)
         self._scheduler = None
@@ -71,6 +73,7 @@ class EditorWrapperLogic(EditorWrapperGraphics):
             Settings.remove("editor/current")
 
     def openDocument(self, file: str = None):
+        """ Open a file in a new tab, or select its tab if it is already open """
         path = Settings.get("editor/current", None) if file is None else file
 
         for docHash, document in self._documents.items():
@@ -87,6 +90,7 @@ class EditorWrapperLogic(EditorWrapperGraphics):
         self.initializeSchedulers(docHash)
 
     def reloadReplacedFile(self, path: str):
+        """ Reload the open tabs of a file that was replaced on disk """
         destination = Path(path)
         for docHash, document in list(self._documents.items()):
             try:
@@ -122,6 +126,7 @@ class EditorWrapperLogic(EditorWrapperGraphics):
         )
 
     def document_uniqueness(self, document: Document):
+        """ Return the tab name: the file name, or its path from the working directory when names clash """
         tabs = self.findChildren(Tab)
         name = repr(document)
         unique = True
@@ -145,6 +150,7 @@ class EditorWrapperLogic(EditorWrapperGraphics):
         self._frame.removeEditor(docHash)
 
     def getFromDisk(self):
+        """ Show in the selected editor the changes made to its file outside the app """
         docHash = Database.ON_TAB_SELECTED.getValue()
         doc = self._documents.get(docHash)
         if doc is None:
@@ -165,6 +171,7 @@ class EditorWrapperLogic(EditorWrapperGraphics):
             self._scheduler.trigger()
 
     def _savePending(self):
+        """ Write the queued edits to disk, queueing again the ones that fail """
         with self.___save_lock:
             with self.___pending_lock:
                 pending, self.___pending_saves = self.___pending_saves, {}
@@ -186,14 +193,23 @@ class EditorWrapperLogic(EditorWrapperGraphics):
         Settings.remove("editor/current")
 
 
+@EventRegister.register(RunEvent, "Editor", priority=EventRegister.URGENT)
 @EventRegister.register(FindShortcutEvent, "editor", priority=EventRegister.URGENT)
 @EventRegister.register(ClosingEvent, priority=EventRegister.URGENT)
 @EventRegister.register(ReadyEvent, priority=EventRegister.HIGH)
 class EditorWrapper(EditorWrapperLogic):
+    """ Editor area with the tab bar, the find widget and the editors """
+
     def __init__(self, parent):
         super().__init__(parent)
 
+    def onRunEvent(self, event: RunEvent):
+        """ Write pending edits to disk before the interpreter reads the file """
+        self._savePending()
+        event.accept()
+
     def onFindShortcutEvent(self, event: FindShortcutEvent):
+        """ Show or hide the find widget while a file is open """
         if self._frame.getEditor(Database.ON_TAB_SELECTED.getValue()) is not None:
             if event.mustClose():
                 self._find_widget.toggle(True)
@@ -201,6 +217,7 @@ class EditorWrapper(EditorWrapperLogic):
             self._find_widget.toggle()
 
     def onClosingEvent(self, e: ClosingEvent):
+        """ Stop autosave, flush pending edits and store the open files """
         # The close button and QApplication.aboutToQuit can both send this event.
         if self._closed:
             e.accept()
@@ -215,6 +232,7 @@ class EditorWrapper(EditorWrapperLogic):
         e.accept()
 
     def onReadyEvent(self, event):
+        """ Reopen the files stored at the last closing """
         files = Settings.get("editor/files", [], list)
         if files:
             for f in files:
@@ -226,122 +244,3 @@ class EditorWrapper(EditorWrapperLogic):
             EditorWrapper.reset_variables()
             return True
         return super().event(e)
-
-#
-# @EventRegister.register(ClosingEvent, priority=EventRegister.URGENT)
-# @EventRegister.register(ReadyEvent, priority=EventRegister.HIGH)
-# class EditorWrapper(QFrame):
-#     def __init__(self, parent):
-#         super().__init__(parent)
-#         self.___scheduler = None
-#         self.___file_update = None
-#
-#         self._tab_manager: TabManager = None
-#         self.___frame: EditorFrame = None
-#
-#         self.___documents: dict[int: Document] = {}
-#
-#         Database.OPEN_FILE.connect(self.openDocument)
-#         Database.ON_TAB_CLOSE.connect(self.closeTab)
-#
-#         def set_current_file():
-#             Database.CURRENT_FILE.setValue(self.___documents.get(Database.ON_TAB_SELECTED.getValue(), None))
-#
-#         Database.ON_TAB_SELECTED.connect(set_current_file)
-#
-#         self.configurations()
-#
-#     def configurations(self):
-#         self.setObjectName("EditorWrapper")
-#         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-#         self.setContentsMargins(0, 0, 0, 0)
-#
-#         layout: QVBoxLayout = createLayout(QVBoxLayout, self)
-#         self._tab_manager = TabManager(self)
-#         self.___frame = EditorFrame(self)
-#
-#         layout.addWidget(self._tab_manager, 1)
-#         layout.addWidget(self.___frame, 10)
-#         self.setLayout(layout)
-#
-#     def openDocument(self, file: str):
-#         path = file if file is not None else Database.OPEN_FILE.getValue()
-#         if (paths := [d.getPath() for d in self.___documents.values()]) and path in paths:
-#             return
-#         doc = Document(path)
-#         docHash = hash(doc)
-#
-#         self.___documents[docHash] = doc
-#
-#         self._tab_manager.addTab(docHash, self.document_uniqueness(doc), doc.getExtension())
-#         self.___frame.addEditor(docHash, Editor(self.___frame), doc.text)
-#
-#         Database.ON_TAB_SELECTED.setValue(docHash)
-#         Database.DOCTYPE.setValue(int(FT.findByExt(doc.getExtension())))
-#
-#         if self.___file_update is None:
-#             self.___file_update = Scheduler(None, self.___auto_save)
-#
-#         if self.___scheduler is None:
-#             self.___scheduler = Scheduler(None, self.___auto_save)
-#             Database.DOCTYPE.setValue(int(FT.findByExt(doc.getExtension())))
-#         self.___frame.getEditor(docHash).textChanged.connect(self.___scheduler.trigger)
-#
-#     def document_uniqueness(self, document: Document):
-#         tabs = self.findChildren(Tab)
-#         name = str(document)
-#         unique = True
-#         for tab in tabs:
-#             text = tab.text()
-#             if text == name or name in text:
-#                 unique = False
-#                 tab.setText(f"{self.___documents[tab.getId()]:sub:{Database.FOLDER.getValue()}}")
-#         if unique:
-#             return name
-#         return f"{document:sub:{Database.FOLDER.getValue()}}"
-#
-#     def closeTab(self):
-#         docHash = Database.ON_TAB_CLOSE.getValue()
-#         self.___documents.pop(docHash)
-#         if docHash == Database.ON_TAB_SELECTED.getValue():
-#             self._tab_manager.setActiveTab()
-#         self.___frame.removeEditor(docHash)
-#
-#     def onClosingEvent(self, e: ClosingEvent):
-#         if self.___scheduler is not None:
-#             self.___scheduler.terminate()
-#             del self.___scheduler
-#         HJ.get_instance().set_files(list(map(lambda x: x.getPath(), self.___documents.values())))
-#         del self.___documents
-#
-#     def ___auto_save(self):
-#         docHash = Database.ON_TAB_SELECTED.getValue()
-#         doc = self.___documents.get(docHash)
-#         doc.text = self.___frame.getEditorText(docHash)
-#
-#     def ___get_from_disk(self):
-#         docHash = Database.ON_TAB_SELECTED.getValue()
-#         doc = self.___documents.get(docHash)
-#         text = self.___frame.getEditorText(docHash)
-#         if doc.text != text:
-#             text = doc.text
-#             editor = self.___frame.getEditor(docHash)
-#             editor.setText(text)
-#
-#     def onReadyEvent(self, event):
-#         files = HJ.get_instance().get_files()
-#         if files:
-#             for f in files:
-#                 self.openDocument(f)
-#
-#     def eventFilter(self, obj, e: QEvent):
-#         if e.type() == NoTabEvent.gtype():
-#             EditorWrapper.reset_variables()
-#             return True
-#         return super().event(e)
-#
-#     @staticmethod
-#     def reset_variables():
-#         Database.ON_TAB_SELECTED.setValue(0)
-#         Database.CURRENT_FILE.setValue(None)
-#         Database.DOCTYPE.setValue(0)

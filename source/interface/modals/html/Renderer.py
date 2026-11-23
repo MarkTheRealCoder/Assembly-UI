@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import QSizePolicy
 
 
 class CustomWebEnginePage(QWebEnginePage):
+    """Page that opens clicked links in the system browser and has no context menu."""
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -21,6 +22,7 @@ class CustomWebEnginePage(QWebEnginePage):
 
 
 class Renderer(QWebEngineView):
+    """Web view that renders an HTML file with JavaScript enabled."""
     def __init__(self, parent, file: str):
         QWebEngineView.__init__(self, parent)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)

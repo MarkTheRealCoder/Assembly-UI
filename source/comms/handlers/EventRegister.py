@@ -39,7 +39,6 @@ class EventRegister:
         """
 
 
-
         def wrapper(cls):
 
 
@@ -97,6 +96,9 @@ class EventRegister:
 
     @staticmethod
     def get(event: type, arg: str = "Main", **specifiers):
+        """
+        Get the objects registered to an event, ordered from the highest to the lowest priority
+        """
         result = []
         result += EventRegister.REFERENCE.get(event, arg, EventRegister.URGENT, **specifiers)
         result += EventRegister.REFERENCE.get(event, arg, EventRegister.HIGH, **specifiers)
@@ -106,6 +108,9 @@ class EventRegister:
 
     @staticmethod
     def remove(obj):
+        """
+        Remove an object from every event it is registered to
+        """
         EventRegister.REFERENCE.delete(obj)
 
     @staticmethod
@@ -117,7 +122,6 @@ class EventRegister:
         :return:
         """
         app = QApplication.instance()
-        # print(f"Keys {keys}")
         refs = EventRegister.get(type(event), arg, **keys)
         for ref in refs:
             event.on(ref)

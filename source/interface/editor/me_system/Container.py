@@ -10,6 +10,8 @@ from source.interface.templates import CloseButton, Tooltip
 
 
 class Container(QFrame):
+    """Row of the hidden tab menu: icon, name and close button of a tab"""
+
     def __init__(self, parent, _id: int, name: str, icon: QIcon):
         super().__init__(parent)
 

@@ -12,7 +12,6 @@ class ScrollButtonGraphics(GenericButton):
     def __init__(self, parent, direction: Literal["up", "down"]):
         super().__init__(parent)
         self.setObjectName("ScrollButton")
-        # Additional UI setup can be done here
         icon = QIcon(find_path(f"scroll-{direction}.svg"))
         self.setIcon(self.rerenderIcon(icon, "#569CD6"))
         self.setIconSize(QSize(16, 16))
@@ -26,10 +25,8 @@ class ScrollButtonGraphics(GenericButton):
 class ScrollButtonLogic(ScrollButtonGraphics):
     def __init__(self, parent, direction: Literal["up", "down"]):
         super().__init__(parent, direction)
-        # Implementation of scroll button logic goes here
 
 
 class ScrollButton(ScrollButtonLogic):
     def __init__(self, parent, direction: Literal["up", "down"]):
         super().__init__(parent, direction)
-        # Additional initialization for ScrollButton

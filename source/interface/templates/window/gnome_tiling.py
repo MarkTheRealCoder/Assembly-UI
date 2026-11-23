@@ -13,6 +13,7 @@ TILED_RESIZE_EDGES_PROPERTY = "gnomeTiledResizeEdges"
 
 @lru_cache(maxsize=1)
 def _load_monitor():
+    """Load the GNOME tiling module once and return its watch function, or None if it is missing or built for another Qt version."""
     project = Path(__file__).resolve().parents[4]
     library_path = project / "build" / "gnome-tiling" / "libassembly-gnome-tiling.so"
     if not library_path.is_file():
@@ -40,6 +41,7 @@ def _load_monitor():
 
 
 def watch_gnome_tiling(window):
+    """Watch the GNOME tiling state of the window on Wayland and publish it as a property of the window."""
     if QGuiApplication.platformName().startswith("wayland"):
         monitor = _load_monitor()
         if monitor is not None:

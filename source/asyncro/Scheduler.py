@@ -2,6 +2,9 @@ import threading
 
 
 class Scheduler:
+    """
+    Runs an action on a background thread, periodically or each time trigger is called
+    """
     def __init__(self, time: float or None, action, *args, **kwargs):
         """
         :param time: Time between two execution of the action. Set it to 'None' to make the execution on-trigger.

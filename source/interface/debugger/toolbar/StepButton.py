@@ -1,4 +1,4 @@
-from PyQt5.QtCore import QSize
+from PyQt5.QtCore import QSize, pyqtSignal
 from PyQt5.QtGui import QIcon
 
 from source.filesystem import find_path
@@ -26,12 +26,15 @@ class StepButtonGraphics(GenericButton):
 
 
 class StepButtonLogic(StepButtonGraphics):
+    stepRequested = pyqtSignal(int)
+
     def __init__(self, parent, step_size: int = 1):
         super().__init__(parent, step_size)
         self.__step_size = step_size
 
     def step_ahead(self):
-        print(f"Stepping ahead by {self.__step_size} instruction/s.")
+        """ Request the execution of the instructions of this button """
+        self.stepRequested.emit(self.__step_size)
 
 
 class StepButton(StepButtonLogic):

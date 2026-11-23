@@ -4,6 +4,7 @@ from source.filesystem import find_path
 
 
 def add_fonts():
+    """ Register the bundled fonts with the application """
     QFontDatabase.addApplicationFont(find_path("AnonymousPro.ttf"))
     QFontDatabase.addApplicationFont(find_path("FiraCode.ttf"))
     QFontDatabase.addApplicationFont(find_path("Inconsolata.ttf"))

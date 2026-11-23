@@ -53,6 +53,7 @@ class CloseButtonLogic(CloseButtonGraphics):
 
 
 class CloseButton(CloseButtonLogic):
+    """Close button that sends a ClosingEvent to its subclass when clicked."""
     def __init__(self, parent, subclass: str = "Main", properties: dict[str, bool] = None):
         super().__init__(parent, properties)
         self.___subclass: str = subclass

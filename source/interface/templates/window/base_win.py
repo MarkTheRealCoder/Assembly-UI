@@ -24,6 +24,7 @@ _RESIZE_HITS = (
 
 
 class BaseWindow(QWidget):
+    """Frameless window that handles native hit testing for the resize edges and the Snap Layout maximize button."""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._windowEffect = None
@@ -37,7 +38,6 @@ class BaseWindow(QWidget):
             hint = ['min', 'max', 'close']
         self._windowEffect = WindowsEffectHelper()
 
-        # remove window border
         # seems kinda pointless(though if you get rid of code below frame will still be seen), but if you don't add this, cursor won't properly work
         newFlags = self.windowFlags() | Qt.FramelessWindowHint
         for flag in flags:
@@ -66,12 +66,10 @@ class BaseWindow(QWidget):
         msg = MSG.from_address(message.__int__())
         if msg.hWnd:
             if msg.message == win32con.WM_NCHITTEST:
-                # 1. Coordinate locali tramite Qt
                 global_pos = QCursor.pos()
                 local_pos = self.mapFromGlobal(global_pos)
                 x, y = local_pos.x(), local_pos.y()
 
-                # Controllo se il mouse è nell'area del pulsante di massimizzazione
                 if QRect(*self.MAXBUTTON_RECT()).contains(QPoint(x, y)):
                     # todo fix button rect interaction after new window opening and closing
                     self._mouse_on_max_btn = True
@@ -80,10 +78,8 @@ class BaseWindow(QWidget):
                 else:
                     if self._mouse_on_max_btn:
                         self._mouse_on_max_btn = False
-                        # Ripristina lo stato normale del pulsante Qt quando il mouse esce
                         self._setMaxButtonHover(False)
 
-                # Gestione dei bordi di ridimensionamento (solo se non massimizzata)
                 if not isMaximized(msg.hWnd):
                     w, h = self.width(), self.height()
                     border = self.___border_width
@@ -119,7 +115,6 @@ class BaseWindow(QWidget):
                     from source.interface.titlebar.Maximize import MaximizeButton
                     btn = self.findChild(MaximizeButton)
                     if btn:
-                        # Simula il click sul pulsante Qt
                         btn.on_press()
                         # Ritorniamo True per dire a Windows: "Gestito da me, non fare nulla (non disegnare robe)"
                     return True, 0

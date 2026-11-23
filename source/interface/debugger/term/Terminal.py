@@ -56,7 +56,6 @@ class TerminalLogic(TerminalGraphics):
 
     def __init__(self, parent):
         super().__init__(parent)
-        # Implementation of terminal logic goes here
         self.setUndoRedoEnabled(False)
         self.separator()
 
@@ -65,6 +64,76 @@ class TerminalLogic(TerminalGraphics):
         self._last_search_prompt: str = ""
         self._last_search_regex: bool = False
         self._base_font = None
+        self._input_callback = None
+        self._output_open: bool = False
+
+    def beginProgram(self, input_callback: callable) -> None:
+        """Prepare the terminal for a program and route submitted lines to the callback."""
+        self._clearUserInput()
+        self._input_callback = input_callback
+        self._output_open = False
+
+    def endProgram(self) -> None:
+        """Close the program output and restore the normal terminal input."""
+        self._clearUserInput()
+        self._input_callback = None
+        self._output_open = False
+
+    def writeProgram(self, text: str) -> None:
+        """Append program output above the line that the user is typing."""
+        if not text:
+            return
+        bar = self.verticalScrollBar()
+        follow = bar.value() >= bar.maximum()
+        last = self.document().lastBlock()
+        cursor = QTextCursor(self.document())
+
+        if self._output_open:
+            cursor.setPosition(last.position() - 1)
+        else:
+            cursor.setPosition(last.position())
+            cursor.insertBlock()
+            cursor.movePosition(QTextCursor.PreviousBlock)
+            self._output_open = True
+
+        first_block = cursor.blockNumber()
+        cursor.setCharFormat(TerminalLogic.infoFmt)
+        cursor.insertText(text)
+
+        block = self.document().findBlockByNumber(first_block)
+        input_block = self.document().lastBlock()
+        while block.isValid() and block != input_block:
+            block.setUserState(TerminalLogic.READONLY_STATE)
+            block = block.next()
+        input_block.setUserState(-1)
+
+        if follow:
+            bar.setValue(bar.maximum())
+
+    def submitInput(self) -> None:
+        """Move the typed lines into the read-only output and send them to the program."""
+        lines = self._takeUserInput()
+        if not lines:
+            return
+        self._write("\n".join(lines), TerminalLogic.writeFmt)
+        self._input_callback([line for line in lines if line])
+
+    def _takeUserInput(self) -> list[str]:
+        """Remove the editable text at the end of the document and return its lines."""
+        block = self.document().lastBlock()
+        while block.previous().isValid() and not self.is_block_protected(block.previous()):
+            block = block.previous()
+        cursor = QTextCursor(self.document())
+        cursor.setPosition(block.position())
+        cursor.movePosition(QTextCursor.End, QTextCursor.KeepAnchor)
+        text = cursor.selectedText().replace(" ", "\n")
+        cursor.removeSelectedText()
+        self._resetCursor()
+        return [line for line in text.split("\n") if line]
+
+    def _clearUserInput(self) -> None:
+        """Delete the text typed after the last protected block."""
+        self._takeUserInput()
 
     def _zoomBy(self, steps: int):
         self.ensurePolished()
@@ -91,6 +160,7 @@ class TerminalLogic(TerminalGraphics):
 
     def _write(self, content: str or QTextFrameFormat, fmt: QTextCharFormat = None, userState = READONLY_STATE, keepPos = False) -> None:
         cursor = self._set_to_eof() if not keepPos else self.textCursor()
+        self._output_open = False
 
         block_start = cursor.position()
 
@@ -128,7 +198,6 @@ class TerminalLogic(TerminalGraphics):
         start = cursor.selectionStart()
         end = cursor.selectionEnd()
 
-        # Create a cursor to iterate through selection
         check_cursor = self.textCursor()
         check_cursor.setPosition(start)
 
@@ -270,7 +339,6 @@ class TerminalLogic(TerminalGraphics):
                 for match in pattern.finditer(text):
                     self._search_matches.append((match.start(), match.end()))
             else:
-                # Plain text search (case-insensitive)
                 lower_text = text.lower()
                 lower_prompt = prompt.lower()
                 start = 0
@@ -325,13 +393,11 @@ class TerminalLogic(TerminalGraphics):
 class Terminal(TerminalLogic):
     def __init__(self, parent):
         super().__init__(parent)
-        # Additional initialization for Terminal
         Settings.addNotificationGroup("editor/current", self.onChangeDocument)
     
     def onFindShortcutEvent(self, event: FindShortcutEvent):
         """Handle find events from the FindWidget."""
         if event.mustClose():
-            # Clear highlights when find widget closes
             self._clearHighlights()
             self._resetCursor()
             self._search_matches.clear()
@@ -342,16 +408,13 @@ class Terminal(TerminalLogic):
         prompt = event.getPrompt()
         
         if movement != "none":
-            # Navigate between matches
             self._navigateMatch(movement)
         elif prompt is not None:
-            # Perform new search
             self._clearHighlights()
             self._resetCursor()
             self._current_match_index = -1
             self._performSearch(prompt, event.isRegex())
         
-        # Send back occurrence info to FindWidget
         EventRegister.send(
             FindShortcutEvent(
                 False,
@@ -361,6 +424,8 @@ class Terminal(TerminalLogic):
         )
 
     def onChangeDocument(self):
+        if self._input_callback is not None:
+            return
         document = Settings.get("editor/current", None)
         if document:
             self.writeModifiable(f"{document} >>")
@@ -404,19 +469,21 @@ class Terminal(TerminalLogic):
         if self.tooltip.isShown():
             self.tooltip.hideTooltip()
 
-        # BACKSPACE key
+        if self._input_callback is not None and event.key() in (Qt.Key_Return, Qt.Key_Enter):
+            self.submitInput()
+            event.accept()
+            return
+
         if event.key() == Qt.Key_Backspace:
             if not self.backspaceEvent(cursor, current_block):
                 event.ignore()
                 return
 
-        # DELETE key
         elif event.key() == Qt.Key_Delete:
             if not self.deleteEvent(cursor, current_block):
                 event.ignore()
                 return
 
-        # Regular typing
         elif event.text() and not event.modifiers() & (Qt.ControlModifier | Qt.AltModifier):
             if self.is_block_protected(current_block) or self.selection_includes_protected():
                 event.ignore()
@@ -425,13 +492,11 @@ class Terminal(TerminalLogic):
                 cursor.setCharFormat(TerminalLogic.writeFmt)
                 self.setTextCursor(cursor)
 
-        # CUT operation
         elif event.matches(QKeySequence.Cut) or (event.modifiers() & Qt.ControlModifier and event.key() == Qt.Key_X):
             self.tooltip.showTooltip()
             event.ignore()
             return
 
-        # PASTE operation into protected block
         elif event.matches(QKeySequence.Paste) or (
                 event.modifiers() & Qt.ControlModifier and event.key() == Qt.Key_V):
             self.paste()
@@ -448,18 +513,15 @@ class Terminal(TerminalLogic):
 
     def backspaceEvent(self, cursor, current_block):
         if cursor.hasSelection():
-            # Check if selection includes protected blocks
             if self.selection_includes_protected():
                 return False
         else:
-            # Check current position
             if cursor.atBlockStart():
                 # At start of block - would delete from previous block
                 prev_block = current_block.previous()
                 if self.is_block_protected(prev_block):
                     return False
             elif self.is_block_protected(current_block):
-                # Inside protected block
                 return False
         return True
 
@@ -468,12 +530,10 @@ class Terminal(TerminalLogic):
             if self.selection_includes_protected():
                 return False
         else:
-            # Check if at end of protected block
             if cursor.atBlockEnd() and self.is_block_protected(current_block):
                 # Would delete from next block - block this
                 return False
             elif self.is_block_protected(current_block):
-                # Inside protected block
                 return False
         return True
 

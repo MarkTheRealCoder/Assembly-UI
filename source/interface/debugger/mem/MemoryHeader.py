@@ -1,3 +1,5 @@
+from html import escape
+
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QFrame, QLabel, QSizePolicy
 
@@ -10,7 +12,6 @@ class MemoryHeaderGraphics(QFrame):
         super().__init__(parent)
         self.setObjectName("MemoryHeader")
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        # Additional UI setup can be done here
         self.program_counter = QLabel("""<span style="color: #6b6b6b;">pc</span> <span style="color: #1D9E75;">0</span><span style="color: #6b6b6b;"> / </span><span style="color: #1D9E75;">0x000000</span>""", self)
         self.instruction = QLabel("""<span style="color: #6b6b6b;">instr</span> <span style="color: #a0a0a0;">None</span>""", self)
         self.scope = QLabel("""<span style="color: #6b6b6b;">scope</span> <span style="color: #a0a0a0;">None</span>""", self)
@@ -33,31 +34,29 @@ class MemoryHeaderGraphics(QFrame):
         self.instruction.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.scope.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.language.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        # self.program_counter.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        # self.instruction.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        # self.scope.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        # self.language.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
     def updateProgramCounter(self, value: int):
-        self.program_counter.setText(f"""<span style="color: #6b6b6b;">pc</span> <span style="color: #1D9E75;">0x{value}</span><span style="color: #6b6b6b;"> / </span><span style="color: #1D9E75;">0x{value:06X}</span>""")
+        """ Show the program counter in decimal and hexadecimal """
+        self.program_counter.setText(f"""<span style="color: #6b6b6b;">pc</span> <span style="color: #1D9E75;">{value}</span><span style="color: #6b6b6b;"> / </span><span style="color: #1D9E75;">0x{value:06X}</span>""")
 
     def updateInstruction(self, value: str):
-        self.instruction.setText(f"""<span style="color: #6b6b6b;">instr</span> <span style="color: #a0a0a0;">{value}</span>""")
+        """ Show the current instruction """
+        self.instruction.setText(f"""<span style="color: #6b6b6b;">instr</span> <span style="color: #a0a0a0;">{escape(str(value))}</span>""")
 
     def updateScope(self, value: str):
-        self.scope.setText(f"""<span style="color: #6b6b6b;">scope</span> <span style="color: #a0a0a0;">{value}</span>""")
+        """ Show the current scope """
+        self.scope.setText(f"""<span style="color: #6b6b6b;">scope</span> <span style="color: #a0a0a0;">{escape(str(value))}</span>""")
 
     def updateLanguage(self, value: str):
-        self.language.setText(f"""<span style="color: #6b6b6b;">lang</span> <span style="color: #a0a0a0;">{value}</span>""")
+        """ Show the language of the program """
+        self.language.setText(f"""<span style="color: #6b6b6b;">lang</span> <span style="color: #a0a0a0;">{escape(str(value))}</span>""")
 
 
 class MemoryHeaderLogic(MemoryHeaderGraphics):
     def __init__(self, parent):
         super().__init__(parent)
-        # Implementation of memory header logic goes here
 
 
 class MemoryHeader(MemoryHeaderLogic):
     def __init__(self, parent):
         super().__init__(parent)
-        # Additional initialization for MemoryHeader
