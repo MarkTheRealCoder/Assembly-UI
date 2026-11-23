@@ -1,5 +1,5 @@
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPainter, QFontMetrics
+from PyQt5.QtCore import Qt, pyqtProperty
+from PyQt5.QtGui import QColor, QPainter, QFontMetrics
 
 from source.filesystem import open_dir
 from source.interface.shared import Settings
@@ -11,6 +11,9 @@ from source.platform import Desktop, isMac
 class Title(BaseTitle):
     def __init__(self, parent):
         super().__init__(parent)
+        self._hover_color = QColor()
+        # Qt repaints the title when the pointer enters or leaves it.
+        self.setAttribute(Qt.WA_Hover)
         Settings.addNotificationGroup("application/cwd", self.setLabel)
         self.FIXED_TEXT = "Assembly Stdio"
         self.setupFontAndAlignment()
@@ -47,8 +50,19 @@ class Title(BaseTitle):
         modifier = "Cmd" if isMac() else "Ctrl"
         self._tooltip.setText(f"Current directory: {self.___curr_dir}\n\nDouble Click to Maximize/Restore | {modifier}+Click to Open Folder")
 
+    @pyqtProperty(QColor)
+    def hoverColor(self):
+        return self._hover_color
+
+    @hoverColor.setter
+    def hoverColor(self, color):
+        self._hover_color = color
+        self.update()
+
     def paintEvent(self, event):
         painter = QPainter(self)
+        if self.underMouse() and self._hover_color.isValid():
+            painter.setPen(self._hover_color)
         metrics = QFontMetrics(self.font())
         elided = metrics.elidedText(self.text(), Qt.ElideRight, self.width())
         painter.drawText(self.rect(), self.alignment(), elided)

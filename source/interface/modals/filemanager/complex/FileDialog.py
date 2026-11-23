@@ -1,11 +1,13 @@
 import os
 from collections.abc import Sequence
+from pathlib import Path
 
 from PyQt5.QtWidgets import QFrame, QSizePolicy, QVBoxLayout, QHBoxLayout
 
 from source.filesystem import create_dir, open_dir, resolve_app_path, to_ui_path
 from source.filesystem.documents import Document
 from source.interface.modals import Dialog
+from source.interface.modals.Popup import Popup
 from source.interface.modals.filemanager.complex.Button import Button
 from source.interface.modals.filemanager.complex.strings import ExtensionBox
 from source.interface.modals.filemanager.complex.strings import FileBox
@@ -69,6 +71,20 @@ class FileDialogLogic(FileDialogGraphics):
             print("Errore")
             self._box.setText(Document.SEP + path)
 
+    def confirm_replace(self, destination: Path) -> bool:
+        if destination.is_dir():
+            raise IsADirectoryError(f'"{destination.name}" is a folder.')
+        accepted = Popup.ask(
+            self.window(),
+            "Replace existing file?",
+            f'A file named "{destination.name}" already exists. Do you want to replace it?',
+            "Replace",
+        )
+        if not accepted:
+            self._name.setFocus()
+            self._name.selectAll()
+        return accepted
+
     def set_current_path(self, path: str, is_file: bool):
         if is_file:
             path, filename = os.path.split(path)
@@ -81,7 +97,8 @@ class FileDialogLogic(FileDialogGraphics):
         def create_folder(name: str) -> bool:
             return create_dir(resolve_app_path(self._box.text()), name)
 
-        self._dialog = Dialog(self, "Create Folder", "Insert the folder name", create_folder)
+        self._dialog = Dialog(self, "Create Folder", "Insert the folder name", create_folder,
+                              "Could not create the folder. Check the name and try again.")
 
     def reset_current_path(self):
         self._box.setText(Document.SEP)

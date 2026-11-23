@@ -7,7 +7,7 @@ from source.interface.modals.Window import add_title_controls, create_window_con
 from source.interface.shared import createLayout
 from source.interface.templates import Title
 from source.interface.templates.window import BaseWindow
-from source.platform import Desktop
+from source.platform import Desktop, isMac
 
 WINDOW_ACTIVE = None
 
@@ -29,7 +29,8 @@ class ModalWindowGraphics(BaseWindow):
         self.setMainWidget(widget, title)
 
     def setConfigurations(self, size: QSize):
-        self.setWindowModality(Qt.WindowModal)
+        # Cocoa turns window-modal children into sheets, which cannot move or resize normally.
+        self.setWindowModality(Qt.ApplicationModal if isMac() else Qt.WindowModal)
         self.setMinimumSize(size)
         self.centerOnScreen()
 

@@ -140,6 +140,8 @@ def ls(path: str, exts: tuple = ()):
 
 
 def create_dir(path: str, name: str) -> bool:
+    if not name.strip():
+        return False
     try:
         os.mkdir(os.path.join(path, name))
     except (FileExistsError, FileNotFoundError, OSError):

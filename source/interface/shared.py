@@ -1,7 +1,7 @@
 import os
 from typing import Literal, Optional
 
-from PyQt5.QtCore import Qt, QPoint, QSettings
+from PyQt5.QtCore import Qt, QEvent, QPoint, QSettings
 from PyQt5.QtGui import QMouseEvent, QPainter, QColor, QPixmap, QIcon
 from PyQt5.QtSvg import QSvgRenderer
 from PyQt5.QtWidgets import QWidget, QLayout, QFrame, QSizePolicy, QGridLayout
@@ -85,6 +85,49 @@ def createLayout(l: type, parent: Optional[QWidget] = None):
     return layout
 
 
+def handleZoomEvent(widget: QWidget, event, zoom_by: callable, reset: callable) -> bool:
+    """Handle zoom keys, Ctrl/Cmd + wheel, and pinch gestures. Return True if the event was used."""
+    kind = event.type()
+    if kind == QEvent.KeyPress:
+        # Qt maps the Command key to ControlModifier on macOS.
+        modifiers = event.modifiers() & ~Qt.KeypadModifier
+        key = event.key()
+        if key in (Qt.Key_Plus, Qt.Key_Equal) and (modifiers & ~Qt.ShiftModifier) == Qt.ControlModifier:
+            zoom_by(1)
+        elif key == Qt.Key_Minus and modifiers == Qt.ControlModifier:
+            zoom_by(-1)
+        elif key == Qt.Key_0 and modifiers == Qt.ControlModifier:
+            reset()
+        else:
+            return False
+    elif kind == QEvent.Wheel and event.modifiers() == Qt.ControlModifier:
+        phase = event.phase()
+        if phase in (Qt.ScrollBegin, Qt.ScrollEnd, Qt.ScrollMomentum):
+            widget._zoom_wheel_delta = 0
+        if phase not in (Qt.ScrollEnd, Qt.ScrollMomentum):
+            widget._zoom_wheel_delta = getattr(widget, "_zoom_wheel_delta", 0) + event.angleDelta().y()
+            steps = int(widget._zoom_wheel_delta / 120)
+            if steps:
+                widget._zoom_wheel_delta -= steps * 120
+                zoom_by(steps)
+    elif kind == QEvent.NativeGesture:
+        gesture = event.gestureType()
+        if gesture in (Qt.BeginNativeGesture, Qt.EndNativeGesture):
+            widget._zoom_magnification = 0.0
+            return False
+        if gesture != Qt.ZoomNativeGesture:
+            return False
+        widget._zoom_magnification = getattr(widget, "_zoom_magnification", 0.0) + event.value()
+        steps = int(widget._zoom_magnification * 10)
+        if steps:
+            widget._zoom_magnification -= steps / 10
+            zoom_by(steps)
+    else:
+        return False
+    event.accept()
+    return True
+
+
 class DraggableFrame(QFrame):
     def __init__(self, parent, position: Literal["top", "bottom", "left", "right", "topleft", "topright", "bottomleft", "bottomright"]):
         super().__init__(parent)
@@ -111,7 +154,7 @@ class DraggableFrame(QFrame):
 
         self.position = self.getPositionValue(position)
         self.drag_position = None
-        self.main_window: MainWindow = parent if parent.isWindow() else parent.parent()
+        self.main_window: MainWindow = parent.parent()
         if hasattr(self.main_window, "registerCorner"):
             self.main_window.registerCorner(self)
 

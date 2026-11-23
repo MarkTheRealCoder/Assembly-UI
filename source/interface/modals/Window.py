@@ -28,12 +28,12 @@ def createSubWindow(reason: str, parent, wclass, *args, **kwargs):
 def create_window_content(window: BaseWindow) -> QWidget:
     content = QWidget(window)
     container = content
-    if isLinux():
-        from source.interface.templates.window.base_linux import LinuxResizeFrame
+    if isLinux() or isMac():
+        from source.interface.templates.window.base_linux import ResizeFrame
 
-        window.setProperty("linuxFrame", True)
+        window.setProperty("linuxFrame" if isLinux() else "macFrame", True)
         window.setAttribute(Qt.WA_TranslucentBackground)
-        container = LinuxResizeFrame(window, content)
+        container = ResizeFrame(window, content)
     createLayout(QVBoxLayout, window).addWidget(container)
     return content
 

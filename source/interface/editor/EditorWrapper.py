@@ -1,5 +1,6 @@
 import logging
 import threading
+from pathlib import Path
 
 from PyQt5.QtCore import QEvent
 from PyQt5.QtWidgets import QFrame, QSizePolicy, QVBoxLayout
@@ -55,6 +56,7 @@ class EditorWrapperLogic(EditorWrapperGraphics):
 
     def setupConnections(self):
         Settings.addNotificationGroup("editor/current", self.openDocument)
+        Database.ON_FILE_REPLACED.connect(self.reloadReplacedFile)
         Database.ON_TAB_CLOSE.connect(self.closeTab)
         Database.ON_TAB_SELECTED.connect(self.setCurrentFile)
         Database.ON_TAB_SELECTED.connect(self.getFromDisk)
@@ -71,8 +73,11 @@ class EditorWrapperLogic(EditorWrapperGraphics):
     def openDocument(self, file: str = None):
         path = Settings.get("editor/current", None) if file is None else file
 
-        if (paths := [d.getPath() for d in self._documents.values()]) and path in paths:
-            return
+        for docHash, document in self._documents.items():
+            if document.getPath() == path:
+                if Database.ON_TAB_SELECTED.getValue() != docHash:
+                    self._tab_manager.setActiveTab(docHash)
+                return
 
         doc = Document(path)
         docHash = hash(doc)
@@ -80,6 +85,23 @@ class EditorWrapperLogic(EditorWrapperGraphics):
 
         self.setupNewDocument(doc, docHash)
         self.initializeSchedulers(docHash)
+
+    def reloadReplacedFile(self, path: str):
+        destination = Path(path)
+        for docHash, document in list(self._documents.items()):
+            try:
+                if not destination.samefile(document.getPath()):
+                    continue
+                # A queued save holds the old text and must not overwrite the new file.
+                with self.___save_lock:
+                    with self.___pending_lock:
+                        self.___pending_saves.pop(docHash, None)
+                    document.reload()
+                    self.___consistency_checker.updateDocument(document)
+            except (OSError, UnicodeError) as error:
+                logging.getLogger(__name__).warning("Could not reload %s: %s", document, error)
+                continue
+            self._frame.getEditor(docHash).setText(document.text)
 
     def setupNewDocument(self, doc: Document, docHash: int):
         self._tab_manager.addTab(

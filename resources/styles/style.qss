@@ -32,11 +32,11 @@ QMainWindow#MainWindow {
     background-color: var(---generic-background-color);
 }
 
-QMainWindow#MainWindow[linuxFrame="true"] {
+QMainWindow#MainWindow[linuxFrame="true"], QMainWindow#MainWindow[macFrame="true"] {
     background-color: transparent;
 }
 
-QWidget#LinuxResizeFrame {
+QWidget#ResizeFrame {
     qproperty-frameColor: var(---generic-background-color);
     qproperty-headerBrush: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0,
         stop: 0 var(---toolbar-start-color),
@@ -190,7 +190,7 @@ QFrame#Toolbar {
     font-family: "Anonymous Pro";
 }
 
-QWidget#LinuxResizeFrame QFrame#Toolbar {
+QWidget#ResizeFrame QFrame#Toolbar {
     background-color: transparent;
     border-bottom-color: transparent;
 }
@@ -235,8 +235,8 @@ QPushButton#File[menuOpen="true"], QPushButton#Help[menuOpen="true"] {
     background-color: rgba(255, 255, 255, 0.1);
 }
 
-QLabel#Title:hover {
-    color: var(---generic-highlight-text-color);
+QFrame#Toolbar QLabel#Title {
+    qproperty-hoverColor: var(---generic-highlight-text-color);
 }
 
 QPushButton#Close:hover, QWidget#Window QPushButton#Close:hover, QWidget#Trash QPushButton#Close:hover {
@@ -321,7 +321,8 @@ QWidget#Window, QWidget#Trash, QDialog#Popup {
     border: 1px solid var(---generic-highlight-background-color);
 }
 
-QWidget#Window[linuxFrame="true"], QWidget#Trash[linuxFrame="true"] {
+QWidget#Window[linuxFrame="true"], QWidget#Trash[linuxFrame="true"],
+QWidget#Window[macFrame="true"], QWidget#Trash[macFrame="true"] {
     background-color: transparent;
     border: none;
 }
@@ -393,6 +394,12 @@ QLabel#Dialog {
 QLabel#Dialog > QLabel {
     background-color: var(---generic-tab-color);
     color: var(---generic-highlight-text-color);
+}
+
+QLabel#Dialog > QLabel#DialogError {
+    background-color: transparent;
+    color: #F0A19B;
+    padding: 0 8px 6px 8px;
 }
 
 QLabel#Dialog > QLineEdit {
@@ -475,9 +482,9 @@ QTextEdit#Terminal {
     background-color: #292727;
     color: #007700;
     border: none;
-    font-family: "Monospace";
-    font-size: 13px;
-    font-style: italic;
+    font-family: "FiraCode";
+    font-size: 13pt;
+    font-style: normal;
 }
 
 QFrame#MemoryViewer, QFrame#ToolbarExecution, QFrame#ToolbarTerminal {

@@ -2,13 +2,17 @@ from PyQt5.QtCore import QEvent, QMargins, QPoint, QRectF, Qt, QTimer, pyqtPrope
 from PyQt5.QtGui import QBrush, QColor, QEnterEvent, QPainter, QPainterPath, QPen
 from PyQt5.QtWidgets import QApplication, QFrame, QVBoxLayout, QWidget
 
+from source.platform import isMac
+
 from .gnome_tiling import TILED_RESIZE_EDGES_PROPERTY, watch_gnome_tiling
 from .resize_cursor_linux import LinuxResizeCursors
 
 
-_RESIZE_BORDER_WIDTH = 5
+_RESIZE_BORDER_WIDTH = 8 if isMac() else 5
 _RESIZE_CORNER_EXTENT = 20
-_FLOATING_RESIZE_OUTSET = 8
+# Cocoa does not deliver mouse events on transparent pixels, so macOS has no outer band.
+_FLOATING_RESIZE_OUTSET = 0 if isMac() else 8
+_MANUAL_RESIZE_INTERVAL_MS = 16
 _CORNER_RADIUS = 12
 _INNER_SHADOW_WIDTH = 4
 _ALL_RESIZE_EDGES = Qt.LeftEdge | Qt.TopEdge | Qt.RightEdge | Qt.BottomEdge
@@ -35,6 +39,12 @@ class _ResizeBorder(QWidget):
         self._resize_edges = Qt.Edges()
         self.resize_margins = QMargins()
         self.outset = 0
+        self._manual_resize = None
+        self._pending_resize_position = None
+        self._manual_resize_timer = QTimer(self)
+        self._manual_resize_timer.setSingleShot(True)
+        self._manual_resize_timer.setTimerType(Qt.PreciseTimer)
+        self._manual_resize_timer.timeout.connect(self._apply_manual_resize)
         self.setMouseTracking(True)
 
     def set_resize_edges(self, edges, outset):
@@ -102,6 +112,35 @@ class _ResizeBorder(QWidget):
         if window is not None and window.cursor() == cursor:
             window.unsetCursor()
 
+    def _apply_manual_resize(self):
+        position, self._pending_resize_position = self._pending_resize_position, None
+        if self._manual_resize is None or position is None:
+            return
+
+        edges, origin, geometry = self._manual_resize
+        delta = position - origin
+        window = self.window()
+        maximum = window.maximumSize()
+        minimum = window.minimumSize().expandedTo(window.minimumSizeHint()).boundedTo(maximum)
+
+        x, y, width, height = geometry.getRect()
+        if edges & (Qt.LeftEdge | Qt.RightEdge):
+            movement = -delta.x() if edges & Qt.LeftEdge else delta.x()
+            width = max(minimum.width(), min(width + movement, maximum.width()))
+            if edges & Qt.LeftEdge:
+                x = geometry.right() + 1 - width
+        if edges & (Qt.TopEdge | Qt.BottomEdge):
+            movement = -delta.y() if edges & Qt.TopEdge else delta.y()
+            height = max(minimum.height(), min(height + movement, maximum.height()))
+            if edges & Qt.TopEdge:
+                y = geometry.bottom() + 1 - height
+        window.setGeometry(x, y, width, height)
+
+    def _finish_manual_resize(self):
+        self._manual_resize_timer.stop()
+        self._pending_resize_position = None
+        self._manual_resize = None
+
     def showEvent(self, event):
         self._prepare_cursors()
         super().showEvent(event)
@@ -112,14 +151,35 @@ class _ResizeBorder(QWidget):
         super().enterEvent(event)
 
     def mouseMoveEvent(self, event):
+        if self._manual_resize is not None:
+            if event.buttons() & Qt.LeftButton:
+                # Apply only the latest position on each frame.
+                self._pending_resize_position = event.globalPos()
+                if not self._manual_resize_timer.isActive():
+                    self._manual_resize_timer.start(_MANUAL_RESIZE_INTERVAL_MS)
+                event.accept()
+                return
+            self._finish_manual_resize()
         self._update_resize_cursor(event.pos())
         super().mouseMoveEvent(event)
 
+    def mouseReleaseEvent(self, event):
+        if self._manual_resize is not None and event.button() == Qt.LeftButton:
+            self._pending_resize_position = event.globalPos()
+            self._apply_manual_resize()
+            self._finish_manual_resize()
+            self._update_resize_cursor(event.pos())
+            event.accept()
+            return
+        super().mouseReleaseEvent(event)
+
     def leaveEvent(self, event):
-        self._clear_resize_cursor()
+        if self._manual_resize is None:
+            self._clear_resize_cursor()
         super().leaveEvent(event)
 
     def hideEvent(self, event):
+        self._finish_manual_resize()
         self._clear_resize_cursor()
         super().hideEvent(event)
 
@@ -127,16 +187,19 @@ class _ResizeBorder(QWidget):
         if event.button() == Qt.LeftButton:
             edges = self._edges_at(event.pos())
             window = self.window().windowHandle()
-            if edges and window is not None and window.startSystemResize(edges):
+            if edges and window is not None:
+                # Cocoa has no system resize, so Qt moves the edges there.
+                if not window.startSystemResize(edges):
+                    self._manual_resize = edges, event.globalPos(), self.window().geometry()
                 event.accept()
                 return
         super().mousePressEvent(event)
 
 
-class LinuxResizeFrame(QWidget):
+class ResizeFrame(QWidget):
     def __init__(self, window, content):
         super().__init__(window)
-        self.setObjectName("LinuxResizeFrame")
+        self.setObjectName("ResizeFrame")
         self._frame_color = QColor("#1E1E1E")
         self._header_brush = QBrush(self._frame_color)
         self._toolbar = content.findChild(QFrame, "Toolbar", Qt.FindDirectChildrenOnly)
