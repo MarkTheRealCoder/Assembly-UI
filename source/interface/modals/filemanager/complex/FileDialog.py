@@ -107,3 +107,4 @@ class FileDialog(FileDialogLogic):
         self._home.onClick(self.reset_current_path)
         self._open_folder.onClick(self.open_folder)
         self._create_folder.onClick(self.create_folder)
+        self._name.returnPressed.connect(self.confirm.click)

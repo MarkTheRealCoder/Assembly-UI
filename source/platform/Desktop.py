@@ -32,11 +32,22 @@ class Desktop:
         widget.move(frame.topLeft())
 
     @staticmethod
+    def getScaleFactor(widget=None) -> float:
+        """Return the UI scale for the screen of a widget, where 1920x1080 is 1.0"""
+        screen = widget.window().screen() if widget is not None else QGuiApplication.primaryScreen()
+        size = screen.size()
+        return max(0.85, min(2.0, min(size.width() / 1920, size.height() / 1080)))
+
+    @staticmethod
+    def getPointScale() -> float:
+        """Return the factor that gives a point size the same visual size on each OS"""
+        # macOS uses 72 logical DPI. Windows and Linux use 96 and apply the system scale.
+        return 96 / 72 if isMac() else 1.0
+
+    @staticmethod
     def getScalableFontSize(base_size: int = 12) -> int:
         """Calculate a font size that has the same visual size on each OS"""
-        # macOS uses 72 logical DPI. Windows and Linux use 96 and apply the system scale.
-        scaled_size = base_size * 96 / 72 if isMac() else base_size
-        return max(8, min(18, round(scaled_size)))
+        return max(8, min(18, round(base_size * Desktop.getPointScale())))
 
     @staticmethod
     def createScalableFont(family: str = "Anonymous Pro", base_size: int = 12, bold: bool = False) -> QFont:

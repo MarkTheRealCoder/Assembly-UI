@@ -125,6 +125,7 @@ class FindWidget(FindWidgetLogic):
 
         self._enable_regex.clicked.connect(self.toggleRegex)
         self._find_button.clicked.connect(self.find)
+        self._text_box.returnPressed.connect(self.find)
         self._occurrence_prev.clicked.connect(self.prevOccurrence)
         self._occurrence_next.clicked.connect(self.nextOccurrence)
         self._close_button.clicked.connect(self._hide)

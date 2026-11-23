@@ -12,6 +12,8 @@ class FileCreator(FileDialog):
 
     def ___confirm(self):
         name = self.get_name()
+        if not name.strip():
+            return
         path = resolve_app_path(self.get_path())
         ext = self.get_extension().lower()
         if file := create_file(path, name, ext):
