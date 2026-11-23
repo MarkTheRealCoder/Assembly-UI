@@ -4,6 +4,8 @@ from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout, QSizePolicy, QLin
 
 from source.interface.shared import createLayout
 
+DIALOG_HEIGHT = 150
+
 
 class BoxGraphics(QLineEdit):
     def __init__(self, parent, prompt: str):
@@ -29,10 +31,14 @@ class Box(BoxLogic):
     def keyPressEvent(self, event: QKeyEvent):
         if event.key() == Qt.Key.Key_Return:
             if not self._action(self.text()):
-                self.setText("")
-                self.parent().log("Action failed, try again.")
+                self.selectAll()
+                self.parent().showError()
             else:
                 self.clearFocus()
+        elif event.key() == Qt.Key.Key_Escape:
+            # Release focus first: a focus-out during the parent's deletion cannot reach the signal.
+            self.clearFocus()
+            self.parent().focus.emit("close")
         else:
             super().keyPressEvent(event)
 
@@ -68,16 +74,17 @@ class Title(TitleLogic):
 class DialogGraphics(QLabel):
     focus = pyqtSignal(str)
 
-    def __init__(self, parent, title: str, prompt: str, action: callable):
+    def __init__(self, parent, title: str, prompt: str, action: callable, error: str):
         super().__init__(parent)
         self._title = title
+        self._error_message = error
         self.configurations(title, prompt, action)
 
     def configurations(self, title: str, prompt: str, action: callable):
         self.setObjectName("Dialog")
         self.setWindowModality(Qt.WindowModality.NonModal)
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
-        self.setFixedSize(300, 150)
+        self.setFixedSize(300, DIALOG_HEIGHT)
 
         layout: QVBoxLayout = createLayout(QVBoxLayout, self)
 
@@ -86,24 +93,41 @@ class DialogGraphics(QLabel):
         self.setFocusProxy(box)
         title_widget.setFocusProxy(box)
 
+        self._error = QLabel(self)
+        self._error.setObjectName("DialogError")
+        self._error.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._error.setWordWrap(True)
+        self._error.hide()
+        self._box = box
+
         layout.addWidget(title_widget)
         layout.addWidget(box)
+        layout.addWidget(self._error)
 
         self.setLayout(layout)
 
 
 class DialogLogic(DialogGraphics):
-    def __init__(self, parent, title: str, prompt: str, action: callable):
-        super().__init__(parent, title, prompt, action)
+    def __init__(self, parent, title: str, prompt: str, action: callable, error: str):
+        super().__init__(parent, title, prompt, action, error)
 
-    def log(self, message: str):
-        label = self.layout().itemAt(0).widget()
-        label.setText(f"{self._title}: {message}")
+    def showError(self):
+        self._error.setText(self._error_message)
+        self._error.ensurePolished()
+        self._error.show()
+        # The modal grows so that the error does not cover the name field.
+        self.setFixedHeight(DIALOG_HEIGHT + self._error.heightForWidth(self.width()))
+
+    def hideError(self):
+        self._error.hide()
+        self.setFixedHeight(DIALOG_HEIGHT)
 
 
 class Dialog(DialogLogic):
-    def __init__(self, parent, title: str, prompt: str, action: callable):
-        super().__init__(parent, title, prompt, action)
+    def __init__(self, parent, title: str, prompt: str, action: callable,
+                 error: str = "Action failed, try again."):
+        super().__init__(parent, title, prompt, action, error)
+        self._box.textEdited.connect(self.hideError)
         self.focus.connect(self.onFocusLose)
         self.show()
         if not QApplication.platformName().startswith("wayland"):

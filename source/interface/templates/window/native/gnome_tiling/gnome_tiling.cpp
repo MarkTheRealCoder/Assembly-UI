@@ -160,6 +160,11 @@ private:
 };
 }
 
+extern "C" Q_DECL_EXPORT const char *assembly_gnome_tiling_qt_version()
+{
+    return QT_VERSION_STR;
+}
+
 extern "C" Q_DECL_EXPORT void assembly_watch_gnome_tiling_v2(QWindow *window)
 {
     if (window->findChild<QObject *>(QLatin1String(monitorName), Qt::FindDirectChildrenOnly))

@@ -1,17 +1,18 @@
 import os
 from typing import Literal, Optional
 
-from PyQt5.QtCore import Qt, QPoint, QSettings
+from PyQt5.QtCore import Qt, QEvent, QPoint, QSettings
 from PyQt5.QtGui import QMouseEvent, QPainter, QColor, QPixmap, QIcon
 from PyQt5.QtSvg import QSvgRenderer
 from PyQt5.QtWidgets import QWidget, QLayout, QFrame, QSizePolicy, QGridLayout
 
 from source.comms import Variable
+from source.filesystem.Folder import settings_path
 from source.interface import MainWindow
 
 
 class Settings:
-    SETTINGS = QSettings("settings.ini", QSettings.IniFormat)
+    SETTINGS = QSettings(settings_path(), QSettings.IniFormat)
     SIGNAL = Variable(str)
 
     @staticmethod
@@ -82,6 +83,49 @@ def createLayout(l: type, parent: Optional[QWidget] = None):
     layout.setSpacing(0)
     layout.setSizeConstraint(QLayout.SetNoConstraint)
     return layout
+
+
+def handleZoomEvent(widget: QWidget, event, zoom_by: callable, reset: callable) -> bool:
+    """Handle zoom keys, Ctrl/Cmd + wheel, and pinch gestures. Return True if the event was used."""
+    kind = event.type()
+    if kind == QEvent.KeyPress:
+        # Qt maps the Command key to ControlModifier on macOS.
+        modifiers = event.modifiers() & ~Qt.KeypadModifier
+        key = event.key()
+        if key in (Qt.Key_Plus, Qt.Key_Equal) and (modifiers & ~Qt.ShiftModifier) == Qt.ControlModifier:
+            zoom_by(1)
+        elif key == Qt.Key_Minus and modifiers == Qt.ControlModifier:
+            zoom_by(-1)
+        elif key == Qt.Key_0 and modifiers == Qt.ControlModifier:
+            reset()
+        else:
+            return False
+    elif kind == QEvent.Wheel and event.modifiers() == Qt.ControlModifier:
+        phase = event.phase()
+        if phase in (Qt.ScrollBegin, Qt.ScrollEnd, Qt.ScrollMomentum):
+            widget._zoom_wheel_delta = 0
+        if phase not in (Qt.ScrollEnd, Qt.ScrollMomentum):
+            widget._zoom_wheel_delta = getattr(widget, "_zoom_wheel_delta", 0) + event.angleDelta().y()
+            steps = int(widget._zoom_wheel_delta / 120)
+            if steps:
+                widget._zoom_wheel_delta -= steps * 120
+                zoom_by(steps)
+    elif kind == QEvent.NativeGesture:
+        gesture = event.gestureType()
+        if gesture in (Qt.BeginNativeGesture, Qt.EndNativeGesture):
+            widget._zoom_magnification = 0.0
+            return False
+        if gesture != Qt.ZoomNativeGesture:
+            return False
+        widget._zoom_magnification = getattr(widget, "_zoom_magnification", 0.0) + event.value()
+        steps = int(widget._zoom_magnification * 10)
+        if steps:
+            widget._zoom_magnification -= steps / 10
+            zoom_by(steps)
+    else:
+        return False
+    event.accept()
+    return True
 
 
 class DraggableFrame(QFrame):

@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QDialog, QHBoxLayout, QLabel, QPushButton, QVBoxLayo
 
 from source.interface.modals.Dialog import Title
 from source.interface.shared import createLayout
+from source.platform import isMac
 
 
 class PopupGraphics(QDialog):
@@ -10,7 +11,8 @@ class PopupGraphics(QDialog):
         super().__init__(parent, Qt.Dialog | Qt.FramelessWindowHint)
         self.setObjectName("Popup")
         self.setWindowTitle(title)
-        self.setWindowModality(Qt.WindowModal)
+        # Cocoa turns window-modal children into sheets.
+        self.setWindowModality(Qt.ApplicationModal if isMac() else Qt.WindowModal)
         self.setMinimumWidth(360)
 
         label = QLabel(message, self)

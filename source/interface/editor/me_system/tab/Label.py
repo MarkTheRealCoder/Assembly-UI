@@ -6,9 +6,11 @@ from PyQt5.QtWidgets import QLabel, QSizePolicy
 class TabLabel(QLabel):
     def __init__(self, parent, name: str):
         super().__init__(parent)
-        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
         self.setText(name)
         self.configurations()
+        # paintEvent elides long names, so the label can be narrower than its text.
+        self.setMinimumWidth(1)
         self.setMaximumWidth(210)
         self.installEventFilter(self.parent())
 
@@ -20,7 +22,7 @@ class TabLabel(QLabel):
 
         return QSize(
             text_width + margins.left() + margins.right(),
-            44
+            metrics.height()
         )
 
     def configurations(self):

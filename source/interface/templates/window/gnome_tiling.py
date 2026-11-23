@@ -4,6 +4,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from PyQt5 import sip
+from PyQt5.QtCore import qVersion
 from PyQt5.QtGui import QGuiApplication
 
 
@@ -19,8 +20,19 @@ def _load_monitor():
     try:
         library = ctypes.CDLL(str(library_path))
         monitor = library.assembly_watch_gnome_tiling_v2
+        built_version = library.assembly_gnome_tiling_qt_version
     except (OSError, AttributeError) as error:
         logging.getLogger(__name__).warning("Could not load GNOME tiling support: %s", error)
+        return None
+    # The module uses Qt private headers, which are valid only for the exact Qt version.
+    built_version.argtypes = ()
+    built_version.restype = ctypes.c_char_p
+    built = built_version().decode("ascii")
+    if built != qVersion():
+        logging.getLogger(__name__).warning(
+            "GNOME tiling support is off: the module uses Qt %s, but the app runs on Qt %s.",
+            built, qVersion(),
+        )
         return None
     monitor.argtypes = (ctypes.c_void_p,)
     monitor.restype = None

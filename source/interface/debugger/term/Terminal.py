@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QTextEdit, QAction, QMenu
 
 from source.comms.events.FindShortcut import FindShortcutEvent
 from source.comms.handlers import EventRegister
-from source.interface.shared import Settings
+from source.interface.shared import Settings, handleZoomEvent
 from source.interface.templates import Tooltip
 
 
@@ -37,9 +37,8 @@ class TerminalLogic(TerminalGraphics):
     highlightFmt = QTextCharFormat()
     currentHighlightFmt = QTextCharFormat()
 
+    # The family and size come from the stylesheet, so zoom can change the document font.
     for fmt in [infoFmt, warnFmt, errorFmt, writeFmt, highlightFmt, currentHighlightFmt]:
-        fmt.setFont(QFont("FiraCode"))
-        fmt.setFontPointSize(13)
         fmt.setFontItalic(False)
 
     infoFmt.setForeground(QColor("#FFFFFF"))   # White
@@ -65,6 +64,23 @@ class TerminalLogic(TerminalGraphics):
         self._current_match_index: int = -1
         self._last_search_prompt: str = ""
         self._last_search_regex: bool = False
+        self._base_font = None
+
+    def _zoomBy(self, steps: int):
+        self.ensurePolished()
+        document = self.document()
+        if self._base_font is None:
+            self._base_font = QFont(document.defaultFont())
+        font = QFont(document.defaultFont())
+        if font.pixelSize() > 0:
+            font.setPixelSize(max(5, min(64, font.pixelSize() + steps)))
+        else:
+            font.setPointSizeF(max(5, min(64, font.pointSizeF() + steps)))
+        document.setDefaultFont(font)
+
+    def _resetZoom(self):
+        if self._base_font is not None:
+            self.document().setDefaultFont(self._base_font)
 
     def _set_to_eof(self):
         cursor = self.textCursor()
@@ -349,6 +365,11 @@ class Terminal(TerminalLogic):
         if document:
             self.writeModifiable(f"{document} >>")
 
+    def viewportEvent(self, event):
+        if handleZoomEvent(self, event, self._zoomBy, self._resetZoom):
+            return True
+        return super().viewportEvent(event)
+
     def contextMenuEvent(self, e):
         menu = QMenu(self)
         for act in [
@@ -374,6 +395,9 @@ class Terminal(TerminalLogic):
 
     def keyPressEvent(self, event):
         """Prevent editing read-only blocks"""
+        if handleZoomEvent(self, event, self._zoomBy, self._resetZoom):
+            return
+
         cursor = self.textCursor()
         current_block = cursor.block()
 

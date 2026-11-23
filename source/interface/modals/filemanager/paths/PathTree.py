@@ -125,6 +125,19 @@ class PathTreeLogic(PathTreeGraphic):
             item.setData(len(items))
             item.removeRow(0)
 
+    def reveal_child(self, index: QModelIndex, name: str):
+        """Load a folder's children, then select the child with the given name."""
+        item: Item = self.model().itemFromIndex(index)
+        self.add_subdirectories(index)
+        self.update(item)
+        self.expand(index)
+        for row in range(item.rowCount()):
+            child = item.child(row)
+            if isinstance(child, Item) and child.text() == name:
+                self.setCurrentIndex(child.index())
+                self.scrollTo(child.index())
+                return
+
     def genPathFromItem(self, item: Item):
         parts: list[str] = []
         copy = item

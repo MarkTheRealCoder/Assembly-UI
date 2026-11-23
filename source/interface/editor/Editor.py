@@ -9,6 +9,7 @@ from source.comms.handlers import EventRegister
 from source.filesystem import find_path
 from source.interface.assets import translateQSS
 from source.interface.editor.lexers import LexerFactory
+from source.interface.shared import handleZoomEvent
 
 
 class EditorGraphics(QsciScintilla):
@@ -68,10 +69,18 @@ class EditorLogic(EditorGraphics):
         self.configureTextFeatures()
         self.configureCommands()
         self.installEventFilter(self)
+        self.SCN_ZOOM.connect(self._updateZoomMargin)
 
         self._setupSearchIndicator()
         self._search_matches = []
         self._current_match_index = -1
+
+    def _updateZoomMargin(self):
+        """Keep the line numbers visible at every zoom level"""
+        self.setMarginWidth(0, "00000")
+
+    def _resetZoom(self):
+        self.zoomTo(0)
 
     def setupLexer(self, ext: str):
         """Setup the appropriate lexer based on current file and content"""
@@ -245,12 +254,19 @@ class Editor(EditorLogic):
 
     def keyPressEvent(self, event):
         """Handle key press events, particularly Find shortcut"""
+        if handleZoomEvent(self, event, self.zoomIn, self._resetZoom):
+            return
         if event.matches(QKeySequence.Find) or (
                 event.modifiers() & Qt.ControlModifier and event.key() == Qt.Key_F):
             EventRegister.send(FindShortcutEvent(False), "editor/find")
             event.ignore()
             return
         super().keyPressEvent(event)
+
+    def viewportEvent(self, event):
+        if handleZoomEvent(self, event, self.zoomIn, self._resetZoom):
+            return True
+        return super().viewportEvent(event)
 
     def onFindShortcutEvent(self, event: FindShortcutEvent):
         # Only process if this editor is the active one

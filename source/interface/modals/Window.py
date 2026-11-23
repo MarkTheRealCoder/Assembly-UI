@@ -1,4 +1,4 @@
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QSpacerItem, QSizePolicy
 
 from source.comms.events import ClosingEvent
@@ -7,9 +7,11 @@ from source.interface.shared import createLayout
 from source.interface.templates import CloseButton
 from source.interface.templates import Title
 from source.interface.templates.window import BaseWindow
-from source.platform import Desktop, isLinux
+from source.platform import Desktop, isLinux, isMac
 
 WINDOWS = []
+MAC_CONTROLS_WIDTH = 38
+MAC_CONTROLS_HEIGHT = 34
 
 
 def createSubWindow(reason: str, parent, wclass, *args, **kwargs):
@@ -26,14 +28,38 @@ def createSubWindow(reason: str, parent, wclass, *args, **kwargs):
 def create_window_content(window: BaseWindow) -> QWidget:
     content = QWidget(window)
     container = content
-    if isLinux():
-        from source.interface.templates.window.base_linux import LinuxResizeFrame
+    if isLinux() or isMac():
+        from source.interface.templates.window.base_linux import ResizeFrame
 
-        window.setProperty("linuxFrame", True)
+        window.setProperty("linuxFrame" if isLinux() else "macFrame", True)
         window.setAttribute(Qt.WA_TranslucentBackground)
-        container = LinuxResizeFrame(window, content)
+        container = ResizeFrame(window, content)
     createLayout(QVBoxLayout, window).addWidget(container)
     return content
+
+
+def add_title_controls(window: BaseWindow, layout: QHBoxLayout, title: QWidget, subclass: str):
+    if not isMac():
+        layout.addWidget(title)
+        layout.addWidget(CloseButton(window, subclass))
+        layout.setStretch(0, 5)
+        layout.setStretch(1, 1)
+        return
+
+    controls = QWidget(window)
+    controls.setObjectName("WindowControls")
+    controls.setProperty("platform", "mac")
+    controls.setFixedSize(MAC_CONTROLS_WIDTH, MAC_CONTROLS_HEIGHT)
+    controls_layout: QHBoxLayout = createLayout(QHBoxLayout, controls)
+    controls_layout.setContentsMargins(12, 0, 12, 0)
+    close = CloseButton(controls, subclass, properties={"mac": True, "standalone": True})
+    close.setIconSize(QSize(0, 0))
+    controls_layout.addWidget(close, alignment=Qt.AlignVCenter)
+
+    layout.addWidget(controls)
+    layout.addWidget(title, 1)
+    # The spacer keeps the title centered on the window.
+    layout.addSpacerItem(QSpacerItem(MAC_CONTROLS_WIDTH, 0, QSizePolicy.Fixed, QSizePolicy.Minimum))
 
 
 class WindowGraphics(BaseWindow):
@@ -51,11 +77,7 @@ class WindowGraphics(BaseWindow):
         tlayout: QHBoxLayout = createLayout(QHBoxLayout)
         mlayout: QHBoxLayout = createLayout(QHBoxLayout)
 
-        tlayout.addWidget(Title(self))
-        tlayout.addWidget(CloseButton(self, self._reason))
-
-        tlayout.setStretch(0, 5)
-        tlayout.setStretch(1, 1)
+        add_title_controls(self, tlayout, Title(self), self._reason)
 
         mlayout.addSpacerItem(QSpacerItem(7, 0, QSizePolicy.Expanding, QSizePolicy.Fixed))
         mlayout.addWidget(content)
@@ -75,10 +97,7 @@ class WindowGraphics(BaseWindow):
         self.centerOnScreen()
 
     def centerOnScreen(self):
-        screen_geometry = Desktop.getDesktopSize()
-        x = (screen_geometry.width() - self.width()) // 2
-        y = (screen_geometry.height() - self.height()) // 2
-        self.move(x, y)
+        Desktop.centerWidget(self, self.parentWidget())
 
 
 class WindowLogic(WindowGraphics):

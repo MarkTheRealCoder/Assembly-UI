@@ -36,14 +36,20 @@ class WindowsEffectHelper:
         disable = c_int(0)
         self.__dwmSetWindowAttribute(hWnd, DWMWA_CAPTION_BUTTON_BOUNDS, byref(disable), 4)
 
-        dwNewLong = win32con.WS_CAPTION
+        # Windows 11 rounds the frame. Windows 10 rejects this attribute and keeps square corners.
+        DWMWA_WINDOW_CORNER_PREFERENCE = 33
+        DWMWCP_ROUND = c_int(2)
+        self.__dwmSetWindowAttribute(hWnd, DWMWA_WINDOW_CORNER_PREFERENCE, byref(DWMWCP_ROUND), 4)
+
+        # WS_THICKFRAME lets Windows resize every window, including the auxiliary windows.
+        dwNewLong = win32con.WS_CAPTION | win32con.WS_THICKFRAME
         if 'close' in hint and len(hint) == 1:
             pass
         else:
             if 'min' in hint:
                 dwNewLong |= win32con.WS_MINIMIZEBOX
             if 'max' in hint:
-                dwNewLong |= win32con.CS_DBLCLKS | win32con.WS_THICKFRAME | win32con.WS_MAXIMIZEBOX
+                dwNewLong |= win32con.CS_DBLCLKS | win32con.WS_MAXIMIZEBOX
 
         dwNewLong &= ~win32con.WS_SYSMENU
         win32gui.SetWindowLong(hWnd, win32con.GWL_STYLE, dwNewLong)

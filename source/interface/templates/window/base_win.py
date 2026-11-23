@@ -6,21 +6,30 @@ import win32con
 import win32gui
 from PyQt5.QtCore import Qt, QRect, QPoint
 from PyQt5.QtGui import QCursor
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QAbstractButton, QWidget
 from _ctypes import POINTER
 from win32con import SW_MAXIMIZE, SW_RESTORE, SW_MINIMIZE
 
 from source.interface.templates.window.effecthelper import WindowsEffectHelper
 from source.interface.templates.window.types import getResizeBorderThickness, isMaximized, \
-    NCCALCSIZE_PARAMS, Taskbar
+    NCCALCSIZE_PARAMS, Taskbar, trackNonClientLeave
+
+WM_NCMOUSELEAVE = 0x02A2
+_RESIZE_CORNER_EXTENT = 20
+_RESIZE_HITS = (
+    (win32con.HTTOPLEFT, win32con.HTTOP, win32con.HTTOPRIGHT),
+    (win32con.HTLEFT, None, win32con.HTRIGHT),
+    (win32con.HTBOTTOMLEFT, win32con.HTBOTTOM, win32con.HTBOTTOMRIGHT),
+)
 
 
 class BaseWindow(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._windowEffect = None
-        self.___border_width = 5
-        self.MAXBUTTON_RECT = lambda: (100, 100, 10, 10)  # dummy value
+        self.___border_width = 8
+        # An empty rectangle: only windows with a maximize button replace it.
+        self.MAXBUTTON_RECT = lambda: (0, 0, 0, 0)
         self._mouse_on_max_btn = False
 
     def setFrameless(self, hint=None, flags: list = []):
@@ -35,7 +44,9 @@ class BaseWindow(QWidget):
             newFlags |= flag
         self.setWindowFlags(newFlags)
 
-        self._windowEffect.setBasicEffect(self.winId(), hint)
+        # winId() on a tool window makes its siblings native, and they cover the owner's resize edges.
+        self.create()
+        self._windowEffect.setBasicEffect(self.effectiveWinId(), hint)
 
         self.windowHandle().screenChanged.connect(self._onScreenChanged)
 
@@ -43,6 +54,13 @@ class BaseWindow(QWidget):
         hWnd = int(self.windowHandle().winId())
         win32gui.SetWindowPos(hWnd, None, 0, 0, 0, 0, win32con.SWP_NOMOVE |
                               win32con.SWP_NOSIZE | win32con.SWP_FRAMECHANGED)
+
+    def _setMaxButtonHover(self, hovered: bool):
+        from source.interface.titlebar.Maximize import MaximizeButton
+        btn = self.findChild(MaximizeButton)
+        if btn and btn.underMouse() != hovered:
+            btn.setAttribute(Qt.WA_UnderMouse, hovered)
+            btn.update()
 
     def nativeEvent(self, e, message):
         msg = MSG.from_address(message.__int__())
@@ -63,40 +81,20 @@ class BaseWindow(QWidget):
                     if self._mouse_on_max_btn:
                         self._mouse_on_max_btn = False
                         # Ripristina lo stato normale del pulsante Qt quando il mouse esce
-                        from source.interface.titlebar.Maximize import MaximizeButton
-                        btn = self.findChild(MaximizeButton)
-                        if btn:
-                            btn.setAttribute(Qt.WA_UnderMouse, False)
-                            btn.update()
+                        self._setMaxButtonHover(False)
 
                 # Gestione dei bordi di ridimensionamento (solo se non massimizzata)
                 if not isMaximized(msg.hWnd):
                     w, h = self.width(), self.height()
-                    left = x < self.___border_width
-                    top = y < self.___border_width
-                    right = x > w - self.___border_width
-                    bottom = y > h - self.___border_width
-
-                    v = None
-                    if top and left:
-                        v = win32con.HTTOPLEFT
-                    elif top and right:
-                        v = win32con.HTTOPRIGHT
-                    elif bottom and left:
-                        v = win32con.HTBOTTOMLEFT
-                    elif bottom and right:
-                        v = win32con.HTBOTTOMRIGHT
-                    elif left:
-                        v = win32con.HTLEFT
-                    elif top:
-                        v = win32con.HTTOP
-                    elif right:
-                        v = win32con.HTRIGHT
-                    elif bottom:
-                        v = win32con.HTBOTTOM
-
-                    if v is not None:
-                        return True, v
+                    border = self.___border_width
+                    if 0 <= x < w and 0 <= y < h and (
+                            x < border or y < border or x >= w - border or y >= h - border):
+                        column = 0 if x < _RESIZE_CORNER_EXTENT else 2 if x >= w - _RESIZE_CORNER_EXTENT else 1
+                        row = 0 if y < _RESIZE_CORNER_EXTENT else 2 if y >= h - _RESIZE_CORNER_EXTENT else 1
+                        # The rim overlaps the content here, so buttons keep their clicks outside the corners.
+                        on_corner = column != 1 and row != 1
+                        if on_corner or not isinstance(self.childAt(x, y), QAbstractButton):
+                            return True, _RESIZE_HITS[row][column]
 
                 return True, win32con.HTCLIENT
 
@@ -104,11 +102,15 @@ class BaseWindow(QWidget):
             elif msg.message == win32con.WM_NCMOUSEMOVE:
                 # Poiché Windows intercetta il mouse, forziamo l'effetto hover sul pulsante PyQt
                 if msg.wParam == win32con.HTMAXBUTTON and self._mouse_on_max_btn:
-                    from source.interface.titlebar.Maximize import MaximizeButton
-                    btn = self.findChild(MaximizeButton)
-                    if btn and not btn.underMouse():
-                        btn.setAttribute(Qt.WA_UnderMouse, True)
-                        btn.update()
+                    self._setMaxButtonHover(True)
+                    # Senza questa richiesta Windows non invia WM_NCMOUSELEAVE
+                    trackNonClientLeave(msg.hWnd)
+
+            # --- CORREZIONE USCITA DEL MOUSE DALLA FINESTRA ---
+            elif msg.message == WM_NCMOUSELEAVE:
+                if self._mouse_on_max_btn:
+                    self._mouse_on_max_btn = False
+                    self._setMaxButtonHover(False)
 
             # --- CORREZIONE CLICK (Pressione) ---
             elif msg.message == win32con.WM_NCLBUTTONDOWN:

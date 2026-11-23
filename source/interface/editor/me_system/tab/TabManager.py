@@ -1,3 +1,4 @@
+from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QSizePolicy, QFrame, QHBoxLayout, QApplication
 
 from source.comms import Database
@@ -22,8 +23,16 @@ class TabManager(QFrame):
         self.___list: TabList = None
         self.___emergency: TabButton = TabButton(self)
         self.___emergency.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
+        self.___emergency.hide()
+
+        # Tabs change geometry only after Qt processes the layout and deferred deletes.
+        self.___overflow_timer = QTimer(self)
+        self.___overflow_timer.setSingleShot(True)
+        self.___overflow_timer.setInterval(30)
+        self.___overflow_timer.timeout.connect(self.addOverflowButton)
 
         self.configurations()
+        Database.ON_TAB_CLOSE.connect(self.scheduleOverflowUpdate)
 
     def configurations(self):
         self.setObjectName("TabManager")
@@ -35,15 +44,22 @@ class TabManager(QFrame):
         self.___layout: QHBoxLayout = createLayout(QHBoxLayout, self)
 
         self.___layout.addWidget(self.___list)
+        self.___layout.addWidget(self.___emergency)
         self.setLayout(self.___layout)
 
+    def scheduleOverflowUpdate(self):
+        self.___overflow_timer.start()
+
     def addOverflowButton(self):
+        if not self.isVisible():
+            return
         self.___emergency.reload(self.___list)
-        if self.___emergency.count() == 0:
-            self.___layout.removeWidget(self.___emergency)
-        else:
-            if self.___emergency not in self.___layout.children():
-                self.___layout.addWidget(self.___emergency)
+        overflow = self.___emergency.count() > 0
+        if overflow != self.___emergency.isVisibleTo(self):
+            # The button changes the width of the list, so the hidden tabs must be recomputed.
+            self.___emergency.setVisible(overflow)
+            self.___layout.activate()
+            self.___emergency.reload(self.___list)
 
         self.update()
 
@@ -70,15 +86,23 @@ class TabManager(QFrame):
             Database.ON_TAB_SELECTED.setValue(0)
 
     def onClosingEvent(self, e):
-        self.addOverflowButton()
+        self.scheduleOverflowUpdate()
 
     def onTabListScrollEvent(self, e):
-        self.addOverflowButton()
+        self.scheduleOverflowUpdate()
 
     def onTabAddedEvent(self, e):
-        self.addOverflowButton()
+        self.scheduleOverflowUpdate()
 
     def onEditorResizeEvent(self, e):
-        self.addOverflowButton()
+        self.scheduleOverflowUpdate()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.scheduleOverflowUpdate()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.scheduleOverflowUpdate()
 
 

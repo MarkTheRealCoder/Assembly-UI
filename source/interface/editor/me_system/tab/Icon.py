@@ -15,7 +15,7 @@ class TabIcon(QPushButton):
 
     def configurations(self):
         self.setObjectName("TabIcon")
-        self.setFixedSize(20, 40)
+        self.setFixedSize(20, 20)
         self.setContentsMargins(0, 0, 0, 0)
         self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
 

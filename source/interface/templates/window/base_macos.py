@@ -6,7 +6,7 @@ class BaseWindow(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._windowEffect = None
-        self.MAXBUTTON_RECT = lambda: (100, 100, 10, 10)
+        self.MAXBUTTON_RECT = lambda: (0, 0, 0, 0)
         self._mouse_on_max_btn = False
 
     def setFrameless(self, hint=None, flags: list = None):

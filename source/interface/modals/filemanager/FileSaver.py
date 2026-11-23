@@ -1,10 +1,10 @@
 from pathlib import Path
 
+from source.comms import Database
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
 from source.filesystem import resolve_app_path
 from source.filesystem.documents import Document, FT
-from source.interface.modals.Popup import Popup
 from source.interface.modals.filemanager.complex import FileDialog
 from source.interface.shared import Settings
 from source.interface.templates import create_toast
@@ -37,24 +37,19 @@ class FileSaver(FileDialog):
         window = self.window()
 
         try:
-            if destination.is_dir():
-                raise IsADirectoryError(f'"{destination.name}" is a folder.')
             overwrite = destination.exists() or destination.is_symlink()
-            if overwrite and not Popup.ask(
-                window,
-                "Replace existing file?",
-                f'A file named "{destination.name}" already exists. Do you want to replace it?',
-                "Replace",
-            ):
+            if overwrite and not self.confirm_replace(destination):
                 return
 
             text = self.cd.text
-            with destination.open("w" if overwrite else "x", newline="\n") as file:
+            with destination.open("w" if overwrite else "x", newline="\n", encoding="utf-8") as file:
                 file.write(text)
         except (OSError, UnicodeError) as error:
             create_toast(window, str(error), "error")
             return
 
+        if overwrite:
+            Database.ON_FILE_REPLACED.setValue(str(destination))
         EventRegister.send(ClosingEvent(), "Tool")
 
 

@@ -27,6 +27,8 @@ class HiddenTabList(QMenu):
     def clearActions(self):
         for a in self.actions():
             self.removeAction(a)
+            # The action owns its row widget, so this also deletes the old row.
+            a.deleteLater()
 
     def count(self):
         return len(self.actions())
