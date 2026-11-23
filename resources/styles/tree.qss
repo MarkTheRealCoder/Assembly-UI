@@ -31,6 +31,8 @@ QTreeView {
     margin: 0;
     color: var(---generic-text-color);
     background-color: var(---generic-highlight-background-color);
+    selection-background-color: var(---generic-light-background-color);
+    outline: 0;
 }
 
 QTreeView::item:open {
@@ -47,19 +49,7 @@ QTreeView::item:selected {
 }
 
 QScrollBar:vertical {
-    background-color: var(---generic-light-background-color);
     width: 5px;
-    margin: 0;
-}
-
-QScrollBar::handle:vertical {
-    background-color: var(---generic-extras-color);
-    border-radius: 2px;
-}
-
-QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
-    background-color: var(---generic-light-background-color);
-    image: none;
 }
 
 

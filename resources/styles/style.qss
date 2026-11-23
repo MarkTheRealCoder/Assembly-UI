@@ -70,13 +70,18 @@ QScrollBar:vertical {
 }
 
 QScrollBar::handle:vertical {
-    background-color: var(---generic-extras-color);
-    border-radius: 5px;
+    background-color: var(---generic-text-color);
+    border-radius: 0px;
     min-height: 20px;
+    margin: 0px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background-color: gray;
 }
 
 QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
-    background-color: var(---generic-light-background-color);
+    background: none;
     image: none;
 }
 
@@ -608,32 +613,7 @@ QFrame#MemoryViewer > QFrame#MemoryHeader > QLabel {
 }
 
 QScrollArea#ScrollWrapper QScrollBar:vertical {
-    background-color: #2D2D30;
     width: 12px;
-    border: none;
-}
-
-QScrollArea#ScrollWrapper QScrollBar::handle:vertical {
-    background-color: var(---generic-text-color);
-    min-height: 20px;
-    border-radius: 0px;
-    margin: 0px;
-}
-
-QScrollArea#ScrollWrapper QScrollBar::handle:vertical:hover {
-    background-color: gray;
-}
-
-QScrollArea#ScrollWrapper QScrollBar::add-line:vertical,
-QScrollArea#ScrollWrapper QScrollBar::sub-line:vertical {
-    height: 0px;
-    width: 0px;
-    border: none;
-}
-
-QScrollArea#ScrollWrapper QScrollBar::add-page:vertical,
-QScrollArea#ScrollWrapper QScrollBar::sub-page:vertical {
-    background: none;
 }
 
 QFrame#MemoryViewer > QScrollArea#ScrollWrapper {
