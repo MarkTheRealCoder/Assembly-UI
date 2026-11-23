@@ -10,7 +10,7 @@ class Icon(QPushButton):
 
     def configurations(self, icon: QIcon):
         self.setObjectName("TabIcon")
-        self.setFixedSize(20, 25)
+        self.setFixedSize(20, 20)
         self.setIcon(icon)
         self.setIconSize(QSize(16, 16))
         self.setContentsMargins(0, 0, 0, 0)

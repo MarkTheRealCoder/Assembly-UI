@@ -1,4 +1,4 @@
-from PyQt5.QtCore import QSize
+from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QFrame, QHBoxLayout
 
@@ -27,13 +27,18 @@ class Container(QFrame):
 
     def configurations(self, _id: int, name: str, icon: QIcon):
         self.setObjectName("Container")
-        self.setFixedWidth(150)
+        self.setFixedSize(150, 32)
         layout: QHBoxLayout = createLayout(QHBoxLayout, self)
-        layout.addWidget(Icon(self, icon))
-        layout.addWidget(Label(self, name))
+        file_icon = Icon(self, icon)
+        label = Label(self, name)
         close_button = CloseButton(self, "Tab", {"tab": True}).setEventIdentifiers(id=_id)
         close_button.setFixedSize(QSize(16, 16))
-        layout.addWidget(close_button)
+        for widget in (file_icon, label, close_button):
+            # The macOS style otherwise adds its own layout margins.
+            widget.setAttribute(Qt.WA_LayoutUsesWidgetRect)
+        layout.addWidget(file_icon, alignment=Qt.AlignVCenter)
+        layout.addWidget(label)
+        layout.addWidget(close_button, alignment=Qt.AlignVCenter)
         self.setLayout(layout)
 
         self.setFrameStyle(QFrame.Panel | QFrame.Raised)

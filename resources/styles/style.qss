@@ -124,40 +124,59 @@ QFrame#TabListPanel {
 }
 
 QPushButton#TabButton {
-    width: 39px;
-    height: 39px;
-    background-color: var(---generic-tab-color);
-    border: 1px solid transparent;
+    min-width: 44px;
+    padding: 0 8px;
+    color: var(---generic-highlight-text-color);
+    font-size: 13px;
+    font-weight: bold;
+    background-color: var(---generic-light-tab-color);
+    border: none;
+    border-left: 2px solid var(---generic-light-tab-border-color);
     border-bottom: 1px solid var(---generic-background-color);
 }
 
-QPushButton#TabButton:hover {
-    border: 1px solid var(---generic-highlightable-text);
+QPushButton#TabButton:hover, QPushButton#TabButton:pressed, QPushButton#TabButton:open {
+    background-color: var(---generic-light-tab-border-color);
 }
 
 QPushButton#TabButton::menu-indicator {
     image: none;
+    width: 0px;
+    height: 0px;
 }
 
 QMenu#HiddenTabList {
     background-color: var(---generic-background-color);
+    border: 1px solid var(---generic-light-tab-color);
+    padding: 2px;
 }
 
 #Container, #Tab {
     color: var(---generic-extras-color);
     background-color: var(---generic-tab-color);
+    border: none;
     padding: 0 5px;
+}
+
+/* Equal top and bottom borders keep the content centered in every tab. */
+#Tab {
+    border-top: 3px solid transparent;
+    border-bottom: 3px solid transparent;
+}
+
+#Container {
+    border-left: 3px solid transparent;
 }
 
 #Container[marked="true"] {
     background-color: var(---generic-light-tab-color);
-    border-left: 2px solid var(---generic-light-tab-border-color);
+    border-left-color: var(---generic-light-tab-border-color);
 }
 
 #Tab[marked="true"] {
     color: var(---generic-text-color);
     background-color: var(---generic-light-tab-color);
-    border-bottom: 5px solid var(---generic-light-tab-border-color);
+    border-bottom-color: var(---generic-light-tab-border-color);
 }
 
 QLabel#TabLabel {
@@ -181,7 +200,8 @@ QPushButton#Close[tab="true"]:hover {
 
 QPushButton#TabIcon {
     background-color: transparent;
-    padding-bottom: 2px;
+    border: none;
+    padding: 0;
 }
 
 QFrame#Toolbar {

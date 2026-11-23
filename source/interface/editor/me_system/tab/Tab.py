@@ -1,6 +1,6 @@
 from PyQt5.QtCore import QSize, QEvent, Qt
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QFrame, QHBoxLayout, QSizePolicy, QLayout
+from PyQt5.QtWidgets import QFrame, QHBoxLayout, QSizePolicy
 
 from source.comms.Signals import DataBase
 from source.comms.events import ClosingEvent
@@ -12,6 +12,11 @@ from source.interface.shared import createLayout
 from source.interface.templates import Tooltip
 from source.interface.templates.CloseButton import CloseButton
 
+# TabManager is 44 px high, and its list uses 1 px for the bottom separator.
+TAB_HEIGHT = 43
+TAB_MIN_WIDTH = 150
+TAB_MAX_WIDTH = 250
+
 
 class TabGraphics(QFrame):
     def __init__(self, parent):
@@ -19,10 +24,8 @@ class TabGraphics(QFrame):
         self.setObjectName("Tab")
         self.setFrameStyle(QFrame.Panel | QFrame.Raised)
 
-        self.setMinimumWidth(150)
-        self.setMaximumWidth(250)
-        self.setFixedHeight(44)
-        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+        self.setFixedHeight(TAB_HEIGHT)
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
         self._tooltip = Tooltip(self, "Tab Tooltip")
         self._tooltip.setPosition("below", "center")
@@ -30,15 +33,25 @@ class TabGraphics(QFrame):
         self._tooltip.setSpecific("Tab")
 
     def sizeHint(self) -> QSize:
-        return QSize(150, 44)
+        layout = self.layout()
+        width = layout.totalSizeHint().width() if layout is not None else TAB_MIN_WIDTH
+        return QSize(max(TAB_MIN_WIDTH, min(TAB_MAX_WIDTH, width)), TAB_HEIGHT)
+
+    def minimumSizeHint(self) -> QSize:
+        # The scroll area must keep each tab at the width of its name.
+        return self.sizeHint()
 
     def setupLayout(self, name: str, ext: str, tab_id: int):
         layout: QHBoxLayout = createLayout(QHBoxLayout, self)
-        layout.setSizeConstraint(QLayout.SetFixedSize)
-        layout.addWidget(TabIcon(self, ext))
-        layout.addWidget(TabLabel(self, name))
-        layout.addWidget(CloseButton(self, "Tab", {"tab": True})
-                         .setEventIdentifiers(id=tab_id))
+        icon = TabIcon(self, ext)
+        label = TabLabel(self, name)
+        close = CloseButton(self, "Tab", {"tab": True}).setEventIdentifiers(id=tab_id)
+        for widget in (icon, label, close):
+            # The macOS style otherwise adds its own layout margins.
+            widget.setAttribute(Qt.WA_LayoutUsesWidgetRect)
+        layout.addWidget(icon, alignment=Qt.AlignVCenter)
+        layout.addWidget(label)
+        layout.addWidget(close, alignment=Qt.AlignVCenter)
         self.setLayout(layout)
         self._tooltip.setText(name)
         self.adjustSize()
