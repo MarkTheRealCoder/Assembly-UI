@@ -1,40 +1,46 @@
 Finestra
-- Cornice personalizzata uguale su macOS, Linux e Windows, ridimensionabile da ogni bordo
+- Cornice personalizzata su macOS, Linux e Windows, ridimensionabile da ogni bordo
+- macOS: pulsanti della finestra a sinistra, menu File e Help nella barra dei menu di macOS
 - Titlebar: mostra la directory di lavoro corrente
 -- Doppio click: massimizza o ripristina la finestra
 -- Ctrl+click (Cmd+click su macOS): apre la directory nel file browser di sistema
 -- Click + trascinamento: sposta la finestra
 - Il bordo tra editor e debugger si trascina per ridimensionare i pannelli
 Menu
-- File: Change Working Path, Open, New (chiede conferma prima di sostituire un file), Save as...
+- File: Change Working Path, Open (solo i file della directory di lavoro), New (.a8088 o .ijvm; chiede conferma prima di sostituire un file), Save as... (salva una copia, che non si apre)
 - Help: Features, istruzioni 8088, istruzioni IJVM
 Editor
 - Evidenziazione della sintassi in base all'estensione del file
 - Una scheda per file; le schede nascoste sono nel menu di overflow
 - Salvataggio automatico durante la scrittura e prima di ogni esecuzione
-- Ricerca con Ctrl+F (testo o espressione regolare)
-- Zoom: Ctrl +, Ctrl -, Ctrl 0, Ctrl + rotellina, pinch
-- In debug una freccia verde e uno sfondo verde segnano la prossima istruzione; l'editor la segue se il file e' nella scheda selezionata
+- Su macOS Cmd sostituisce Ctrl in tutte le scorciatoie
+- Ricerca con Ctrl+F (testo o espressione regolare, senza distinguere maiuscole e minuscole)
+- Ctrl+X e Ctrl+C tagliano o copiano le righe intere della selezione; Ctrl+Shift+Su/Giu' spostano le righe
+- Ctrl+D duplica la riga, Ctrl+Shift+L la cancella, Ctrl+T la scambia con la riga sopra
+- Zoom: Ctrl +, Ctrl -, Ctrl 0, Ctrl + rotellina, pinch sul touchpad (macOS e Windows)
+- Durante l'esecuzione una freccia verde e uno sfondo verde segnano la prossima istruzione; l'editor la segue se il file e' nella scheda selezionata
 Toolbar di esecuzione
 - Run: esegue senza pause
 - Debug: si ferma prima della prima istruzione
-- Stop: termina il programma
+- Stop: termina il programma (visibile solo durante l'esecuzione)
 - Step di 1 o 10 istruzioni (solo in debug)
-- Esecuzione automatica ogni 500 ms, 1 s, 2 s, 3 s, 4 s, 5 s o 10 s
+- Esecuzione automatica (solo in debug): un'istruzione ogni 500 ms, 1 s, 2 s, 3 s, 4 s, 5 s o 10 s
 - HEX / DEC: mostra i valori della memoria in esadecimale (predefinito) o decimale
 Memory viewer
 - Header: program counter, prossima istruzione con la sua riga, scope, linguaggio
 - IJVM: CONSTANTS e STACK; ogni funzione mostra prima le variabili, poi lo stack per indirizzo; una funzione chiamata appare dentro la chiamante
+- 8088 MEMORY: i byte diversi da zero di .DATA (da 0x1000) e .BSS (da 0x2000); ogni cella e' un byte; i byte di un'etichetta stanno in un gruppo "msg (0x1000)" con i nomi msg+0, msg+1, ...; un byte fuori da ogni etichetta ha come nome il suo indirizzo
 - 8088: REGISTERS, STACK, MEMORY, FLAGS; le parole di una subroutine (dal suo indirizzo di ritorno in giu') stanno in un gruppo con la sua etichetta
-- Un valore nuovo lampeggia in verde, un valore rimosso in rosso
+- Un valore nuovo lampeggia in verde, un valore cambiato in blu, un valore rimosso in rosso
+- Alla fine dell'esecuzione la vista mantiene lo stato finale; l'esecuzione successiva la svuota
 - In debug la vista scorre fino a ogni nuovo valore o funzione
 - Una luce azzurra gira attorno all'header mentre il programma aspetta un input
 - Il pulsante copia mette "nome: valore" negli appunti
 Terminale
 - Output del programma in tempo reale
 - Messaggi: solo il tag e' colorato ([INFO] azzurro, [WARNING] giallo, [EXCEPTION] rosso), il testo e' grigio chiaro
-- Dopo ogni esecuzione ricompaiono la barra bianca e il prompt "file >>"
-- Ricerca con Ctrl+F, pulizia con Ctrl+L o Ctrl+Shift+K, zoom come l'editor
+- Dopo ogni esecuzione compaiono il codice di uscita, la barra bianca e il prompt "<percorso del file> >>"
+- Ricerca con Ctrl+F; pulizia con Ctrl+L o Ctrl+Shift+K (con il terminale attivo), dal menu del tasto destro o dal pulsante della toolbar (due click); zoom come l'editor
 Input
 - IN (IJVM) e _GETCHAR (8088) leggono un carattere per istruzione
 - Scrivere i caratteri nel terminale e premere Invio: "12;" da' tre input ('1', '2', ';')
@@ -48,4 +54,6 @@ Indirizzi
 - IJVM: stack in parole; main parte da 0x8000; ogni metodo chiamato ha come base (LV) l'indirizzo del suo OBJREF
 - 8088: PC in byte nel segmento text secondo la codifica 8086; CALL salva l'indirizzo in byte dell'istruzione successiva
 Limiti di visualizzazione
-- 16 chiamate, 64 elementi di stack per chiamata, 128 byte di memoria diversi da zero, 200.000 caratteri di output per esecuzione
+- IJVM: 16 chiamate, 64 elementi di stack per chiamata
+- 8088: 64 parole di stack in totale, i primi 128 byte di memoria diversi da zero
+- 200.000 caratteri di output per esecuzione

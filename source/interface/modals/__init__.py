@@ -2,7 +2,7 @@ from .Dialog import Dialog
 from .ModalWindow import modalOpen
 from .Window import createSubWindow
 from .filemanager import FilePicker, FileCreator, FileSaver, DirectoryPicker
-from .html import Renderer
+from .html import Renderer, warmUpWebEngine
 
 __all__ = [
     'modalOpen',
@@ -13,6 +13,7 @@ __all__ = [
     'FileCreator',
     'FileSaver',
     'Renderer',
+    'warmUpWebEngine',
     'createSubWindow',
 ]
 

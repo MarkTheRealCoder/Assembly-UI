@@ -7,6 +7,7 @@ _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
+from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QApplication, QDesktopWidget
 
 from source.comms.events import ClosingEvent
@@ -14,6 +15,7 @@ from source.comms.handlers import EventRegister
 from source.filesystem import find_path
 from source.interface import MainWindow
 from source.interface.assets import add_fonts, translateQSS
+from source.interface.modals import warmUpWebEngine
 from source.interface.shared import Settings
 from source.platform import Desktop, isLinux
 
@@ -50,6 +52,8 @@ if __name__ == "__main__":
     if not app.platformName().startswith("wayland"):
         window.activateWindow()
     window.setFocus()
+    # Start the web engine while no program runs, so the first help page does not block a run.
+    QTimer.singleShot(0, warmUpWebEngine)
     sys.exit(app.exec_())
 
 # todo: Modify titlebar and main window to match OS signals

@@ -323,6 +323,7 @@ class TerminalLogic(TerminalGraphics):
 
     def clear(self) -> None:
         self.setText("")
+        self._output_open = False
         self.separator()
         if Settings.get("editor/current", None):
             document = Settings.get("editor/current", None)
@@ -447,6 +448,13 @@ class Terminal(TerminalLogic):
     def __init__(self, parent):
         super().__init__(parent)
         Settings.addNotificationGroup("editor/current", self.onChangeDocument)
+
+        # The action belongs to the terminal, so its shortcuts work while the terminal has focus.
+        self._clear_action = QAction("Clear Terminal", self)
+        self._clear_action.setShortcuts([QKeySequence(Qt.CTRL + Qt.Key_L), QKeySequence(Qt.CTRL + Qt.SHIFT + Qt.Key_K)])
+        self._clear_action.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+        self._clear_action.triggered.connect(self.clear)
+        self.addAction(self._clear_action)
     
     def onFindShortcutEvent(self, event: FindShortcutEvent):
         """Handle find events from the FindWidget."""
@@ -490,26 +498,20 @@ class Terminal(TerminalLogic):
 
     def contextMenuEvent(self, e):
         menu = QMenu(self)
-        for act in [
-
-                ("Paste", [QKeySequence.Paste], self.paste),
-                ("Copy", [QKeySequence.Copy], self.copy),
-                "slash",
-                ("Select All", [QKeySequence.SelectAll], self.selectAll),
-                "slash",
-                ("Clear Terminal", [QKeySequence(Qt.CTRL + Qt.Key_L), QKeySequence(Qt.CTRL + Qt.SHIFT + Qt.Key_K)], self.clear)
-            ]:
-            if act == "slash":
-                menu.addSeparator()
-                continue
-            action = QAction(self)
-            action.setText(act[0])
-            if act[1]:
-                action.setShortcuts(act[1])
-            action.triggered.connect(act[2])
+        for text, shortcut, slot in (("Paste", QKeySequence.Paste, self.paste), ("Copy", QKeySequence.Copy, self.copy)):
+            action = QAction(text, menu)
+            action.setShortcut(shortcut)
+            action.triggered.connect(slot)
             menu.addAction(action)
-
+        menu.addSeparator()
+        select_all = QAction("Select All", menu)
+        select_all.setShortcut(QKeySequence.SelectAll)
+        select_all.triggered.connect(self.selectAll)
+        menu.addAction(select_all)
+        menu.addSeparator()
+        menu.addAction(self._clear_action)
         menu.exec_(e.globalPos())
+        menu.deleteLater()
 
     def keyPressEvent(self, event):
         """Prevent editing read-only blocks"""

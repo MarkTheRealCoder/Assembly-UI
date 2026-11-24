@@ -1,0 +1,330 @@
+/* Shared style of the help pages. The colors, fonts and scrollbars follow resources/styles/style.qss. */
+
+@font-face {
+    font-family: "Anonymous Pro";
+    src: url("../fonts/AnonymousPro.ttf");
+}
+
+@font-face {
+    font-family: "FiraCode";
+    src: url("../fonts/FiraCode.ttf");
+}
+
+:root {
+    --background: #1E1E1E;
+    --panel: #252526;
+    --raised: #2D2D30;
+    --border: #37373D;
+    --text: #CCCCCC;
+    --muted: #8C8C8C;
+    --strong: #FFFFFF;
+    --accent: #569CD6;
+    --accent-light: #9CDCFE;
+    --line: #007ACC;
+    --success: #1D9E75;
+    --info: #4FC3F7;
+    --warning: #E5C07B;
+    --error: #F14C4C;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 64px;
+}
+
+body {
+    margin: 0;
+    background: var(--background);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+/* Scrollbars: same width, track and square handle as the app. */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+    background: var(--panel);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--text);
+    border-radius: 0;
+    min-height: 20px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: gray;
+}
+
+::-webkit-scrollbar-button {
+    display: none;
+}
+
+/* Navigation bar */
+nav {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 6px;
+    padding: 10px 24px;
+    background: var(--raised);
+    border-bottom: 1px solid var(--background);
+    font-family: "Anonymous Pro", monospace;
+    font-size: 13px;
+}
+
+nav a {
+    color: var(--text);
+    text-decoration: none;
+    padding: 3px 9px;
+    border-radius: 5px;
+}
+
+nav a:hover {
+    background: var(--border);
+    color: var(--strong);
+}
+
+main {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 24px 24px 48px;
+}
+
+h1, h2, h3 {
+    font-family: "Anonymous Pro", monospace;
+    font-weight: bold;
+    color: var(--strong);
+}
+
+h1 {
+    font-size: 26px;
+    margin: 8px 0 4px;
+}
+
+.subtitle {
+    color: var(--muted);
+    margin: 0 0 24px;
+}
+
+h2 {
+    font-size: 19px;
+    margin: 36px 0 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+}
+
+h3 {
+    font-size: 15px;
+    color: var(--accent-light);
+    margin: 22px 0 8px;
+}
+
+p {
+    margin: 8px 0;
+}
+
+a {
+    color: var(--accent);
+}
+
+a:hover {
+    color: var(--accent-light);
+}
+
+ul {
+    margin: 6px 0;
+    padding-left: 22px;
+}
+
+li {
+    margin: 3px 0;
+}
+
+li::marker {
+    color: var(--accent);
+}
+
+strong {
+    color: var(--strong);
+}
+
+code, kbd, pre {
+    font-family: "FiraCode", "Consolas", "Menlo", monospace;
+    font-size: 12.5px;
+}
+
+code {
+    color: var(--accent-light);
+    background: var(--raised);
+    padding: 1px 5px;
+    border-radius: 3px;
+}
+
+kbd {
+    color: var(--strong);
+    background: var(--raised);
+    border: 1px solid var(--border);
+    border-bottom-width: 2px;
+    padding: 0 5px;
+    border-radius: 4px;
+}
+
+/* Tables */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0 18px;
+    background: var(--panel);
+}
+
+th, td {
+    padding: 7px 12px;
+    border: 1px solid var(--border);
+    text-align: left;
+    vertical-align: top;
+}
+
+th {
+    background: var(--raised);
+    color: var(--strong);
+    font-family: "Anonymous Pro", monospace;
+    font-weight: bold;
+}
+
+tbody tr:nth-child(2n) {
+    background: #2A2A2B;
+}
+
+td:first-child {
+    white-space: nowrap;
+}
+
+td:first-child code {
+    color: var(--accent);
+    background: none;
+    padding: 0;
+    font-weight: bold;
+}
+
+/* Cards and notes */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 14px;
+}
+
+.card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 18px;
+}
+
+.card h3 {
+    margin-top: 0;
+}
+
+.note {
+    background: var(--panel);
+    border-left: 3px solid var(--line);
+    border-radius: 0 6px 6px 0;
+    padding: 10px 16px;
+    margin: 12px 0;
+}
+
+.note.warning {
+    border-left-color: var(--warning);
+}
+
+.note-title {
+    font-family: "Anonymous Pro", monospace;
+    font-weight: bold;
+    color: var(--strong);
+    margin-bottom: 4px;
+}
+
+/* Example programs */
+.example {
+    position: relative;
+    margin: 10px 0 20px;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+}
+
+.example-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 8px 6px 14px;
+    background: var(--raised);
+    border-bottom: 1px solid var(--border);
+    border-radius: 6px 6px 0 0;
+    font-family: "Anonymous Pro", monospace;
+    color: var(--strong);
+}
+
+.example pre {
+    margin: 0;
+    padding: 12px 14px;
+    overflow-x: auto;
+    color: var(--text);
+}
+
+.example pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+}
+
+.copy {
+    font-family: "Anonymous Pro", monospace;
+    font-size: 12px;
+    color: var(--text);
+    background: var(--border);
+    border: none;
+    border-radius: 5px;
+    padding: 4px 12px;
+    cursor: pointer;
+}
+
+.copy:hover {
+    background: var(--line);
+    color: var(--strong);
+}
+
+.copy.done {
+    background: var(--success);
+    color: var(--strong);
+}
+
+.run {
+    font-size: 13px;
+    color: var(--muted);
+    margin: -12px 0 20px;
+}
+
+.run code {
+    color: var(--success);
+}
+
+/* Syntax colors of the examples, close to the editor lexers. */
+.k { color: var(--accent); }
+.n { color: #B5CEA8; }
+.s { color: #CE9178; }
+.c { color: #6A9955; }
+.l { color: #DCDCAA; }
