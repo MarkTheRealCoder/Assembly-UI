@@ -1,3 +1,4 @@
+import faulthandler
 import os
 import subprocess
 from typing import NamedTuple, Optional
@@ -8,6 +9,7 @@ from source.filesystem import find_path
 from source.filesystem.documents import Document
 from source.filesystem.documents.FileTypes import FT
 from source.interface.shared import Settings
+from source.platform import isWindows
 
 
 class InterpreterUpdate(NamedTuple):
@@ -100,6 +102,10 @@ class _JavaInterpreterInterface:
 
         if not jpype.isJVMStarted():
             jvm_path = _JavaInterpreterInterface.___find_jvm()
+            if isWindows() and faulthandler.is_enabled():
+                # The JVM raises access violations on purpose and handles them itself (null checks, stack probes,
+                # safepoints). On Windows, faulthandler reports each one as a fatal exception, so it must stay off.
+                faulthandler.disable()
             jpype.startJVM(
                 *_JavaInterpreterInterface.___jvm_arguments(jvm_path),
                 jvmpath=jvm_path,
