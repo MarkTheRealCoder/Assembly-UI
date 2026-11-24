@@ -77,6 +77,7 @@ class SingleMemoryChunkLogic(SingleMemoryChunkGraphics):
         """ Show the value again in the current display base """
         value_label: QLabel = self.layout().itemAt(1).widget()
         value_label.setText(self.formatValue(self._value))
+        self.updated()
 
     def copyToClipboard(self):
         clipboard = QApplication.clipboard()

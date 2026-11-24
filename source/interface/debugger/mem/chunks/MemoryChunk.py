@@ -38,6 +38,11 @@ class _MemoryChunk(QFrame):
         animation.finished.connect(self.___clear_effect)
         animation.start()
 
+    def ___blue_flash(self):
+        animation = self.___flash(Qt.blue, 2000, 0.0, QEasingCurve.OutCubic)
+        animation.finished.connect(self.___clear_effect)
+        animation.start()
+
     def ___red_flash(self):
         animation = self.___flash(Qt.red, 1500, 0.05, QEasingCurve.Linear)
         animation.finished.connect(self.deleteLater)
@@ -49,6 +54,9 @@ class _MemoryChunk(QFrame):
         if self.___first_spawn:
             self.___first_spawn = False
             self.___green_flash()
+
+    def updated(self):
+        self.___blue_flash()
 
     def rm(self):
         """ Starts the removal animation. Qt removes the widget from its layout when it is deleted. """
