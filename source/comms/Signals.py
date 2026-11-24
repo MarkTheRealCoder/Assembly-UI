@@ -54,3 +54,6 @@ class DataBase:
     # Global events
     ON_FILE_REPLACED: Variable = Variable(str)              # ON FILE REPLACED FROM A FILE DIALOG
 
+    # Execution
+    ON_EXECUTION_LINE: Variable = Variable(tuple)           # (PATH, LINE) OF THE NEXT INSTRUCTION, LINE -1 TO CLEAR
+

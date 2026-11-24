@@ -59,6 +59,7 @@ class EditorWrapperLogic(EditorWrapperGraphics):
     def setupConnections(self):
         Settings.addNotificationGroup("editor/current", self.openDocument)
         Database.ON_FILE_REPLACED.connect(self.reloadReplacedFile)
+        Database.ON_EXECUTION_LINE.connect(self.showExecutionLine)
         Database.ON_TAB_CLOSE.connect(self.closeTab)
         Database.ON_TAB_SELECTED.connect(self.setCurrentFile)
         Database.ON_TAB_SELECTED.connect(self.getFromDisk)
@@ -88,6 +89,22 @@ class EditorWrapperLogic(EditorWrapperGraphics):
 
         self.setupNewDocument(doc, docHash)
         self.initializeSchedulers(docHash)
+
+    def showExecutionLine(self):
+        """
+        Highlight the next line of the running program in the editor of its file.
+        The editor scrolls to the line only if that file is in the selected tab.
+        """
+        path, line = Database.ON_EXECUTION_LINE.getValue()
+        selected = Database.ON_TAB_SELECTED.getValue()
+        for docHash, document in self._documents.items():
+            editor = self._frame.getEditor(docHash)
+            if editor is None:
+                continue
+            if document.getPath() == path:
+                editor.setExecutionLine(line, follow=docHash == selected)
+            else:
+                editor.setExecutionLine(-1)
 
     def reloadReplacedFile(self, path: str):
         """ Reload the open tabs of a file that was replaced on disk """

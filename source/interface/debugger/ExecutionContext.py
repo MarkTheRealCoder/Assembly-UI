@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QFrame, QSizePolicy, QHBoxLayout, QVBoxLayout, QSpacerItem
 
+from source.comms import Database
 from source.comms.events import ClosingEvent, RunEvent
 from source.comms.handlers import EventRegister
 from source.filesystem.documents import Document
@@ -52,6 +53,7 @@ class ExecutionContextLogic(ExecutionContextGraphics):
         self.___handle: Interpreter = None
         self.___worker: InterpreterWorker = None
         self.___output_size: int = 0
+        self.___path: str = None
 
     def clearTerminal(self):
         self.terminal.clear()
@@ -73,6 +75,7 @@ class ExecutionContextLogic(ExecutionContextGraphics):
         path = Settings.get("editor/current", None)
         if not path:
             self.terminal.error("No file is open.")
+            self.terminal.prompt()
             return False
 
         EventRegister.send(RunEvent(debug), "Editor")
@@ -82,11 +85,13 @@ class ExecutionContextLogic(ExecutionContextGraphics):
             contexts = handle.contexts
         except Exception as error:
             self.terminal.error(f"Could not start the interpreter: {error}")
+            self.terminal.prompt()
             return False
 
         self.___handle = handle
         self.___output_size = 0
-        self.memory_viewer.loadContexts(contexts, handle.language)
+        self.___path = path
+        self.memory_viewer.loadContexts(contexts, handle.language, debug)
         self.terminal.beginProgram(self.feedInput)
 
         self.___worker = InterpreterWorker(self, handle)
@@ -107,10 +112,23 @@ class ExecutionContextLogic(ExecutionContextGraphics):
             self.___handle.step(count)
 
     def feedInput(self, lines: list[str]):
-        """ Send the lines typed in the terminal to the program """
-        if self.___handle is not None:
-            for line in lines:
-                self.___handle.feed(line)
+        """
+        Send the characters of the lines typed in the terminal to the program, without newlines.
+        A line with a character code above the limit of the program is not sent.
+        """
+        if self.___handle is None:
+            return
+        limit = self.___handle.max_input_value
+        for line in lines:
+            invalid = next((c for c in line if ord(c) > limit), None)
+            if invalid is not None:
+                self.terminal.warning(f"Input not sent: '{invalid}' has code {ord(invalid)}. "
+                                      f"The program reads one byte per character, from 0 to {limit}.")
+                continue
+            if self.___handle.feed(line):
+                self.memory_viewer.setWaitingInput(False)
+            else:
+                self.terminal.warning("Input not sent: the program does not accept more input.")
 
     def ___writeOutput(self, text: str):
         """ Write program output up to the limit of one run """
@@ -129,6 +147,9 @@ class ExecutionContextLogic(ExecutionContextGraphics):
         if update.output:
             self.___writeOutput(update.output)
         self.memory_viewer.applyUpdate(update)
+        self.memory_viewer.setWaitingInput(update.state == "WAITING_INPUT")
+        if update.line > 0 and not update.terminal:
+            Database.ON_EXECUTION_LINE.setValue((self.___path, update.line))
 
         if update.terminal:
             self.___finishExecution(update)
@@ -136,7 +157,7 @@ class ExecutionContextLogic(ExecutionContextGraphics):
             worker.acknowledge()
 
     def ___finishExecution(self, update: InterpreterUpdate):
-        """ Report the result of the program and restore the controls """
+        """ Report the result of the program, print the prompt again and restore the controls """
         self.terminal.endProgram()
         if update.state == "FAILED":
             self.terminal.error(update.message or "Execution failed.")
@@ -144,8 +165,13 @@ class ExecutionContextLogic(ExecutionContextGraphics):
             self.terminal.warning("Execution stopped.")
         else:
             self.terminal.info(f"Execution finished with code {update.exit_code}.")
+        self.terminal.prompt()
+        self.memory_viewer.setWaitingInput(False)
+        self.memory_viewer.stopFollowing()
+        Database.ON_EXECUTION_LINE.setValue((self.___path, -1))
         self.___handle = None
         self.___worker = None
+        self.___path = None
         self.toolbar_e.executionEnded()
 
     def shutdownExecution(self):

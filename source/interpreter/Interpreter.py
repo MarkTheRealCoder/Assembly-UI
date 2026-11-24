@@ -18,6 +18,7 @@ class InterpreterUpdate(NamedTuple):
     message: Optional[str]
     warnings: Optional[str]
     pc: int
+    line: int
     instruction: Optional[str]
     scope: Optional[str]
     output: str
@@ -149,10 +150,17 @@ class _Interpreter:
         """ Executes a number of instructions of a paused program. """
         return bool(self.___session.step(count))
 
+    @property
+    def max_input_value(self) -> int:
+        """ Largest character code that the program can read. """
+        return int(self.___session.MAX_INPUT_VALUE)
+
     def feed(self, line: str) -> bool:
-        """ Sends a line of input. The program reads the first character of the line. """
-        if not line:
-            raise _Interpreter.FeedException("Input must not be empty.")
+        """
+        Sends the characters of a line of input, without a newline. The program reads one character per input
+        instruction. Returns False if the session refuses the line, for example if a character code exceeds
+        max_input_value.
+        """
         return bool(self.___session.feed(line))
 
     def terminate(self) -> None:
@@ -175,6 +183,7 @@ class _Interpreter:
             message=_Interpreter.___text(update.getMessage()),
             warnings=_Interpreter.___text(update.getWarnings()),
             pc=int(update.getProgramCounter()),
+            line=int(update.getLine()),
             instruction=_Interpreter.___text(update.getInstruction()),
             scope=_Interpreter.___text(update.getScope()),
             output=str(update.getOutput()),
@@ -188,20 +197,24 @@ class _Interpreter:
 
     @staticmethod
     def ___decode_changed(delta) -> list[tuple]:
-        """ Converts the changed nodes to (context, path, value) tuples. A group has the value None. """
+        """
+        Converts the changed nodes to (context, path, value, order) tuples. A group has the value None.
+        The order is the position of the node among the current children of its parent.
+        """
         keys = str(delta.getChangedKeys())
         if not keys:
             return []
         kinds = memoryview(delta.getChangedKinds()).cast("B").tolist()
         values = memoryview(delta.getChangedValues()).cast("B").cast("i").tolist()
+        orders = memoryview(delta.getChangedOrders()).cast("B").cast("i").tolist()
         changed = []
-        for key, kind, value in zip(keys.split("\n"), kinds, values):
+        for key, kind, value, order in zip(keys.split("\n"), kinds, values, orders):
             context, _, path = key.partition(":")
             if kind == _Interpreter.___KIND_GROUP:
                 value = None
             elif kind == _Interpreter.___KIND_UNSET:
                 value = _Interpreter.___UNSET_VALUE
-            changed.append((context, path, value))
+            changed.append((context, path, value, order))
         return changed
 
     @staticmethod

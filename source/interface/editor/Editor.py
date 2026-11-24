@@ -46,7 +46,6 @@ class EditorGraphics(QsciScintilla):
         self.setMarginsFont(QFont("Monospace", 8))
         self.setMarginsBackgroundColor(QColor("#2D2D30"))
         self.setMarginsForegroundColor(QColor("#569CD6"))
-        self.setMarginBackgroundColor(1, Qt.red)
 
     def loadStyles(self):
         """Load and apply CSS styles"""
@@ -63,6 +62,8 @@ class EditorLogic(EditorGraphics):
 
     SEARCH_INDICATOR = 10
     CURRENT_MATCH_INDICATOR = 11
+    EXECUTION_MARKER = 20
+    EXECUTION_ARROW_MARKER = 21
 
     def __init__(self, mwt: QWidget, ext: str):
         super().__init__(mwt, ext)
@@ -73,6 +74,7 @@ class EditorLogic(EditorGraphics):
         self.SCN_ZOOM.connect(self._updateZoomMargin)
 
         self._setupSearchIndicator()
+        self._setupExecutionMarker()
         self._search_matches = []
         self._current_match_index = -1
 
@@ -130,6 +132,29 @@ class EditorLogic(EditorGraphics):
         """Set editor font from database"""
         self.setFont(QFont(Database.FONT.getValue()))
     
+    def _setupExecutionMarker(self):
+        """Configure the markers of the line that the debugger runs next"""
+        self.markerDefine(QsciScintilla.Background, self.EXECUTION_MARKER)
+        self.setMarkerBackgroundColor(QColor("#1D4F3F"), self.EXECUTION_MARKER)
+        self.markerDefine(QsciScintilla.RightArrow, self.EXECUTION_ARROW_MARKER)
+        self.setMarkerBackgroundColor(QColor("#3FB950"), self.EXECUTION_ARROW_MARKER)
+        self.setMarkerForegroundColor(QColor("#3FB950"), self.EXECUTION_ARROW_MARKER)
+        self.setMarginType(1, QsciScintilla.SymbolMargin)
+        self.setMarginWidth(1, 12)
+        self.setMarginBackgroundColor(1, QColor("#2D2D30"))
+        self.setMarginMarkerMask(1, 1 << self.EXECUTION_ARROW_MARKER)
+
+    def setExecutionLine(self, line: int, follow: bool = False):
+        """Highlight a line from 1 as the next one to run, or clear the highlight with -1"""
+        self.markerDeleteAll(self.EXECUTION_MARKER)
+        self.markerDeleteAll(self.EXECUTION_ARROW_MARKER)
+        if line <= 0 or line > self.lines():
+            return
+        self.markerAdd(line - 1, self.EXECUTION_MARKER)
+        self.markerAdd(line - 1, self.EXECUTION_ARROW_MARKER)
+        if follow:
+            self.ensureLineVisible(line - 1)
+
     def _setupSearchIndicator(self):
         """Configure the indicators used for search highlights"""
         # General matches: outlined box

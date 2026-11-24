@@ -1,3 +1,4 @@
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QFrame, QVBoxLayout
 
 from source.interface.debugger.mem.ContextWindow import ContextWindow
@@ -9,6 +10,8 @@ class ContextContainerGraphics(QFrame):
         super().__init__(parent)
         self.setObjectName("ContextContainer")
         layout: QVBoxLayout = createLayout(QVBoxLayout, self)
+        # The windows keep their own height and stack from the top.
+        layout.setAlignment(Qt.AlignTop)
         self.setLayout(layout)
 
     def addContextToLayout(self, context_window):

@@ -32,15 +32,16 @@ class CompoundMemoryChunkGraphics(_MemoryChunk):
         super().__init__(parent)
         self.setObjectName("CompoundMemoryChunk")
         color = roundColors('Compound') if color is None else color
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        # The chunk takes the height of its content; only the width follows the parent.
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.setStyleSheet(f"QFrame#CompoundMemoryChunk {{ border-left: 1px solid {color}; }}")
         layout: QVBoxLayout = createLayout(QVBoxLayout, self)
         layout.setAlignment(Qt.AlignTop)
-        layout.addWidget(CompoundMemoryChunkHeader(name, color=color), 1)
+        layout.addWidget(CompoundMemoryChunkHeader(name, color=color))
         inner_layout: QVBoxLayout = createLayout(QVBoxLayout)
         inner_layout.setContentsMargins(8, 8, 8, 8)
         inner_layout.setSpacing(4)
-        layout.addLayout(inner_layout, 2)
+        layout.addLayout(inner_layout)
         self.setLayout(layout)
         self._inner_layout = inner_layout
 

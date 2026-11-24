@@ -146,6 +146,31 @@
             margin-bottom: 8px;
         }
 
+        .feature-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .feature-table th,
+        .feature-table td {
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .feature-table th {
+            color: var(--accent-color);
+            background-color: var(--bg-color);
+        }
+
+        .section-title {
+            color: var(--accent-color);
+            font-size: 1.6em;
+            margin: 40px 0 10px 0;
+        }
+
         @media (max-width: 768px) {
             .features-grid {
                 grid-template-columns: 1fr;
@@ -164,157 +189,137 @@
 <body>
     <div class="container">
         <h1>Assembly Stdio Features</h1>
-        <p class="subtitle">A comprehensive assembly language IDE for 8088 and IJVM architectures</p>
+        <p class="subtitle">Editor, interpreter and debugger for IJVM and Intel 8088 assembly</p>
 
         <div class="tip">
             <div class="tip-title">Getting Started</div>
-            Assembly Stdio is designed to provide a complete development environment for assembly programming. 
-            Navigate through the features below to discover all the powerful tools at your disposal.
+            Open a <span class="code">.jas</span>/<span class="code">.ijvm</span> or
+            <span class="code">.asm</span>/<span class="code">.a8088</span> file, then select
+            <span class="highlight">Run</span> or <span class="highlight">Debug</span> in the execution toolbar.
+            The program output, the input and the messages appear in the terminal.
+            The memory viewer shows the state of the program.
         </div>
 
         <div class="features-grid">
             <div class="feature-card">
-                <h2 class="feature-title">
-                    <span class="feature-icon">File Operations</span>
-                </h2>
+                <h2 class="feature-title"><span class="feature-icon">Window and Title Bar</span></h2>
                 <ul class="feature-list">
-                    <li><span class="highlight">Multi-format Support</span> - Work with <span class="code">.ijvm</span> and <span class="code">.a8088</span> files</li>
-                    <li><span class="highlight">Working Directory</span> - Set and manage your project workspace</li>
-                    <li><span class="highlight">File Management</span>
+                    <li><span class="highlight">Custom window frame</span> - Same layout on macOS, Linux and Windows, resizable from every edge</li>
+                    <li><span class="highlight">Working directory</span> - The title shows the current directory
                         <ul>
-                            <li>Open existing assembly files</li>
-                            <li>Create new files with templates</li>
-                            <li>Save as... with automatic extension handling</li>
+                            <li>Double-click to maximize or restore the window</li>
+                            <li><span class="code">Ctrl+Click</span> (<span class="code">Cmd+Click</span> on macOS) to open the directory in the file browser</li>
+                            <li>Drag to move the window</li>
                         </ul>
                     </li>
-                    <li><span class="highlight">Smart File Detection</span> - Automatic syntax highlighting based on file type</li>
+                    <li><span class="highlight">Resizable panels</span> - Drag the border between the editor and the debugger</li>
                 </ul>
             </div>
 
             <div class="feature-card">
-                <h2 class="feature-title">
-                    <span class="feature-icon">Code Editor</span>
-                </h2>
+                <h2 class="feature-title"><span class="feature-icon">Files and Help Menus</span></h2>
                 <ul class="feature-list">
-                    <li><span class="highlight">Syntax Highlighting</span> - Color-coded assembly instructions</li>
-                    <li><span class="highlight">Tabbed Interface</span> - Work with multiple files simultaneously</li>
-                    <li><span class="highlight">Modern Font Support</span> - Scalable fonts that adapt to screen size</li>
-                    <li><span class="highlight">Auto-indentation</span> - Smart code formatting</li>
+                    <li><span class="highlight">Change Working Path</span> - Select or create the folder of your source files</li>
+                    <li><span class="highlight">Open</span> - Open a source file; an open file activates its tab</li>
+                    <li><span class="highlight">New</span> - Create a file; the dialog asks before it replaces a file</li>
+                    <li><span class="highlight">Save as...</span> - Save the current file with a new name and the same extension</li>
+                    <li><span class="highlight">Help</span> - This page, the 8088 instructions and the IJVM instructions</li>
                 </ul>
             </div>
 
             <div class="feature-card">
-                <h2 class="feature-title">
-                    <span class="feature-icon">Memory Visualization</span>
-                </h2>
+                <h2 class="feature-title"><span class="feature-icon">Code Editor</span></h2>
                 <ul class="feature-list">
-                    <li><span class="highlight">Real-time Updates</span> - Watch memory changes during execution</li>
-                    <li><span class="highlight">Architecture-specific Display</span>
+                    <li><span class="highlight">Syntax highlighting</span> - The lexer follows the file extension</li>
+                    <li><span class="highlight">Tabs</span> - One tab per file; hidden tabs are in the overflow menu</li>
+                    <li><span class="highlight">Automatic saving</span> - Edits are saved to disk while you type and before each run</li>
+                    <li><span class="highlight">Search</span> - <span class="code">Ctrl+F</span>, with plain text or regular expressions</li>
+                    <li><span class="highlight">Zoom</span> - <span class="code">Ctrl +</span>, <span class="code">Ctrl -</span>, <span class="code">Ctrl 0</span>, <span class="code">Ctrl</span> + wheel, or pinch</li>
+                    <li><span class="highlight">Line commands</span> - <span class="code">Ctrl+Shift+Up/Down</span> moves the selected lines</li>
+                    <li><span class="highlight">Execution line</span> - In debug mode a green arrow and a green background mark the next instruction; the editor scrolls to it while its file is in the selected tab</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h2 class="feature-title"><span class="feature-icon">Execution Toolbar</span></h2>
+                <ul class="feature-list">
+                    <li><span class="highlight">Run</span> - Execute the current file without pauses</li>
+                    <li><span class="highlight">Debug</span> - Pause before the first instruction</li>
+                    <li><span class="highlight">Stop</span> - End the program at any time</li>
+                    <li><span class="highlight">Step</span> - In debug mode, execute 1 or 10 instructions</li>
+                    <li><span class="highlight">Automatic stepping</span> - Execute one instruction every 500 ms, 1 s, 2 s, 3 s, 4 s, 5 s or 10 s</li>
+                    <li><span class="highlight">HEX / DEC</span> - Show the memory values in hexadecimal (default) or in decimal; the switch updates every value at once</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h2 class="feature-title"><span class="feature-icon">Memory Viewer</span></h2>
+                <ul class="feature-list">
+                    <li><span class="highlight">Header</span> - The program counter, the next instruction with its source line, the scope and the language</li>
+                    <li><span class="highlight">IJVM</span> - <span class="code">CONSTANTS</span> and <span class="code">STACK</span>
                         <ul>
-                            <li>IJVM: Constants, Variables, Stack</li>
-                            <li>8088: SECT DATA, SECT BSS, Stack, Registers</li>
+                            <li>Each method frame shows its variables first, then its operand stack by word address</li>
+                            <li>A called method appears inside the frame of its caller</li>
                         </ul>
                     </li>
-                    <li><span class="highlight">Interactive Cells</span> - Double-click any cell to copy its content</li>
-                    <li><span class="highlight">Dynamic Resizing</span> - Adjust memory panel width</li>
-                    <li><span class="highlight">Context Switching</span> - Automatic reset when changing file types</li>
-                </ul>
-            </div>
-
-            <div class="feature-card">
-                <h2 class="feature-title">
-                    <span class="feature-icon">Execution Controls</span>
-                </h2>
-                <ul class="feature-list">
-                    <li><span class="highlight">Step-by-step Execution</span> - Execute one instruction at a time</li>
-                    <li><span class="highlight">Bulk Execution</span> - Run 10 instructions at once</li>
-                    <li><span class="highlight">Play/Pause Control</span> - Continuous execution with pause capability</li>
-                    <li><span class="highlight">Configurable Timing</span> - Adjust delay between instructions</li>
-                    <li><span class="highlight">Execution Reset</span> - Start over with a clean state</li>
-                </ul>
-            </div>
-
-            <div class="feature-card">
-                <h2 class="feature-title">
-                    <span class="feature-icon">Input/Output System</span>
-                </h2>
-                <ul class="feature-list">
-                    <li><span class="highlight">Interactive Input</span> - Provide input during program execution</li>
-                    <li><span class="highlight">Real-time Output</span> - View program output immediately</li>
-                    <li><span class="highlight">Clear Formatting</span> - Easy-to-read I/O display</li>
-                    <li><span class="highlight">Scrollable Output</span> - Handle large amounts of output data</li>
-                </ul>
-            </div>
-
-            <div class="feature-card">
-                <h2 class="feature-title">
-                    <span class="feature-icon">User Interface</span>
-                </h2>
-                <ul class="feature-list">
-                    <li><span class="highlight">Dark Theme</span> - Eye-friendly dark color scheme</li>
-                    <li><span class="highlight">Scalable Fonts</span> - Automatically adjust to screen resolution</li>
-                    <li><span class="highlight">Responsive Design</span> - Adapts to different window sizes</li>
-                    <li><span class="highlight">Professional Styling</span> - Modern, clean interface design</li>
-                </ul>
-            </div>
-
-            <div class="feature-card">
-                <h2 class="feature-title">
-                    <span class="feature-icon">Help & Documentation</span>
-                </h2>
-                <ul class="feature-list">
-                    <li><span class="highlight">Built-in Instruction Reference</span>
+                    <li><span class="highlight">8088</span> - <span class="code">REGISTERS</span>, <span class="code">STACK</span>, <span class="code">MEMORY</span> and <span class="code">FLAGS</span>
                         <ul>
-                            <li>Complete 8088 instruction set documentation</li>
-                            <li>Comprehensive IJVM instruction guide</li>
+                            <li>The stack shows each word by address; the words of a subroutine, from its return address down, are inside a group with its label</li>
                         </ul>
                     </li>
-                    <li><span class="highlight">Interactive Help</span> - HTML-based documentation viewer</li>
-                    <li><span class="highlight">Feature Overview</span> - This comprehensive features page</li>
-                    <li><span class="highlight">Context-sensitive Help</span> - Relevant help based on current context</li>
+                    <li><span class="highlight">Change animation</span> - A new value flashes green; a removed value flashes red</li>
+                    <li><span class="highlight">Follow</span> - In debug mode the viewer scrolls to each new value or frame</li>
+                    <li><span class="highlight">Input light</span> - A light blue light runs around the header while the program waits for input</li>
+                    <li><span class="highlight">Copy</span> - The copy button of a value puts <span class="code">name: value</span> on the clipboard</li>
                 </ul>
             </div>
 
             <div class="feature-card">
-                <h2 class="feature-title">
-                    <span class="feature-icon">Settings & Customization</span>
-                </h2>
+                <h2 class="feature-title"><span class="feature-icon">Terminal</span></h2>
                 <ul class="feature-list">
-                    <li><span class="highlight">Font Configuration</span> - Choose fonts and sizes</li>
-                    <li><span class="highlight">Display Options</span> - Customize visual appearance</li>
-                    <li><span class="highlight">Editor Preferences</span> - Configure editing behavior</li>
-                    <li><span class="highlight">Theme Settings</span> - Adjust color schemes</li>
-                    <li><span class="highlight">Auto-save Options</span> - Configure automatic file saving</li>
-                </ul>
-            </div>
-
-            <div class="feature-card">
-                <h2 class="feature-title">
-                    <span class="feature-icon">Advanced Features</span>
-                </h2>
-                <ul class="feature-list">
-                    <li><span class="highlight">Title Bar Integration</span>
-                        <ul>
-                            <li>Display current working directory</li>
-                            <li>Double-click to maximize the window</li>
-                            <li>Ctrl+click (Cmd+click on macOS) to open directory in file browser</li>
-                        </ul>
-                    </li>
-                    <li><span class="highlight">Memory Highlighting</span> - Visual feedback for memory changes</li>
-                    <li><span class="highlight">File Type Detection</span> - Automatic mode switching</li>
-                    <li><span class="highlight">Cross-platform Support</span> - Works on multiple operating systems</li>
+                    <li><span class="highlight">Program output</span> - The output appears while the program runs</li>
+                    <li><span class="highlight">Messages</span> - Only the tag has a color: <span class="code">[INFO]</span> light blue, <span class="code">[WARNING]</span> yellow, <span class="code">[EXCEPTION]</span> red; the text is light gray</li>
+                    <li><span class="highlight">Prompt</span> - After each run, a separator bar and the <span class="code">file &gt;&gt;</span> prompt appear again</li>
+                    <li><span class="highlight">Search</span> - <span class="code">Ctrl+F</span> in the terminal</li>
+                    <li><span class="highlight">Clear</span> - <span class="code">Ctrl+L</span> or <span class="code">Ctrl+Shift+K</span>, also in the context menu</li>
+                    <li><span class="highlight">Zoom</span> - Same keys and gestures as the editor</li>
                 </ul>
             </div>
         </div>
 
+        <h2 class="section-title">Program Input</h2>
         <div class="tip">
-            <div class="tip-title">Pro Tips</div>
-            <ul class="feature-list">
-                <li>Use <span class="code">Ctrl+Click</span> (<span class="code">Cmd+Click</span> on macOS) on the title bar to quickly access your working directory</li>
-                <li>Double-click memory cells to copy their values for debugging</li>
-                <li>Drag the splitter between editor and memory to optimize your workspace</li>
-            </ul>
+            <div class="tip-title">How to type an input</div>
+            When the program executes <span class="code">IN</span> (IJVM) or the <span class="code">_GETCHAR</span> system call (8088),
+            it waits and the light runs around the memory viewer header. Type the characters in the terminal and press
+            <span class="code">Enter</span>.
         </div>
+        <table class="feature-table">
+            <tr><th>Rule</th><th>Details</th></tr>
+            <tr><td>One character, one input</td><td>Each input instruction reads one character. The line <span class="code">12;</span> gives three inputs: <span class="code">'1'</span>, <span class="code">'2'</span> and <span class="code">';'</span>. Typing them on one line or on three lines gives the same result.</td></tr>
+            <tr><td>Value</td><td>The program receives the character code, not the digit: <span class="code">'1'</span> is 49 (0x31). Subtract 0x30 to get a digit.</td></tr>
+            <tr><td>Maximum value</td><td>255 (0xFF). Each input is one byte, so every character must have a code from 0 to 255. The terminal does not send a line with another character and shows a warning.</td></tr>
+            <tr><td>Enter</td><td>Enter sends the line. It does not send a newline character, and an empty line sends nothing.</td></tr>
+            <tr><td>End of a number</td><td>The course programs end a number with <span class="code">;</span> (0x3B). Type <span class="code">;</span> after the digits.</td></tr>
+            <tr><td>Typing ahead</td><td>The characters wait in a queue until the program reads them, up to 4096 characters.</td></tr>
+        </table>
+
+        <h2 class="section-title">Addresses</h2>
+        <table class="feature-table">
+            <tr><th>Item</th><th>IJVM</th><th>8088</th></tr>
+            <tr><td>Program counter</td><td>Byte address in the method area. <span class="code">main</span> starts at 0; each other method follows in source order after a 4-byte header (parameter count and local count).</td><td>Byte address in the text segment, from 0. The size of each instruction follows the 8086 encoding; a jump uses the short form when its target is in range.</td></tr>
+            <tr><td>Instruction size</td><td>1 byte, 2 bytes for <span class="code">BIPUSH</span>, <span class="code">ILOAD</span>, <span class="code">ISTORE</span>, and 3 bytes for <span class="code">GOTO</span>, <span class="code">IFEQ</span>, <span class="code">IFLT</span>, <span class="code">IF_ICMPEQ</span>, <span class="code">IINC</span>, <span class="code">LDC_W</span>, <span class="code">INVOKEVIRTUAL</span>. Labels take no space.</td><td>Opcode, ModR/M byte, displacement and immediate, as in the 8086.</td></tr>
+            <tr><td>Stack</td><td>Word addresses. The frame of <span class="code">main</span> starts at 0x8000 with its variables. A called method takes the address of its OBJREF as its base (LV): the link pointer, the parameters, the variables, the saved PC and the saved LV come before its operand stack.</td><td>Offsets in the stack segment. <span class="code">CALL</span> pushes the byte address of the next instruction and <span class="code">RET</span> jumps back to it.</td></tr>
+        </table>
+
+        <h2 class="section-title">Display Limits</h2>
+        <table class="feature-table">
+            <tr><th>Item</th><th>Limit</th></tr>
+            <tr><td>Call frames shown</td><td>16 most recent</td></tr>
+            <tr><td>Stack entries shown</td><td>64 most recent per frame</td></tr>
+            <tr><td>Non-zero memory bytes shown (8088)</td><td>128</td></tr>
+            <tr><td>Terminal output</td><td>200,000 characters per run</td></tr>
+        </table>
     </div>
 </body>
-</html> 
+</html>

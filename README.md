@@ -24,16 +24,16 @@ Assembly UI for UniCA's ARE course. Part of the "Assembly Stdio" project.
 | **Editor** | Syntax highlighting, tabs, search, zoom, and automatic saving |
 | **Execution** | Run a program, or debug it one instruction at a time |
 | **Automatic stepping** | Execute one instruction every 500 ms to 10 s |
-| **Memory viewer** | Live registers, stack, memory, flags, constants, and call frames |
-| **Terminal** | Program output, interactive input, search, and error reports |
+| **Memory viewer** | Live registers, stack, memory, flags, constants, and nested call frames with addresses, in hexadecimal or decimal |
+| **Terminal** | Program output, interactive input, search, and tagged messages |
 | **Desktop** | Custom window frame for macOS, Linux, and Windows |
 
 ### Supported languages
 
 | Language | File extensions | Memory viewer contexts |
 | --- | --- | --- |
-| **IJVM** | `.jas`, `.ijvm` | Constants, call frames with locals and operand stack |
-| **Intel 8088** | `.asm`, `.a8088` | Registers, stack, memory, flags |
+| **IJVM** | `.jas`, `.ijvm` | Constants, and a stack of call frames: variables, then the operand stack by word address, then the called method |
+| **Intel 8088** | `.asm`, `.a8088` | Registers, stack with one group per active `CALL`, memory, flags |
 
 ## Getting started
 
@@ -70,12 +70,14 @@ python main.py
 
 1. Open or create a source file.
 2. Select **Run** to execute the program, or **Debug** to pause before the first instruction.
-3. In debug mode, step ahead by **1** or **10** instructions, or start automatic stepping.
-4. When the program asks for input, type a line in the terminal and press <kbd>Enter</kbd>.
+3. In debug mode, step ahead by **1** or **10** instructions, or start automatic stepping. The editor marks the next line.
+4. When the program asks for input, a light runs around the memory viewer header. Type the characters in the terminal and press <kbd>Enter</kbd>.
 5. Select **Stop** to end the program at any time.
 
+Select **HEX** or **DEC** at the right of the execution toolbar to change the base of the memory values.
+
 > [!NOTE]
-> The program reads the first character of each input line. The UI and the command-line interpreter use the same rule.
+> Each input instruction reads one character, so the line `12;` gives the three inputs `'1'`, `'2'`, and `';'`. The program receives the character code, from 0 to 255. <kbd>Enter</kbd> does not send a newline character. The UI and the command-line interpreter use the same rule. **Help > Features** lists all the input rules and the address layout.
 
 ### Display limits
 

@@ -41,7 +41,7 @@ class InterpreterWorker(QThread):
             # PyQt aborts the application if an exception leaves QThread.run.
             self.___handle.terminate()
             self.updated.emit(InterpreterUpdate(
-                "FAILED", True, 1, f"Interpreter connection failed: {error}", None, -1, None, None, "", [], []
+                "FAILED", True, 1, f"Interpreter connection failed: {error}", None, -1, -1, None, None, "", [], []
             ))
         finally:
             if jpype.isJVMStarted():

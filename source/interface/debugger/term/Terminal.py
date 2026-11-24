@@ -1,7 +1,8 @@
 import re
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QTextCharFormat, QColor, QFont, QTextCursor, QKeySequence, QTextFrameFormat, QTextLength
+from PyQt5.QtGui import QTextCharFormat, QColor, QFont, QTextCursor, QKeySequence, QTextFrameFormat, QTextLength, \
+    QTextBlockFormat
 from PyQt5.QtWidgets import QTextEdit, QAction, QMenu
 
 from source.comms.events.FindShortcut import FindShortcutEvent
@@ -29,22 +30,37 @@ class TerminalLogic(TerminalGraphics):
     READONLY_STATE = 1
     READONLY_AND_MODIFIABLE_STATE = 2
 
+    INFO_TAG = "[INFO]"
+    WARNING_TAG = "[WARNING]"
+    EXCEPTION_TAG = "[EXCEPTION]"
+
     infoFmt = QTextCharFormat()
-    warnFmt = QTextCharFormat()
-    errorFmt = QTextCharFormat()
+    infoTagFmt = QTextCharFormat()
+    warnTagFmt = QTextCharFormat()
+    errorTagFmt = QTextCharFormat()
+    messageFmt = QTextCharFormat()
     writeFmt = QTextCharFormat()
     separatorFmt = QTextFrameFormat()
+    messageBlockFmt = QTextBlockFormat()
     highlightFmt = QTextCharFormat()
     currentHighlightFmt = QTextCharFormat()
 
     # The family and size come from the stylesheet, so zoom can change the document font.
-    for fmt in [infoFmt, warnFmt, errorFmt, writeFmt, highlightFmt, currentHighlightFmt]:
+    for fmt in [infoFmt, infoTagFmt, warnTagFmt, errorTagFmt, messageFmt, writeFmt, highlightFmt, currentHighlightFmt]:
         fmt.setFontItalic(False)
 
-    infoFmt.setForeground(QColor("#FFFFFF"))   # White
-    warnFmt.setForeground(QColor("#CCCC00"))   # Yellow
-    errorFmt.setForeground(QColor("#DD0000"))  # Red
-    writeFmt.setForeground(QColor("#00CC00"))  # Green
+    infoFmt.setForeground(QColor("#FFFFFF"))      # White: program output and the prompt
+    infoTagFmt.setForeground(QColor("#4FC3F7"))   # Light blue: [INFO]
+    warnTagFmt.setForeground(QColor("#E5C07B"))   # Yellow: [WARNING]
+    errorTagFmt.setForeground(QColor("#F14C4C"))  # Red: [EXCEPTION]
+    messageFmt.setForeground(QColor("#C8C8C8"))   # Light gray: text of a message
+    writeFmt.setForeground(QColor("#00CC00"))     # Green: user input
+    for fmt in [infoTagFmt, warnTagFmt, errorTagFmt]:
+        fmt.setFontWeight(QFont.Bold)
+
+    # Space above and below each message line, so consecutive messages stay apart.
+    messageBlockFmt.setTopMargin(3)
+    messageBlockFmt.setBottomMargin(3)
     highlightFmt.setBackground(QColor("#8800CC"))  # Purple highlight
     currentHighlightFmt.setBackground(QColor("#CC00FF"))  # Brighter purple for current match
 
@@ -116,7 +132,7 @@ class TerminalLogic(TerminalGraphics):
         if not lines:
             return
         self._write("\n".join(lines), TerminalLogic.writeFmt)
-        self._input_callback([line for line in lines if line])
+        self._input_callback(lines)
 
     def _takeUserInput(self) -> list[str]:
         """Remove the editable text at the end of the document and return its lines."""
@@ -157,6 +173,35 @@ class TerminalLogic(TerminalGraphics):
             cursor.movePosition(cursor.MoveOperation.End)
             self.setTextCursor(cursor)
         return cursor
+
+    def _writeMessage(self, tag: str, tag_fmt: QTextCharFormat, text: str) -> None:
+        """Write a message with a colored tag on each line and the text in light gray."""
+        segments = []
+        for line in str(text).splitlines() or [""]:
+            segments.append((tag, tag_fmt))
+            segments.append((f" {line}\n", TerminalLogic.messageFmt))
+        self._writeSegments(segments, TerminalLogic.messageBlockFmt)
+
+    def _writeSegments(self, segments: list[tuple[str, QTextCharFormat]], block_fmt: QTextBlockFormat = None,
+                       userState = READONLY_STATE) -> None:
+        """Append text segments with their formats at the end and protect their blocks."""
+        cursor = self._set_to_eof()
+        self._output_open = False
+        block_start = cursor.position()
+
+        for text, fmt in segments:
+            cursor.insertText(text, fmt)
+
+        last_pos = cursor.position() - 1
+        cursor.setPosition(block_start)
+        while cursor.position() <= last_pos:
+            cursor.block().setUserState(userState)
+            if block_fmt is not None:
+                cursor.setBlockFormat(block_fmt)
+            if not cursor.movePosition(QTextCursor.NextBlock):
+                break
+
+        self._resetCursor()
 
     def _write(self, content: str or QTextFrameFormat, fmt: QTextCharFormat = None, userState = READONLY_STATE, keepPos = False) -> None:
         cursor = self._set_to_eof() if not keepPos else self.textCursor()
@@ -210,16 +255,24 @@ class TerminalLogic(TerminalGraphics):
         return False
 
     def info(self, text: str) -> None:
-        self._write(f"[INFO]: {text}", TerminalLogic.infoFmt)
+        self._writeMessage(TerminalLogic.INFO_TAG, TerminalLogic.infoTagFmt, text)
 
     def warning(self, text: str) -> None:
-        self._write(text, TerminalLogic.warnFmt)
+        self._writeMessage(TerminalLogic.WARNING_TAG, TerminalLogic.warnTagFmt, text)
 
     def error(self, text: str) -> None:
-        self._write(text, TerminalLogic.errorFmt)
+        self._writeMessage(TerminalLogic.EXCEPTION_TAG, TerminalLogic.errorTagFmt, text)
 
     def separator(self) -> None:
         self._write(TerminalLogic.separatorFmt)
+
+    def prompt(self) -> None:
+        """Write the separator bar and the prompt of the current file, as at the start of the terminal."""
+        self.separator()
+        document = Settings.get("editor/current", None)
+        if document:
+            self.writeModifiable(f"{document} >>")
+        self.scrollDown()
 
     def writeModifiable(self, text: str) -> None:
         keepPos = False

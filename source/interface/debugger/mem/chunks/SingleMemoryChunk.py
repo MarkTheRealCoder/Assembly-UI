@@ -1,6 +1,6 @@
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QHBoxLayout, QLabel, QApplication
+from PyQt5.QtWidgets import QHBoxLayout, QLabel, QApplication, QSizePolicy
 
 from source.filesystem import find_path
 from source.interface.debugger.mem.chunks.MemoryChunk import _MemoryChunk
@@ -22,16 +22,32 @@ class _CopyButton(GenericButton):
 
 
 class SingleMemoryChunkGraphics(_MemoryChunk):
+    # Display base shared by every chunk: True for hexadecimal, False for decimal.
+    hexadecimal: bool = True
 
-    def __init__(self, parent, key: str, value: str or int ): #or list[tuple[str, int]] or None = None
+    @staticmethod
+    def formatValue(value: str or int) -> str:
+        """ Text of a value in the current display base. Text values are shown as they are. """
+        if isinstance(value, str):
+            return value
+        return hex(value) if SingleMemoryChunkGraphics.hexadecimal else str(value)
+
+    @staticmethod
+    def setHexadecimal(hexadecimal: bool):
+        """ Select the display base of every chunk. Call refresh on the existing chunks to apply it. """
+        SingleMemoryChunkGraphics.hexadecimal = hexadecimal
+
+    def __init__(self, parent, key: str, value: str or int):
         super().__init__(parent)
         self.setObjectName("SingleMemoryChunk")
+        # The chunk takes the height of its content; only the width follows the parent.
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         layout: QHBoxLayout = createLayout(QHBoxLayout, self)
         _key = QLabel(f"{key}:")
         _key.setObjectName("MemoryChunkKey")
         _key.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         layout.addWidget(_key, 1)
-        _value = QLabel(value if isinstance(value, str) else hex(value))
+        _value = QLabel(SingleMemoryChunkGraphics.formatValue(value))
         _value.setObjectName("MemoryChunkValue")
         _value.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         layout.addWidget(_value, 2)
@@ -55,12 +71,16 @@ class SingleMemoryChunkLogic(SingleMemoryChunkGraphics):
 
     def setValue(self, value: str or int):
         self._value = value
+        self.refresh()
+
+    def refresh(self):
+        """ Show the value again in the current display base """
         value_label: QLabel = self.layout().itemAt(1).widget()
-        value_label.setText(value if isinstance(value, str) else hex(value))
+        value_label.setText(self.formatValue(self._value))
 
     def copyToClipboard(self):
         clipboard = QApplication.clipboard()
-        clipboard.setText(f"{self._key}: {self._value}" if isinstance(self._value, str) else f"{self._key}: {hex(self._value)}")
+        clipboard.setText(f"{self._key}: {self.formatValue(self._value)}")
 
 
 class SingleMemoryChunk(SingleMemoryChunkLogic):

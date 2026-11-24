@@ -578,6 +578,19 @@ QPushButton#RunButton[active="true"]:hover {
     background-color: #3FB950;
 }
 
+QFrame#ToolbarExecution QPushButton#NumberBaseButton {
+    min-width: 46px;
+    max-width: 46px;
+    font-family: "Monospace";
+    font-size: 12px;
+    font-weight: bold;
+    color: #1D9E75;
+}
+
+QFrame#ToolbarExecution QPushButton#NumberBaseButton:!checked {
+    color: #E48300;
+}
+
 QFrame#ToolbarExecution QPushButton#StopButton {
     background-color: #DA3633;
 }
@@ -716,7 +729,6 @@ QFrame#ContextWindow CompoundMemoryChunk {
     padding: 0px;
     margin: 0px;
     border-radius: 8px;
-    min-height: 64px;
 }
 
 
