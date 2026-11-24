@@ -74,7 +74,7 @@ python main.py
 4. When the program asks for input, a light runs around the memory viewer header. Type the characters in the terminal and press <kbd>Enter</kbd>.
 5. Select **Stop** to end the program at any time.
 
-Select **HEX** or **DEC** at the right of the execution toolbar to change the base of the memory values.
+Pick **HEX**, **DEC** or **OCT** in the selector at the right of the execution toolbar to change the base of the memory values.
 
 > [!NOTE]
 > Each input instruction reads one character, so the line `12;` gives the three inputs `'1'`, `'2'`, and `';'`. The program receives the character code, from 0 to 255. <kbd>Enter</kbd> does not send a newline character. The UI and the command-line interpreter use the same rule. **Help > Features** lists all the input rules and the address layout.

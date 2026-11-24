@@ -33,10 +33,7 @@
         <li>I commenti cominciano con <code>//</code> o con <code>;</code>.</li>
         <li>Il programma termina con la chiamata di sistema <code>EXIT</code>, con <code>HLT</code> o dopo l'ultima istruzione.</li>
     </ul>
-    <div class="note warning">
-        <div class="note-title">Registri in maiuscolo</div>
-        Scrivi i nomi dei registri in maiuscolo (<code>AX</code>, non <code>ax</code>). L'interprete accetta <code>mov ax, 5</code> senza errori, ma non trova il registro e il risultato è sbagliato. Le istruzioni e le direttive funzionano in maiuscolo o in minuscolo.
-    </div>
+    <p>Le istruzioni, le direttive e i registri funzionano in maiuscolo o in minuscolo (<code>MOV AX, 5</code> o <code>mov ax, 5</code>). Le etichette e le costanti distinguono maiuscole e minuscole.</p>
 
     <h2 id="esempi">Esempi per la prima esecuzione</h2>
     <p>Crea un file <code>.a8088</code>, copia un esempio nel file e clicca <strong>Run</strong> o <strong>Debug</strong>.</p>
@@ -140,7 +137,7 @@ fmt: .ASCII "7 * 7 = %d\n\0"</code></pre>
         <thead><tr><th>Istruzione</th><th>Operandi</th><th>Descrizione</th></tr></thead>
         <tbody>
         <tr><td><code>MOV</code></td><td><code>dest, src</code></td><td>Copia <code>src</code> in <code>dest</code>.</td></tr>
-        <tr><td><code>MOVB</code></td><td><code>dest, src</code></td><td>Copia un byte. I registri devono essere a 8 bit. Vedi i <a href="#limiti">limiti</a> per la scrittura in memoria.</td></tr>
+        <tr><td><code>MOVB</code></td><td><code>dest, src</code></td><td>Copia un byte. I registri devono essere a 8 bit. In memoria scrive un solo byte.</td></tr>
         <tr><td><code>PUSH</code></td><td><code>src</code></td><td>Mette una parola sullo stack: <code>SP</code> diminuisce di 2.</td></tr>
         <tr><td><code>POP</code></td><td><code>dest</code></td><td>Toglie una parola dallo stack e la copia in <code>dest</code>: <code>SP</code> aumenta di 2.</td></tr>
         </tbody>
@@ -162,8 +159,8 @@ fmt: .ASCII "7 * 7 = %d\n\0"</code></pre>
         <tr><td><code>MULB</code></td><td><code>src</code></td><td><code>AX = AL * src</code>, con <code>src</code> a 8 bit. Il risultato va in <code>AH:AL</code>.</td></tr>
         <tr><td><code>DIV</code></td><td><code>src</code></td><td>Divide <code>AX</code> per <code>src</code>: quoziente in <code>AL</code>, resto in <code>AH</code>. <code>DX</code> non fa parte del dividendo. Un quoziente maggiore di 255 perde i bit alti. La divisione per zero ferma il programma con un errore.</td></tr>
         <tr><td><code>DIVB</code></td><td><code>src</code></td><td>Divide <code>AL</code> per <code>src</code> (a 8 bit): quoziente in <code>AL</code>, resto in <code>AH</code>. Il valore iniziale di <code>AH</code> non conta.</td></tr>
-        <tr><td><code>INC</code></td><td><code>dest</code></td><td><code>dest = dest + 1</code>.</td></tr>
-        <tr><td><code>DEC</code></td><td><code>dest</code></td><td><code>dest = dest - 1</code>.</td></tr>
+        <tr><td><code>INC</code></td><td><code>dest</code></td><td><code>dest = dest + 1</code>. <code>CF</code> non cambia.</td></tr>
+        <tr><td><code>DEC</code></td><td><code>dest</code></td><td><code>dest = dest - 1</code>. <code>CF</code> non cambia.</td></tr>
         </tbody>
     </table>
 
@@ -187,12 +184,9 @@ fmt: .ASCII "7 * 7 = %d\n\0"</code></pre>
         <tr><td><code>JMP</code></td><td><code>label</code></td><td>Sempre.</td></tr>
         <tr><td><code>JE</code> / <code>JZ</code></td><td><code>label</code></td><td>Uguale: <code>ZF = 1</code>.</td></tr>
         <tr><td><code>JNE</code> / <code>JNZ</code></td><td><code>label</code></td><td>Diverso: <code>ZF = 0</code>.</td></tr>
-        <tr><td><code>JNGE</code></td><td><code>label</code></td><td>Minore, con segno: <code>SF ≠ OF</code>.</td></tr>
-        <tr><td><code>JL</code></td><td><code>label</code></td><td><code>SF = 1</code>. Non controlla <code>OF</code>: vedi i <a href="#limiti">limiti</a>.</td></tr>
-        <tr><td><code>JNG</code></td><td><code>label</code></td><td>Minore o uguale, con segno: <code>ZF = 1</code> o <code>SF ≠ OF</code>.</td></tr>
-        <tr><td><code>JLE</code></td><td><code>label</code></td><td><code>ZF = 1</code> o <code>SF = 1</code>. Non controlla <code>OF</code>.</td></tr>
-        <tr><td><code>JNLE</code></td><td><code>label</code></td><td>Maggiore, con segno: <code>ZF = 0</code> e <code>SF = OF</code>.</td></tr>
-        <tr><td><code>JG</code></td><td><code>label</code></td><td><code>ZF = 0</code> e <code>SF = 0</code>. Non controlla <code>OF</code>.</td></tr>
+        <tr><td><code>JL</code> / <code>JNGE</code></td><td><code>label</code></td><td>Minore, con segno: <code>SF ≠ OF</code>.</td></tr>
+        <tr><td><code>JLE</code> / <code>JNG</code></td><td><code>label</code></td><td>Minore o uguale, con segno: <code>ZF = 1</code> o <code>SF ≠ OF</code>.</td></tr>
+        <tr><td><code>JG</code> / <code>JNLE</code></td><td><code>label</code></td><td>Maggiore, con segno: <code>ZF = 0</code> e <code>SF = OF</code>.</td></tr>
         <tr><td><code>JGE</code> / <code>JNL</code></td><td><code>label</code></td><td>Maggiore o uguale, con segno: <code>SF = OF</code>.</td></tr>
         <tr><td><code>JB</code> / <code>JNAE</code> / <code>JC</code></td><td><code>label</code></td><td>Minore, senza segno: <code>CF = 1</code>.</td></tr>
         <tr><td><code>JBE</code> / <code>JNA</code></td><td><code>label</code></td><td>Minore o uguale, senza segno: <code>CF = 1</code> o <code>ZF = 1</code>.</td></tr>
@@ -215,6 +209,7 @@ fmt: .ASCII "7 * 7 = %d\n\0"</code></pre>
         <tbody>
         <tr><td><code>SYS</code></td><td>-</td><td>Chiamata di sistema. <code>SYS</code> toglie dallo stack il numero della chiamata e poi i suoi argomenti: dopo <code>SYS</code> non serve <code>ADD SP, n</code>. Un numero sconosciuto non fa nulla e lascia gli argomenti sullo stack.</td></tr>
         <tr><td><code>HLT</code></td><td>-</td><td>Ferma il programma con il codice 0 e scrive <code>Program halted.</code></td></tr>
+        <tr><td><code>NOP</code></td><td>-</td><td>Non fa nulla.</td></tr>
         </tbody>
     </table>
     <h3>Chiamate di sistema</h3>
@@ -233,10 +228,10 @@ fmt: .ASCII "7 * 7 = %d\n\0"</code></pre>
         <tbody>
         <tr><td>Registri a 16 bit</td><td><code>AX</code>, <code>BX</code>, <code>CX</code>, <code>DX</code>, <code>SI</code>, <code>DI</code>, <code>BP</code>, <code>SP</code>.</td></tr>
         <tr><td>Registri a 8 bit</td><td><code>AL</code>, <code>AH</code>, <code>BL</code>, <code>BH</code>, <code>CL</code>, <code>CH</code>, <code>DL</code>, <code>DH</code>. Le istruzioni con la <code>B</code> finale (<code>MOVB</code>, <code>ADDB</code>, ...) accettano solo questi registri.</td></tr>
-        <tr><td>Registri di segmento</td><td><code>DS</code>, <code>ES</code>, <code>SS</code>. <code>CS</code> non è supportato e vale sempre 0.</td></tr>
-        <tr><td>Immediati</td><td>Decimali (<code>27</code>, <code>-1</code>) ed esadecimali (<code>0x1B</code>). Non ci sono numeri ottali: <code>027</code> vale 27. I caratteri come <code>'A'</code> non sono supportati: usa il codice (<code>65</code>).</td></tr>
+        <tr><td>Registri di segmento</td><td><code>CS</code>, <code>DS</code>, <code>ES</code>, <code>SS</code>. Tutti valgono 0 all'inizio. <code>CS</code> si può solo leggere.</td></tr>
+        <tr><td>Immediati</td><td>Decimali (<code>27</code>, <code>-1</code>), esadecimali (<code>0x1B</code>) e ottali con lo zero iniziale, come in C (<code>033</code> vale 27). <code>09</code> è decimale. I caratteri come <code>'A'</code> non sono supportati: usa il codice (<code>65</code>).</td></tr>
         <tr><td>Etichette e costanti</td><td><code>loop</code>, <code>msg</code>, <code>_EXIT</code>. Sono validi anche <code>label+n</code>, <code>label-n</code> e <code>label1-label2</code>.</td></tr>
-        <tr><td>Memoria</td><td><code>[BX]</code>, <code>[SI]</code>, <code>[BP+4]</code>, <code>[label]</code>, <code>[label+2]</code>, <code>[label+BX]</code>, <code>[BX+SI+2]</code>. Con <code>BP</code> l'indirizzo è nel segmento dello stack.</td></tr>
+        <tr><td>Memoria</td><td><code>[BX]</code>, <code>[SI]</code>, <code>[BP+4]</code>, <code>[BP-2]</code>, <code>[label]</code>, <code>[label+2]</code>, <code>[label-1]</code>, <code>[label+BX]</code>, <code>[BX+SI+2]</code>. Anche la forma <code>(BX)</code> è valida. Con <code>BP</code> l'indirizzo è nel segmento dello stack. La dimensione dell'accesso è un byte con le istruzioni che terminano con <code>B</code> o con un registro a 8 bit (<code>MOV [x], AL</code>), altrimenti una parola.</td></tr>
         </tbody>
     </table>
 
@@ -247,8 +242,8 @@ fmt: .ASCII "7 * 7 = %d\n\0"</code></pre>
         <tr><td><code>=</code></td><td><code>_EXIT = 1</code></td><td>Definisce una costante.</td></tr>
         <tr><td><code>.SECT</code></td><td><code>.SECT .TEXT</code></td><td>Comincia la sezione <code>.TEXT</code>, <code>.DATA</code> o <code>.BSS</code>.</td></tr>
         <tr><td><code>.ASCII</code></td><td><code>msg: .ASCII "Ciao\n\0"</code></td><td>In <code>.DATA</code>: scrive i caratteri della stringa, un byte per carattere. Le sequenze valide sono <code>\0</code>, <code>\n</code>, <code>\t</code>, <code>\r</code> e <code>\\</code>. La stringa non riceve uno <code>\0</code> automatico.</td></tr>
-        <tr><td><code>.BYTE</code></td><td><code>v: .BYTE 1, 2, 3</code></td><td>In <code>.DATA</code>: scrive uno o più byte.</td></tr>
-        <tr><td><code>.SPACE</code></td><td><code>buf: .SPACE 10</code></td><td>In <code>.BSS</code>: riserva <code>n</code> byte a zero.</td></tr>
+        <tr><td><code>.BYTE</code></td><td><code>v: .BYTE 1, 0x2, 03</code></td><td>In <code>.DATA</code>: scrive uno o più byte.</td></tr>
+        <tr><td><code>.SPACE</code></td><td><code>buf: .SPACE 10</code></td><td>In <code>.BSS</code> o in <code>.DATA</code>: riserva <code>n</code> byte a zero.</td></tr>
         </tbody>
     </table>
     <p>Ogni riga di <code>.DATA</code> e di <code>.BSS</code> deve avere la sua etichetta: l'interprete ignora una riga senza etichetta. <code>.DATA</code> comincia all'indirizzo <code>0x1000</code> e <code>.BSS</code> all'indirizzo <code>0x2000</code>. Nel contesto MEMORY ogni cella è un byte di queste sezioni che non vale zero. I byte di un'etichetta sono in un gruppo con il nome e l'indirizzo dell'etichetta, per esempio <code>msg (0x1000)</code>, e ogni cella ha il nome del suo offset: <code>msg+0</code>, <code>msg+1</code>. Un byte fuori da ogni etichetta ha come nome il suo indirizzo.</p>
@@ -269,12 +264,9 @@ fmt: .ASCII "7 * 7 = %d\n\0"</code></pre>
     <div class="note warning">
         <div class="note-title">Comportamenti dell'interprete da conoscere</div>
         <ul>
-            <li><code>JL</code>, <code>JLE</code> e <code>JG</code> non controllano <code>OF</code>. Per un confronto con segno che può andare in overflow, usa <code>JNGE</code>, <code>JNG</code>, <code>JNLE</code> e <code>JGE</code>.</li>
-            <li>Le istruzioni sui byte (<code>ADDB</code>, <code>SUBB</code>, <code>CMPB</code>, <code>MULB</code>) e <code>INC</code> / <code>DEC</code> non cambiano <code>OF</code>. <code>INC</code> e <code>DEC</code> cambiano <code>CF</code>.</li>
-            <li>Una scrittura in memoria scrive sempre una parola (2 byte), anche con <code>MOVB</code>, se l'indirizzo non contiene un registro a 8 bit. <code>MOVB [a], AL</code> mette a zero anche il byte dopo <code>a</code>.</li>
-            <li><code>[BP-2]</code> è un errore di sintassi, e <code>[BP - 2]</code> (con gli spazi) legge un indirizzo sbagliato. Con <code>BP</code> usa solo offset positivi, come <code>[BP+4]</code>.</li>
-            <li>La forma <code>(BX)</code> non funziona: usa <code>[BX]</code>.</li>
-            <li><code>NOP</code> non è supportata.</li>
+            <li><code>MUL</code> calcola sempre <code>AX = AL * src</code>, anche con un operando a 16 bit. L'8088 reale calcola <code>DX:AX = AX * src</code>.</li>
+            <li><code>DIV</code> divide sempre <code>AX</code> e mette il quoziente in <code>AL</code>. L'8088 reale, con un divisore a 16 bit, divide <code>DX:AX</code> e mette il quoziente in <code>AX</code>.</li>
+            <li><code>MUL</code> e <code>MULB</code> impostano i flag dal byte basso del risultato. L'8088 reale mette <code>CF = OF = 1</code> quando la metà alta del risultato non è zero.</li>
         </ul>
     </div>
 

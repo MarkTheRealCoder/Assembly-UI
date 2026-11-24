@@ -84,8 +84,10 @@ ADDB: 'ADDB' | 'addb';
 XORB: 'XORB' | 'xorb';
 MULB: 'MULB' | 'mulb';
 
-// System call
+// System call and control instructions
 SYS: 'SYS' | 'sys';
+HLT: 'HLT' | 'hlt';
+NOP: 'NOP' | 'nop';
 
 // 16-bit General Purpose Registers
 AX: 'AX' | 'ax';
@@ -125,6 +127,8 @@ MINUS: '-';
 
 // Numbers and literals
 HEX: '0' [xX] [0-9a-fA-F]+;
+// A number with a leading zero is octal, as in C and in the as88 assembler: 017 is 15.
+OCT: '-'? '0' [0-7]+;
 NUM: '-'? [0-9]+;
 
 // Identifiers (labels, variables)

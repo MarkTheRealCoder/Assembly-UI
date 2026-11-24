@@ -123,6 +123,7 @@
         <tbody>
         <tr><td><code>BIPUSH</code></td><td><code>numero</code></td><td>Mette il numero sullo stack.</td></tr>
         <tr><td><code>DUP</code></td><td>-</td><td>Copia la parola in cima e mette la copia sullo stack.</td></tr>
+        <tr><td><code>ERR</code></td><td>-</td><td>Scrive <code>ERROR: the program executed ERR.</code> e ferma il programma con il codice 1.</td></tr>
         <tr><td><code>GOTO</code></td><td><code>etichetta</code></td><td>Salta all'etichetta.</td></tr>
         <tr><td><code>HALT</code></td><td>-</td><td>Ferma il programma con il codice 0 e scrive <code>PROGRAM OUTPUT IS:</code> seguito da tutti i caratteri di <code>OUT</code>.</td></tr>
         <tr><td><code>IADD</code></td><td>-</td><td>Toglie <em>a</em> e <em>b</em>, mette <em>a</em> + <em>b</em>.</td></tr>
@@ -172,7 +173,7 @@
         <div class="note-title">Comportamenti dell'interprete da conoscere</div>
         <ul>
             <li><code>BIPUSH</code> non controlla l'intervallo di un byte: <code>BIPUSH 300</code> mette 300.</li>
-            <li><code>ERR</code>, <code>WIDE</code> e <code>INP</code> non sono supportate. <code>ERR</code> ferma il programma con l'errore <code>Unknown instruction: ERR</code>.</li>
+            <li><code>WIDE</code> e <code>INP</code> non sono supportate.</li>
             <li>Se <code>.main</code> termina senza <code>HALT</code>, il programma finisce senza il riepilogo <code>PROGRAM OUTPUT IS:</code>.</li>
         </ul>
     </div>

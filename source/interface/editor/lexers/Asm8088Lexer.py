@@ -82,14 +82,14 @@ class Asm8088Lexer(QsciLexerCustom):
             'JNL', 'JB', 'JNAE', 'JBE', 'JNA', 'JA', 'JNBE', 'JAE', 'JNB',
             'JS', 'JNS', 'JO', 'JNO', 'JP', 'JPE', 'JNP', 'JPO', 'JC', 'JNC',
             'JCXZ', 'LOOP', 'CALL', 'RET', 'MOVB', 'SUBB', 'DIVB', 'CMPB',
-            'ADDB', 'XORB', 'MULB', 'SYS',
+            'ADDB', 'XORB', 'MULB', 'SYS', 'HLT', 'NOP',
             'mov', 'push', 'pop', 'add', 'adc', 'sub', 'sbb', 'mul', 'div',
             'inc', 'dec', 'cmp', 'and', 'or', 'xor', 'not', 'jmp', 'je', 'jz',
             'jne', 'jnz', 'jl', 'jnge', 'jle', 'jng', 'jg', 'jnle', 'jge',
             'jnl', 'jb', 'jnae', 'jbe', 'jna', 'ja', 'jnbe', 'jae', 'jnb',
             'js', 'jns', 'jo', 'jno', 'jp', 'jpe', 'jnp', 'jpo', 'jc', 'jnc',
             'jcxz', 'loop', 'call', 'ret', 'movb', 'subb', 'divb', 'cmpb',
-            'addb', 'xorb', 'mulb', 'sys'
+            'addb', 'xorb', 'mulb', 'sys', 'hlt', 'nop'
         }
 
         self.registers = {

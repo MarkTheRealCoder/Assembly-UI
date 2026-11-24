@@ -117,8 +117,11 @@ class EditorLogic(EditorGraphics):
             if command := commands.find(cmd):
                 command.setKey(seq)
 
-        add_command(QsciCommand.LineCut, Qt.CTRL + Qt.Key_X)
-        add_command(QsciCommand.LineCopy, Qt.CTRL + Qt.Key_C)
+        # keyPressEvent cuts or copies the line when nothing is selected, so the line commands need no keys.
+        add_command(QsciCommand.LineCut, 0)
+        add_command(QsciCommand.LineCopy, 0)
+        add_command(QsciCommand.SelectionCut, Qt.CTRL + Qt.Key_X)
+        add_command(QsciCommand.SelectionCopy, Qt.CTRL + Qt.Key_C)
         add_command(QsciCommand.MoveSelectedLinesUp, Qt.SHIFT + Qt.CTRL + Qt.Key_Up)
         add_command(QsciCommand.MoveSelectedLinesDown, Qt.SHIFT + Qt.CTRL + Qt.Key_Down)
 
@@ -274,7 +277,7 @@ class Editor(EditorLogic):
         self._clearSearch()
 
     def keyPressEvent(self, event):
-        """Handle the zoom keys and the Find shortcut"""
+        """Handle the zoom keys, the Find shortcut and the line cut and copy"""
         if handleZoomEvent(self, event, self.zoomIn, self._resetZoom):
             return
         if event.matches(QKeySequence.Find) or (
@@ -282,6 +285,14 @@ class Editor(EditorLogic):
             EventRegister.send(FindShortcutEvent(False), "editor/find")
             event.ignore()
             return
+        # Cut and copy act on the selection, or on the whole line when nothing is selected.
+        if not self.hasSelectedText():
+            if event.matches(QKeySequence.Cut):
+                self.SendScintilla(QsciScintilla.SCI_LINECUT)
+                return
+            if event.matches(QKeySequence.Copy):
+                self.SendScintilla(QsciScintilla.SCI_LINECOPY)
+                return
         super().keyPressEvent(event)
 
     def viewportEvent(self, event):

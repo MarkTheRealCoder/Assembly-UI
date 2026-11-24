@@ -84,9 +84,9 @@ class MemoryViewerLogic(MemoryViewerGraphics):
         self.mem_header.setWaiting(False)
         self.___follow_new_nodes = debug
 
-    def setHexadecimal(self, hexadecimal: bool):
-        """ Show every memory value in hexadecimal or in decimal """
-        SingleMemoryChunk.setHexadecimal(hexadecimal)
+    def setNumberBase(self, base: int):
+        """ Show every memory value in base 16, 10 or 8 """
+        SingleMemoryChunk.setNumberBase(base)
         w: ContextContainer = self.mem_wrapper.exposeWidget()
         for chunk in w.findChildren(SingleMemoryChunk):
             chunk.refresh()

@@ -2,7 +2,7 @@ from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import QHBoxLayout, QSizePolicy, QFrame
 
 from source.interface.debugger import ExecutionContext
-from source.interface.debugger.toolbar.NumberBaseButton import NumberBaseButton
+from source.interface.debugger.toolbar.NumberBasePicker import NumberBasePicker
 from source.interface.debugger.toolbar.RunButton import RunButton
 from source.interface.debugger.toolbar.StepButton import StepButton
 from source.interface.debugger.toolbar.StopButton import StopButton
@@ -35,7 +35,7 @@ class ToolbarGraphics(QFrame):
         self._step_ahead_10_button: StepButton = StepButton(self, 10)
         self._timedisplay_tick: TimedExecutionTickPicker = TimedExecutionTickPicker(self)
         self._start_timedisplay_button: TimedExecutionButton = TimedExecutionButton(self)
-        self._number_base_button: NumberBaseButton = NumberBaseButton(self)
+        self._number_base_picker: NumberBasePicker = NumberBasePicker(self)
 
         self._timedisplay_tick.currentIndexChanged.connect(lambda: self._start_timedisplay_button.update_interval(self._timedisplay_tick.currentData()))
 
@@ -57,7 +57,7 @@ class ToolbarGraphics(QFrame):
         layout.addWidget(self._timedisplay_tick, 1)
         layout.addWidget(self._start_timedisplay_button)
         layout.addStretch(1)
-        layout.addWidget(self._number_base_button)
+        layout.addWidget(self._number_base_picker)
         self.setLayout(layout)
 
     def runGraphic(self, debug: bool = False):
@@ -121,9 +121,9 @@ class ToolbarLogic(ToolbarGraphics):
         if self._step_timer.isActive():
             self._step_timer.setInterval(self._timedisplay_tick.currentData())
 
-    def changeNumberBase(self, hexadecimal: bool):
-        """ Show the memory values in hexadecimal or in decimal """
-        self.exec_context.memory_viewer.setHexadecimal(hexadecimal)
+    def changeNumberBase(self, base: int):
+        """ Show the memory values in base 16, 10 or 8 """
+        self.exec_context.memory_viewer.setNumberBase(base)
 
     def executionEnded(self):
         """ Restore the buttons after the end of the program """
@@ -143,4 +143,4 @@ class Toolbar(ToolbarLogic):
         self._start_timedisplay_button.clicked.connect(self.toggleTimedExecution)
         self._timedisplay_tick.currentIndexChanged.connect(self.updateTimedInterval)
         self._step_timer.timeout.connect(self.step)
-        self._number_base_button.baseChanged.connect(self.changeNumberBase)
+        self._number_base_picker.baseChanged.connect(self.changeNumberBase)

@@ -64,7 +64,7 @@
                 <li>The syntax colors follow the file extension.</li>
                 <li>The autocompletion suggests the instructions and the words of the file after the first character.</li>
                 <li>The editor saves the file while you type, before each run, when you change tab and when you close the app.</li>
-                <li><kbd>Ctrl+X</kbd> and <kbd>Ctrl+C</kbd> cut or copy the <strong>whole lines</strong> of the selection.</li>
+                <li><kbd>Ctrl+X</kbd> and <kbd>Ctrl+C</kbd> cut or copy the selection. With no selection, they cut or copy the whole line.</li>
                 <li><kbd>Ctrl+Shift+Up</kbd> and <kbd>Ctrl+Shift+Down</kbd> move the selected lines.</li>
                 <li><kbd>Ctrl+D</kbd> duplicates the line, <kbd>Ctrl+Shift+L</kbd> deletes it, and <kbd>Ctrl+T</kbd> swaps it with the line above.</li>
                 <li><kbd>Ctrl+F</kbd> opens the search bar, with plain text or regular expressions. The search ignores the case.</li>
@@ -92,7 +92,7 @@
         <tr><td>Stop</td><td>End the program. The button shows only while a program runs.</td></tr>
         <tr><td>Step 1 / Step 10</td><td>In debug mode, execute 1 or 10 instructions.</td></tr>
         <tr><td>Automatic stepping</td><td>In debug mode, pick an interval (500 ms, 1, 2, 3, 4, 5 or 10 s) and click the metronome button. The program executes one instruction at each interval. Click the button again to stop.</td></tr>
-        <tr><td>HEX / DEC</td><td>Show the memory values in hexadecimal (default) or in decimal. A click changes every value at once.</td></tr>
+        <tr><td>HEX / DEC / OCT</td><td>Pick the base of the memory values: hexadecimal (default), decimal or octal. The change applies to every value at once.</td></tr>
         </tbody>
     </table>
 
@@ -176,7 +176,7 @@
         <tbody>
         <tr><td><kbd>Ctrl+F</kbd></td><td>Editor, terminal</td><td>Open the search bar.</td></tr>
         <tr><td><kbd>Ctrl +</kbd> / <kbd>Ctrl -</kbd> / <kbd>Ctrl 0</kbd></td><td>Editor, terminal</td><td>Zoom in, zoom out, reset the zoom.</td></tr>
-        <tr><td><kbd>Ctrl+X</kbd> / <kbd>Ctrl+C</kbd></td><td>Editor</td><td>Cut or copy the whole lines of the selection.</td></tr>
+        <tr><td><kbd>Ctrl+X</kbd> / <kbd>Ctrl+C</kbd></td><td>Editor</td><td>Cut or copy the selection, or the whole line when nothing is selected.</td></tr>
         <tr><td><kbd>Ctrl+Shift+Up</kbd> / <kbd>Ctrl+Shift+Down</kbd></td><td>Editor</td><td>Move the selected lines.</td></tr>
         <tr><td><kbd>Ctrl+D</kbd></td><td>Editor</td><td>Duplicate the line.</td></tr>
         <tr><td><kbd>Ctrl+Shift+L</kbd></td><td>Editor</td><td>Delete the line.</td></tr>

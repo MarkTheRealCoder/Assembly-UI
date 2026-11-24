@@ -22,20 +22,23 @@ class _CopyButton(GenericButton):
 
 
 class SingleMemoryChunkGraphics(_MemoryChunk):
-    # Display base shared by every chunk: True for hexadecimal, False for decimal.
-    hexadecimal: bool = True
+    # Display base shared by every chunk: 16, 10 or 8.
+    base: int = 16
+    ___FORMATS = {16: hex, 10: str, 8: oct}
 
     @staticmethod
     def formatValue(value: str or int) -> str:
         """ Text of a value in the current display base. Text values are shown as they are. """
         if isinstance(value, str):
             return value
-        return hex(value) if SingleMemoryChunkGraphics.hexadecimal else str(value)
+        return SingleMemoryChunkGraphics.___FORMATS[SingleMemoryChunkGraphics.base](value)
 
     @staticmethod
-    def setHexadecimal(hexadecimal: bool):
-        """ Select the display base of every chunk. Call refresh on the existing chunks to apply it. """
-        SingleMemoryChunkGraphics.hexadecimal = hexadecimal
+    def setNumberBase(base: int):
+        """ Select the display base of every chunk: 16, 10 or 8. Call refresh on the existing chunks to apply it. """
+        if base not in SingleMemoryChunkGraphics.___FORMATS:
+            raise ValueError(f"Unsupported number base: {base}")
+        SingleMemoryChunkGraphics.base = base
 
     def __init__(self, parent, key: str, value: str or int):
         super().__init__(parent)
