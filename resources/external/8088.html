@@ -1,55 +1,55 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Istruzioni 8088</title>
+    <title>8088 Instructions</title>
     <link rel="stylesheet" href="help.css">
     <script src="help.js" defer></script>
 </head>
 <body>
 <nav>
-    <a href="#struttura">Struttura</a>
-    <a href="#esempi">Esempi</a>
-    <a href="#dati">Dati</a>
-    <a href="#aritmetica">Aritmetica</a>
-    <a href="#logica">Logica</a>
-    <a href="#salti">Salti</a>
-    <a href="#sistema">Sistema</a>
-    <a href="#operandi">Operandi</a>
-    <a href="#direttive">Direttive</a>
-    <a href="#flag">Flag</a>
-    <a href="#limiti">Limiti</a>
+    <a href="#struttura">Structure</a>
+    <a href="#esempi">Examples</a>
+    <a href="#dati">Data</a>
+    <a href="#aritmetica">Arithmetic</a>
+    <a href="#logica">Logic</a>
+    <a href="#salti">Jumps</a>
+    <a href="#sistema">System</a>
+    <a href="#operandi">Operands</a>
+    <a href="#direttive">Directives</a>
+    <a href="#flag">Flags</a>
+    <a href="#limiti">Limits</a>
 </nav>
 <main>
-    <h1>Istruzioni 8088</h1>
-    <p class="subtitle">Il set ridotto di istruzioni Intel 8088 che l'interprete esegue. Le istruzioni che non sono in questa pagina non sono supportate.</p>
+    <h1>8088 Instructions</h1>
+    <p class="subtitle">The reduced Intel 8088 instruction set that the interpreter runs. Instructions that are not on this page are not supported.</p>
 
-    <h2 id="struttura">Struttura di un programma</h2>
+    <h2 id="struttura">Program structure</h2>
     <ul>
-        <li>Le costanti vanno all'inizio, nella forma <code>NOME = valore</code>. Le costanti delle chiamate di sistema (<code>_EXIT</code>, <code>_GETCHAR</code>, <code>_PRINTF</code>) non sono predefinite: il programma le deve definire.</li>
-        <li><code>.SECT .TEXT</code> contiene le istruzioni. L'esecuzione parte dalla prima istruzione di questa sezione: l'etichetta <code>main:</code> non è necessaria.</li>
-        <li><code>.SECT .DATA</code> contiene i dati con un valore iniziale. <code>.SECT .BSS</code> contiene lo spazio libero.</li>
-        <li>Un'etichetta è <code>nome:</code>, da sola su una riga o prima di un'istruzione.</li>
-        <li>I commenti cominciano con <code>//</code> o con <code>;</code>.</li>
-        <li>Il programma termina con la chiamata di sistema <code>EXIT</code>, con <code>HLT</code> o dopo l'ultima istruzione.</li>
+        <li>Constants go at the beginning, in the form <code>NAME = value</code>. The system call constants (<code>_EXIT</code>, <code>_GETCHAR</code>, <code>_PRINTF</code>) are not predefined: the program must define them.</li>
+        <li><code>.SECT .TEXT</code> contains the instructions. Execution starts from the first instruction of this section: the <code>main:</code> label is not required.</li>
+        <li><code>.SECT .DATA</code> contains data with an initial value. <code>.SECT .BSS</code> contains free space.</li>
+        <li>A label is <code>name:</code>, alone on a line or before an instruction.</li>
+        <li>Comments start with <code>//</code> or with <code>;</code>.</li>
+        <li>The program ends with the <code>EXIT</code> system call, with <code>HLT</code>, or after the last instruction.</li>
     </ul>
-    <p>Le istruzioni, le direttive e i registri funzionano in maiuscolo o in minuscolo (<code>MOV AX, 5</code> o <code>mov ax, 5</code>). Le etichette e le costanti distinguono maiuscole e minuscole.</p>
+    <p>Instructions, directives and registers work in upper or lower case (<code>MOV AX, 5</code> or <code>mov ax, 5</code>). Labels and constants are case-sensitive.</p>
 
-    <h2 id="esempi">Esempi per la prima esecuzione</h2>
-    <p>Crea un file <code>.a8088</code>, copia un esempio nel file e clicca <strong>Run</strong> o <strong>Debug</strong>.</p>
+    <h2 id="esempi">Examples for your first run</h2>
+    <p>Create a <code>.a8088</code> file, copy an example into the file and click <strong>Run</strong> or <strong>Debug</strong>.</p>
 
     <h3>1. Hello, World!</h3>
     <div class="example">
-        <div class="example-header">hello.a8088<button class="copy" data-done="Copiato" data-failed="Seleziona e copia">Copia</button></div>
+        <div class="example-header">hello.a8088<button class="copy" data-done="Copied" data-failed="Select and copy">Copy</button></div>
         <pre><code>_EXIT = 1
 _PRINTF = 127
 
 .SECT .TEXT
-    PUSH 0              // valore (questo formato non lo usa)
-    PUSH msg            // indirizzo della stringa di formato
+    PUSH 0              // value (this format does not use it)
+    PUSH msg            // address of the format string
     PUSH _PRINTF
-    SYS                 // SYS toglie dallo stack 127, il formato e il valore
-    PUSH 0              // codice di uscita
+    SYS                 // SYS pops 127, the format and the value off the stack
+    PUSH 0              // exit code
     PUSH _EXIT
     SYS
 
@@ -58,36 +58,36 @@ msg: .ASCII "Hello, World!\n\0"</code></pre>
     </div>
     <p class="run">Output: <code>Hello, World!</code></p>
 
-    <h3>2. Input e output</h3>
-    <p>Il programma legge un numero che termina con <code>;</code> e scrive il doppio del numero.</p>
+    <h3>2. Input and output</h3>
+    <p>The program reads a number ending with <code>;</code> and prints twice the number.</p>
     <div class="example">
-        <div class="example-header">doppio.a8088<button class="copy" data-done="Copiato" data-failed="Seleziona e copia">Copia</button></div>
+        <div class="example-header">double.a8088<button class="copy" data-done="Copied" data-failed="Select and copy">Copy</button></div>
         <pre><code>_EXIT = 1
 _GETCHAR = 117
 _PRINTF = 127
 
 .SECT .TEXT
-    MOV BX, 0           // BX = numero letto
+    MOV BX, 0           // BX = number read
 read:
     PUSH _GETCHAR
-    SYS                 // AL = carattere successivo dell'input
-    CMPB AL, 59         // 59 = ';' termina il numero
+    SYS                 // AL = next input character
+    CMPB AL, 59         // 59 = ';' ends the number
     JE done
-    SUBB AL, 48         // cifra ASCII -> valore
+    SUBB AL, 48         // ASCII digit -> value
     XORB AH, AH
-    MOV CX, AX          // CX = cifra
+    MOV CX, AX          // CX = digit
     MOV AX, BX          // AX = BX * 10
     ADD AX, AX
     MOV DX, AX
     ADD AX, AX
     ADD AX, AX
     ADD AX, DX
-    ADD AX, CX          // AX = BX * 10 + cifra
+    ADD AX, CX          // AX = BX * 10 + digit
     MOV BX, AX
     JMP read
 done:
     MOV AX, BX
-    ADD AX, BX          // AX = 2 * numero
+    ADD AX, BX          // AX = 2 * number
     PUSH AX
     PUSH fmt
     PUSH _PRINTF
@@ -99,18 +99,18 @@ done:
 .SECT .DATA
 fmt: .ASCII "%d\n\0"</code></pre>
     </div>
-    <p class="run">Input <code>123;</code> → output <code>246</code>. Scrivi l'input nel terminale e premi <kbd>Invio</kbd>.</p>
+    <p class="run">Input <code>123;</code> → output <code>246</code>. Type the input in the terminal and press <kbd>Enter</kbd>.</p>
 
-    <h3>3. Sottoprogramma con CALL e RET</h3>
+    <h3>3. Subroutine with CALL and RET</h3>
     <div class="example">
-        <div class="example-header">quadrato.a8088<button class="copy" data-done="Copiato" data-failed="Seleziona e copia">Copia</button></div>
+        <div class="example-header">square.a8088<button class="copy" data-done="Copied" data-failed="Select and copy">Copy</button></div>
         <pre><code>_EXIT = 1
 _PRINTF = 127
 
 .SECT .TEXT
-    PUSH 7              // argomento
+    PUSH 7              // argument
     CALL square
-    ADD SP, 2           // toglie l'argomento
+    ADD SP, 2           // removes the argument
     PUSH AX
     PUSH fmt
     PUSH _PRINTF
@@ -119,10 +119,10 @@ _PRINTF = 127
     PUSH _EXIT
     SYS
 
-square:                 // AX = argomento * argomento
+square:                 // AX = argument * argument
     PUSH BP
     MOV BP, SP
-    MOV AX, [BP+4]      // [BP+2] = indirizzo di ritorno, [BP+4] = argomento
+    MOV AX, [BP+4]      // [BP+2] = return address, [BP+4] = argument
     MUL AL              // AX = AL * AL
     POP BP
     RET
@@ -130,148 +130,148 @@ square:                 // AX = argomento * argomento
 .SECT .DATA
 fmt: .ASCII "7 * 7 = %d\n\0"</code></pre>
     </div>
-    <p class="run">Output: <code>7 * 7 = 49</code>. In Debug, lo STACK mostra le parole di <code>square</code> in un gruppo con il suo nome.</p>
+    <p class="run">Output: <code>7 * 7 = 49</code>. In Debug, the STACK shows the words of <code>square</code> in a group with its name.</p>
 
-    <h2 id="dati">Trasferimento dati</h2>
+    <h2 id="dati">Data transfer</h2>
     <table>
-        <thead><tr><th>Istruzione</th><th>Operandi</th><th>Descrizione</th></tr></thead>
+        <thead><tr><th>Instruction</th><th>Operands</th><th>Description</th></tr></thead>
         <tbody>
-        <tr><td><code>MOV</code></td><td><code>dest, src</code></td><td>Copia <code>src</code> in <code>dest</code>.</td></tr>
-        <tr><td><code>MOVB</code></td><td><code>dest, src</code></td><td>Copia un byte. I registri devono essere a 8 bit. In memoria scrive un solo byte.</td></tr>
-        <tr><td><code>PUSH</code></td><td><code>src</code></td><td>Mette una parola sullo stack: <code>SP</code> diminuisce di 2.</td></tr>
-        <tr><td><code>POP</code></td><td><code>dest</code></td><td>Toglie una parola dallo stack e la copia in <code>dest</code>: <code>SP</code> aumenta di 2.</td></tr>
+        <tr><td><code>MOV</code></td><td><code>dest, src</code></td><td>Copies <code>src</code> into <code>dest</code>.</td></tr>
+        <tr><td><code>MOVB</code></td><td><code>dest, src</code></td><td>Copies a byte. Registers must be 8-bit. In memory it writes a single byte.</td></tr>
+        <tr><td><code>PUSH</code></td><td><code>src</code></td><td>Pushes a word onto the stack: <code>SP</code> decreases by 2.</td></tr>
+        <tr><td><code>POP</code></td><td><code>dest</code></td><td>Pops a word off the stack and copies it into <code>dest</code>: <code>SP</code> increases by 2.</td></tr>
         </tbody>
     </table>
 
-    <h2 id="aritmetica">Aritmetica</h2>
+    <h2 id="aritmetica">Arithmetic</h2>
     <table>
-        <thead><tr><th>Istruzione</th><th>Operandi</th><th>Descrizione</th></tr></thead>
+        <thead><tr><th>Instruction</th><th>Operands</th><th>Description</th></tr></thead>
         <tbody>
         <tr><td><code>ADD</code></td><td><code>dest, src</code></td><td><code>dest = dest + src</code>.</td></tr>
-        <tr><td><code>ADDB</code></td><td><code>dest, src</code></td><td>Somma di due byte.</td></tr>
+        <tr><td><code>ADDB</code></td><td><code>dest, src</code></td><td>Sum of two bytes.</td></tr>
         <tr><td><code>ADC</code></td><td><code>dest, src</code></td><td><code>dest = dest + src + CF</code>.</td></tr>
         <tr><td><code>SUB</code></td><td><code>dest, src</code></td><td><code>dest = dest - src</code>.</td></tr>
-        <tr><td><code>SUBB</code></td><td><code>dest, src</code></td><td>Sottrazione di due byte.</td></tr>
+        <tr><td><code>SUBB</code></td><td><code>dest, src</code></td><td>Subtraction of two bytes.</td></tr>
         <tr><td><code>SBB</code></td><td><code>dest, src</code></td><td><code>dest = dest - src - CF</code>.</td></tr>
-        <tr><td><code>CMP</code></td><td><code>op1, op2</code></td><td>Calcola <code>op1 - op2</code> e imposta i flag. Gli operandi non cambiano.</td></tr>
-        <tr><td><code>CMPB</code></td><td><code>op1, op2</code></td><td>Come <code>CMP</code>, su due byte.</td></tr>
-        <tr><td><code>MUL</code></td><td><code>src</code></td><td><code>AX = AL * src</code>, troncato a 16 bit. <code>DX</code> non cambia.</td></tr>
-        <tr><td><code>MULB</code></td><td><code>src</code></td><td><code>AX = AL * src</code>, con <code>src</code> a 8 bit. Il risultato va in <code>AH:AL</code>.</td></tr>
-        <tr><td><code>DIV</code></td><td><code>src</code></td><td>Divide <code>AX</code> per <code>src</code>: quoziente in <code>AL</code>, resto in <code>AH</code>. <code>DX</code> non fa parte del dividendo. Un quoziente maggiore di 255 perde i bit alti. La divisione per zero ferma il programma con un errore.</td></tr>
-        <tr><td><code>DIVB</code></td><td><code>src</code></td><td>Divide <code>AL</code> per <code>src</code> (a 8 bit): quoziente in <code>AL</code>, resto in <code>AH</code>. Il valore iniziale di <code>AH</code> non conta.</td></tr>
-        <tr><td><code>INC</code></td><td><code>dest</code></td><td><code>dest = dest + 1</code>. <code>CF</code> non cambia.</td></tr>
-        <tr><td><code>DEC</code></td><td><code>dest</code></td><td><code>dest = dest - 1</code>. <code>CF</code> non cambia.</td></tr>
+        <tr><td><code>CMP</code></td><td><code>op1, op2</code></td><td>Computes <code>op1 - op2</code> and sets the flags. The operands do not change.</td></tr>
+        <tr><td><code>CMPB</code></td><td><code>op1, op2</code></td><td>Like <code>CMP</code>, on two bytes.</td></tr>
+        <tr><td><code>MUL</code></td><td><code>src</code></td><td><code>AX = AL * src</code>, truncated to 16 bits. <code>DX</code> does not change.</td></tr>
+        <tr><td><code>MULB</code></td><td><code>src</code></td><td><code>AX = AL * src</code>, with an 8-bit <code>src</code>. The result goes into <code>AH:AL</code>.</td></tr>
+        <tr><td><code>DIV</code></td><td><code>src</code></td><td>Divides <code>AX</code> by <code>src</code>: quotient in <code>AL</code>, remainder in <code>AH</code>. <code>DX</code> is not part of the dividend. A quotient greater than 255 loses its high bits. Division by zero stops the program with an error.</td></tr>
+        <tr><td><code>DIVB</code></td><td><code>src</code></td><td>Divides <code>AL</code> by <code>src</code> (8-bit): quotient in <code>AL</code>, remainder in <code>AH</code>. The initial value of <code>AH</code> does not matter.</td></tr>
+        <tr><td><code>INC</code></td><td><code>dest</code></td><td><code>dest = dest + 1</code>. <code>CF</code> does not change.</td></tr>
+        <tr><td><code>DEC</code></td><td><code>dest</code></td><td><code>dest = dest - 1</code>. <code>CF</code> does not change.</td></tr>
         </tbody>
     </table>
 
-    <h2 id="logica">Logica</h2>
+    <h2 id="logica">Logic</h2>
     <table>
-        <thead><tr><th>Istruzione</th><th>Operandi</th><th>Descrizione</th></tr></thead>
+        <thead><tr><th>Instruction</th><th>Operands</th><th>Description</th></tr></thead>
         <tbody>
-        <tr><td><code>AND</code></td><td><code>dest, src</code></td><td>AND bit a bit. <code>CF = 0</code>.</td></tr>
-        <tr><td><code>OR</code></td><td><code>dest, src</code></td><td>OR bit a bit. <code>CF = 0</code>.</td></tr>
-        <tr><td><code>XOR</code></td><td><code>dest, src</code></td><td>XOR bit a bit. <code>CF = 0</code>. <code>XOR AX, AX</code> mette <code>AX</code> a zero.</td></tr>
-        <tr><td><code>XORB</code></td><td><code>dest, src</code></td><td>XOR bit a bit di due byte.</td></tr>
-        <tr><td><code>NOT</code></td><td><code>dest</code></td><td>Inverte ogni bit. Non cambia i flag.</td></tr>
+        <tr><td><code>AND</code></td><td><code>dest, src</code></td><td>Bitwise AND. <code>CF = 0</code>.</td></tr>
+        <tr><td><code>OR</code></td><td><code>dest, src</code></td><td>Bitwise OR. <code>CF = 0</code>.</td></tr>
+        <tr><td><code>XOR</code></td><td><code>dest, src</code></td><td>Bitwise XOR. <code>CF = 0</code>. <code>XOR AX, AX</code> sets <code>AX</code> to zero.</td></tr>
+        <tr><td><code>XORB</code></td><td><code>dest, src</code></td><td>Bitwise XOR of two bytes.</td></tr>
+        <tr><td><code>NOT</code></td><td><code>dest</code></td><td>Inverts every bit. Does not change the flags.</td></tr>
         </tbody>
     </table>
 
-    <h2 id="salti">Salti e sottoprogrammi</h2>
-    <p>Usa i salti dopo un <code>CMP</code>. "Con segno" significa che i valori sono in complemento a due.</p>
+    <h2 id="salti">Jumps and subroutines</h2>
+    <p>Use jumps after a <code>CMP</code>. "Signed" means the values are in two's complement.</p>
     <table>
-        <thead><tr><th>Istruzione</th><th>Operandi</th><th>Salta se</th></tr></thead>
+        <thead><tr><th>Instruction</th><th>Operands</th><th>Jumps if</th></tr></thead>
         <tbody>
-        <tr><td><code>JMP</code></td><td><code>label</code></td><td>Sempre.</td></tr>
-        <tr><td><code>JE</code> / <code>JZ</code></td><td><code>label</code></td><td>Uguale: <code>ZF = 1</code>.</td></tr>
-        <tr><td><code>JNE</code> / <code>JNZ</code></td><td><code>label</code></td><td>Diverso: <code>ZF = 0</code>.</td></tr>
-        <tr><td><code>JL</code> / <code>JNGE</code></td><td><code>label</code></td><td>Minore, con segno: <code>SF ≠ OF</code>.</td></tr>
-        <tr><td><code>JLE</code> / <code>JNG</code></td><td><code>label</code></td><td>Minore o uguale, con segno: <code>ZF = 1</code> o <code>SF ≠ OF</code>.</td></tr>
-        <tr><td><code>JG</code> / <code>JNLE</code></td><td><code>label</code></td><td>Maggiore, con segno: <code>ZF = 0</code> e <code>SF = OF</code>.</td></tr>
-        <tr><td><code>JGE</code> / <code>JNL</code></td><td><code>label</code></td><td>Maggiore o uguale, con segno: <code>SF = OF</code>.</td></tr>
-        <tr><td><code>JB</code> / <code>JNAE</code> / <code>JC</code></td><td><code>label</code></td><td>Minore, senza segno: <code>CF = 1</code>.</td></tr>
-        <tr><td><code>JBE</code> / <code>JNA</code></td><td><code>label</code></td><td>Minore o uguale, senza segno: <code>CF = 1</code> o <code>ZF = 1</code>.</td></tr>
-        <tr><td><code>JA</code> / <code>JNBE</code></td><td><code>label</code></td><td>Maggiore, senza segno: <code>CF = 0</code> e <code>ZF = 0</code>.</td></tr>
-        <tr><td><code>JAE</code> / <code>JNB</code> / <code>JNC</code></td><td><code>label</code></td><td>Maggiore o uguale, senza segno: <code>CF = 0</code>.</td></tr>
+        <tr><td><code>JMP</code></td><td><code>label</code></td><td>Always.</td></tr>
+        <tr><td><code>JE</code> / <code>JZ</code></td><td><code>label</code></td><td>Equal: <code>ZF = 1</code>.</td></tr>
+        <tr><td><code>JNE</code> / <code>JNZ</code></td><td><code>label</code></td><td>Not equal: <code>ZF = 0</code>.</td></tr>
+        <tr><td><code>JL</code> / <code>JNGE</code></td><td><code>label</code></td><td>Less, signed: <code>SF ≠ OF</code>.</td></tr>
+        <tr><td><code>JLE</code> / <code>JNG</code></td><td><code>label</code></td><td>Less or equal, signed: <code>ZF = 1</code> or <code>SF ≠ OF</code>.</td></tr>
+        <tr><td><code>JG</code> / <code>JNLE</code></td><td><code>label</code></td><td>Greater, signed: <code>ZF = 0</code> and <code>SF = OF</code>.</td></tr>
+        <tr><td><code>JGE</code> / <code>JNL</code></td><td><code>label</code></td><td>Greater or equal, signed: <code>SF = OF</code>.</td></tr>
+        <tr><td><code>JB</code> / <code>JNAE</code> / <code>JC</code></td><td><code>label</code></td><td>Below, unsigned: <code>CF = 1</code>.</td></tr>
+        <tr><td><code>JBE</code> / <code>JNA</code></td><td><code>label</code></td><td>Below or equal, unsigned: <code>CF = 1</code> or <code>ZF = 1</code>.</td></tr>
+        <tr><td><code>JA</code> / <code>JNBE</code></td><td><code>label</code></td><td>Above, unsigned: <code>CF = 0</code> and <code>ZF = 0</code>.</td></tr>
+        <tr><td><code>JAE</code> / <code>JNB</code> / <code>JNC</code></td><td><code>label</code></td><td>Above or equal, unsigned: <code>CF = 0</code>.</td></tr>
         <tr><td><code>JS</code> / <code>JNS</code></td><td><code>label</code></td><td><code>SF = 1</code> / <code>SF = 0</code>.</td></tr>
         <tr><td><code>JO</code> / <code>JNO</code></td><td><code>label</code></td><td><code>OF = 1</code> / <code>OF = 0</code>.</td></tr>
-        <tr><td><code>JP</code> / <code>JPE</code></td><td><code>label</code></td><td>Parità pari: <code>PF = 1</code>.</td></tr>
-        <tr><td><code>JNP</code> / <code>JPO</code></td><td><code>label</code></td><td>Parità dispari: <code>PF = 0</code>.</td></tr>
+        <tr><td><code>JP</code> / <code>JPE</code></td><td><code>label</code></td><td>Even parity: <code>PF = 1</code>.</td></tr>
+        <tr><td><code>JNP</code> / <code>JPO</code></td><td><code>label</code></td><td>Odd parity: <code>PF = 0</code>.</td></tr>
         <tr><td><code>JCXZ</code></td><td><code>label</code></td><td><code>CX = 0</code>.</td></tr>
-        <tr><td><code>LOOP</code></td><td><code>label</code></td><td>Diminuisce <code>CX</code> di 1, poi salta se <code>CX ≠ 0</code>.</td></tr>
-        <tr><td><code>CALL</code></td><td><code>label</code></td><td>Sempre. Mette sullo stack l'indirizzo dell'istruzione successiva.</td></tr>
-        <tr><td><code>RET</code></td><td>-</td><td>Toglie l'indirizzo di ritorno dallo stack e salta a quell'indirizzo.</td></tr>
+        <tr><td><code>LOOP</code></td><td><code>label</code></td><td>Decreases <code>CX</code> by 1, then jumps if <code>CX ≠ 0</code>.</td></tr>
+        <tr><td><code>CALL</code></td><td><code>label</code></td><td>Always. Pushes the address of the next instruction onto the stack.</td></tr>
+        <tr><td><code>RET</code></td><td>-</td><td>Pops the return address off the stack and jumps to that address.</td></tr>
         </tbody>
     </table>
 
-    <h2 id="sistema">Istruzioni di sistema</h2>
+    <h2 id="sistema">System instructions</h2>
     <table>
-        <thead><tr><th>Istruzione</th><th>Operandi</th><th>Descrizione</th></tr></thead>
+        <thead><tr><th>Instruction</th><th>Operands</th><th>Description</th></tr></thead>
         <tbody>
-        <tr><td><code>SYS</code></td><td>-</td><td>Chiamata di sistema. <code>SYS</code> toglie dallo stack il numero della chiamata e poi i suoi argomenti: dopo <code>SYS</code> non serve <code>ADD SP, n</code>. Un numero sconosciuto non fa nulla e lascia gli argomenti sullo stack.</td></tr>
-        <tr><td><code>HLT</code></td><td>-</td><td>Ferma il programma con il codice 0 e scrive <code>Program halted.</code></td></tr>
-        <tr><td><code>NOP</code></td><td>-</td><td>Non fa nulla.</td></tr>
+        <tr><td><code>SYS</code></td><td>-</td><td>System call. <code>SYS</code> pops the call number off the stack and then its arguments: no <code>ADD SP, n</code> is needed after <code>SYS</code>. An unknown number does nothing and leaves the arguments on the stack.</td></tr>
+        <tr><td><code>HLT</code></td><td>-</td><td>Stops the program with code 0 and prints <code>Program halted.</code></td></tr>
+        <tr><td><code>NOP</code></td><td>-</td><td>Does nothing.</td></tr>
         </tbody>
     </table>
-    <h3>Chiamate di sistema</h3>
+    <h3>System calls</h3>
     <table>
-        <thead><tr><th>Numero</th><th>Nome</th><th>Uso</th><th>Descrizione</th></tr></thead>
+        <thead><tr><th>Number</th><th>Name</th><th>Usage</th><th>Description</th></tr></thead>
         <tbody>
-        <tr><td><code>1</code></td><td><code>EXIT</code></td><td><code>PUSH codice</code><br><code>PUSH _EXIT</code><br><code>SYS</code></td><td>Termina il programma e scrive <code>Program exited with code: N</code>.</td></tr>
-        <tr><td><code>117</code></td><td><code>GETCHAR</code></td><td><code>PUSH _GETCHAR</code><br><code>SYS</code></td><td>Legge un carattere dell'input e mette il suo codice (da 0 a 255) in <code>AL</code>. <code>AH</code> non cambia. Se l'input è vuoto, il programma aspetta: scrivi i caratteri nel terminale e premi <kbd>Invio</kbd>. <kbd>Invio</kbd> non invia il carattere di nuova riga.</td></tr>
-        <tr><td><code>127</code></td><td><code>PRINTF</code></td><td><code>PUSH valore</code><br><code>PUSH formato</code><br><code>PUSH _PRINTF</code><br><code>SYS</code></td><td>Scrive la stringa <code>formato</code> con un solo valore. Usa <code>%d</code>, <code>%x</code>, <code>%o</code> o <code>%c</code>, una volta sola: due specificatori causano un errore. Il valore è una parola senza segno: -1 diventa 65535. La stringa deve terminare con <code>\0</code> (al massimo 256 byte).</td></tr>
-        </tbody>
-    </table>
-
-    <h2 id="operandi">Operandi</h2>
-    <table>
-        <thead><tr><th>Tipo</th><th>Descrizione</th></tr></thead>
-        <tbody>
-        <tr><td>Registri a 16 bit</td><td><code>AX</code>, <code>BX</code>, <code>CX</code>, <code>DX</code>, <code>SI</code>, <code>DI</code>, <code>BP</code>, <code>SP</code>.</td></tr>
-        <tr><td>Registri a 8 bit</td><td><code>AL</code>, <code>AH</code>, <code>BL</code>, <code>BH</code>, <code>CL</code>, <code>CH</code>, <code>DL</code>, <code>DH</code>. Le istruzioni con la <code>B</code> finale (<code>MOVB</code>, <code>ADDB</code>, ...) accettano solo questi registri.</td></tr>
-        <tr><td>Registri di segmento</td><td><code>CS</code>, <code>DS</code>, <code>ES</code>, <code>SS</code>. Tutti valgono 0 all'inizio. <code>CS</code> si può solo leggere.</td></tr>
-        <tr><td>Immediati</td><td>Decimali (<code>27</code>, <code>-1</code>), esadecimali (<code>0x1B</code>) e ottali con lo zero iniziale, come in C (<code>033</code> vale 27). <code>09</code> è decimale. I caratteri come <code>'A'</code> non sono supportati: usa il codice (<code>65</code>).</td></tr>
-        <tr><td>Etichette e costanti</td><td><code>loop</code>, <code>msg</code>, <code>_EXIT</code>. Sono validi anche <code>label+n</code>, <code>label-n</code> e <code>label1-label2</code>.</td></tr>
-        <tr><td>Memoria</td><td><code>[BX]</code>, <code>[SI]</code>, <code>[BP+4]</code>, <code>[BP-2]</code>, <code>[label]</code>, <code>[label+2]</code>, <code>[label-1]</code>, <code>[label+BX]</code>, <code>[BX+SI+2]</code>. Anche la forma <code>(BX)</code> è valida. Con <code>BP</code> l'indirizzo è nel segmento dello stack. La dimensione dell'accesso è un byte con le istruzioni che terminano con <code>B</code> o con un registro a 8 bit (<code>MOV [x], AL</code>), altrimenti una parola.</td></tr>
+        <tr><td><code>1</code></td><td><code>EXIT</code></td><td><code>PUSH code</code><br><code>PUSH _EXIT</code><br><code>SYS</code></td><td>Ends the program and prints <code>Program exited with code: N</code>.</td></tr>
+        <tr><td><code>117</code></td><td><code>GETCHAR</code></td><td><code>PUSH _GETCHAR</code><br><code>SYS</code></td><td>Reads one input character and puts its code (0 to 255) in <code>AL</code>. <code>AH</code> does not change. If the input is empty, the program waits: type the characters in the terminal and press <kbd>Enter</kbd>. <kbd>Enter</kbd> does not send the newline character.</td></tr>
+        <tr><td><code>127</code></td><td><code>PRINTF</code></td><td><code>PUSH value</code><br><code>PUSH format</code><br><code>PUSH _PRINTF</code><br><code>SYS</code></td><td>Prints the <code>format</code> string with a single value. Use <code>%d</code>, <code>%x</code>, <code>%o</code> or <code>%c</code>, only once: two specifiers cause an error. The value is an unsigned word: -1 becomes 65535. The string must end with <code>\0</code> (at most 256 bytes).</td></tr>
         </tbody>
     </table>
 
-    <h2 id="direttive">Direttive</h2>
+    <h2 id="operandi">Operands</h2>
     <table>
-        <thead><tr><th>Direttiva</th><th>Esempio</th><th>Descrizione</th></tr></thead>
+        <thead><tr><th>Type</th><th>Description</th></tr></thead>
         <tbody>
-        <tr><td><code>=</code></td><td><code>_EXIT = 1</code></td><td>Definisce una costante.</td></tr>
-        <tr><td><code>.SECT</code></td><td><code>.SECT .TEXT</code></td><td>Comincia la sezione <code>.TEXT</code>, <code>.DATA</code> o <code>.BSS</code>.</td></tr>
-        <tr><td><code>.ASCII</code></td><td><code>msg: .ASCII "Ciao\n\0"</code></td><td>In <code>.DATA</code>: scrive i caratteri della stringa, un byte per carattere. Le sequenze valide sono <code>\0</code>, <code>\n</code>, <code>\t</code>, <code>\r</code> e <code>\\</code>. La stringa non riceve uno <code>\0</code> automatico.</td></tr>
-        <tr><td><code>.BYTE</code></td><td><code>v: .BYTE 1, 0x2, 03</code></td><td>In <code>.DATA</code>: scrive uno o più byte.</td></tr>
-        <tr><td><code>.SPACE</code></td><td><code>buf: .SPACE 10</code></td><td>In <code>.BSS</code> o in <code>.DATA</code>: riserva <code>n</code> byte a zero.</td></tr>
-        </tbody>
-    </table>
-    <p>Ogni riga di <code>.DATA</code> e di <code>.BSS</code> deve avere la sua etichetta: l'interprete ignora una riga senza etichetta. <code>.DATA</code> comincia all'indirizzo <code>0x1000</code> e <code>.BSS</code> all'indirizzo <code>0x2000</code>. Nel contesto MEMORY ogni cella è un byte di queste sezioni che non vale zero. I byte di un'etichetta sono in un gruppo con il nome e l'indirizzo dell'etichetta, per esempio <code>msg (0x1000)</code>, e ogni cella ha il nome del suo offset: <code>msg+0</code>, <code>msg+1</code>. Un byte fuori da ogni etichetta ha come nome il suo indirizzo.</p>
-
-    <h2 id="flag">Flag</h2>
-    <table>
-        <thead><tr><th>Flag</th><th>Nome</th><th>Vale 1 quando</th></tr></thead>
-        <tbody>
-        <tr><td><code>ZF</code></td><td>Zero</td><td>Il risultato è zero.</td></tr>
-        <tr><td><code>SF</code></td><td>Sign</td><td>Il bit più alto del risultato è 1 (risultato negativo).</td></tr>
-        <tr><td><code>CF</code></td><td>Carry</td><td>L'operazione ha un riporto o un prestito (senza segno).</td></tr>
-        <tr><td><code>OF</code></td><td>Overflow</td><td>Il risultato con segno non entra nel registro.</td></tr>
-        <tr><td><code>PF</code></td><td>Parity</td><td>Il byte basso del risultato ha un numero pari di bit a 1.</td></tr>
+        <tr><td>16-bit registers</td><td><code>AX</code>, <code>BX</code>, <code>CX</code>, <code>DX</code>, <code>SI</code>, <code>DI</code>, <code>BP</code>, <code>SP</code>.</td></tr>
+        <tr><td>8-bit registers</td><td><code>AL</code>, <code>AH</code>, <code>BL</code>, <code>BH</code>, <code>CL</code>, <code>CH</code>, <code>DL</code>, <code>DH</code>. Instructions ending in <code>B</code> (<code>MOVB</code>, <code>ADDB</code>, ...) accept only these registers.</td></tr>
+        <tr><td>Segment registers</td><td><code>CS</code>, <code>DS</code>, <code>ES</code>, <code>SS</code>. All are 0 at the start. <code>CS</code> is read-only.</td></tr>
+        <tr><td>Immediates</td><td>Decimal (<code>27</code>, <code>-1</code>), hexadecimal (<code>0x1B</code>) and octal with a leading zero, as in C (<code>033</code> equals 27). <code>09</code> is decimal. Characters such as <code>'A'</code> are not supported: use the code (<code>65</code>).</td></tr>
+        <tr><td>Labels and constants</td><td><code>loop</code>, <code>msg</code>, <code>_EXIT</code>. <code>label+n</code>, <code>label-n</code> and <code>label1-label2</code> are also valid.</td></tr>
+        <tr><td>Memory</td><td><code>[BX]</code>, <code>[SI]</code>, <code>[BP+4]</code>, <code>[BP-2]</code>, <code>[label]</code>, <code>[label+2]</code>, <code>[label-1]</code>, <code>[label+BX]</code>, <code>[BX+SI+2]</code>. The <code>(BX)</code> form is also valid. With <code>BP</code> the address is in the stack segment. The access size is one byte with instructions ending in <code>B</code> or with an 8-bit register (<code>MOV [x], AL</code>), otherwise one word.</td></tr>
         </tbody>
     </table>
 
-    <h2 id="limiti">Differenze dall'8088 reale</h2>
+    <h2 id="direttive">Directives</h2>
+    <table>
+        <thead><tr><th>Directive</th><th>Example</th><th>Description</th></tr></thead>
+        <tbody>
+        <tr><td><code>=</code></td><td><code>_EXIT = 1</code></td><td>Defines a constant.</td></tr>
+        <tr><td><code>.SECT</code></td><td><code>.SECT .TEXT</code></td><td>Starts the <code>.TEXT</code>, <code>.DATA</code> or <code>.BSS</code> section.</td></tr>
+        <tr><td><code>.ASCII</code></td><td><code>msg: .ASCII "Hello\n\0"</code></td><td>In <code>.DATA</code>: writes the characters of the string, one byte per character. The valid sequences are <code>\0</code>, <code>\n</code>, <code>\t</code>, <code>\r</code> and <code>\\</code>. The string does not get an automatic <code>\0</code>.</td></tr>
+        <tr><td><code>.BYTE</code></td><td><code>v: .BYTE 1, 0x2, 03</code></td><td>In <code>.DATA</code>: writes one or more bytes.</td></tr>
+        <tr><td><code>.SPACE</code></td><td><code>buf: .SPACE 10</code></td><td>In <code>.BSS</code> or in <code>.DATA</code>: reserves <code>n</code> zeroed bytes.</td></tr>
+        </tbody>
+    </table>
+    <p>Every line in <code>.DATA</code> and <code>.BSS</code> must have its own label: the interpreter ignores a line without a label. <code>.DATA</code> starts at address <code>0x1000</code> and <code>.BSS</code> at address <code>0x2000</code>. In the MEMORY context each cell is a non-zero byte of these sections. The bytes of a label are in a group with the label's name and address, for example <code>msg (0x1000)</code>, and each cell is named after its offset: <code>msg+0</code>, <code>msg+1</code>. A byte outside any label is named after its address.</p>
+
+    <h2 id="flag">Flags</h2>
+    <table>
+        <thead><tr><th>Flag</th><th>Name</th><th>Is 1 when</th></tr></thead>
+        <tbody>
+        <tr><td><code>ZF</code></td><td>Zero</td><td>The result is zero.</td></tr>
+        <tr><td><code>SF</code></td><td>Sign</td><td>The highest bit of the result is 1 (negative result).</td></tr>
+        <tr><td><code>CF</code></td><td>Carry</td><td>The operation has a carry or a borrow (unsigned).</td></tr>
+        <tr><td><code>OF</code></td><td>Overflow</td><td>The signed result does not fit in the register.</td></tr>
+        <tr><td><code>PF</code></td><td>Parity</td><td>The low byte of the result has an even number of 1 bits.</td></tr>
+        </tbody>
+    </table>
+
+    <h2 id="limiti">Differences from the real 8088</h2>
     <div class="note warning">
-        <div class="note-title">Comportamenti dell'interprete da conoscere</div>
+        <div class="note-title">Interpreter behaviors to be aware of</div>
         <ul>
-            <li><code>MUL</code> calcola sempre <code>AX = AL * src</code>, anche con un operando a 16 bit. L'8088 reale calcola <code>DX:AX = AX * src</code>.</li>
-            <li><code>DIV</code> divide sempre <code>AX</code> e mette il quoziente in <code>AL</code>. L'8088 reale, con un divisore a 16 bit, divide <code>DX:AX</code> e mette il quoziente in <code>AX</code>.</li>
-            <li><code>MUL</code> e <code>MULB</code> impostano i flag dal byte basso del risultato. L'8088 reale mette <code>CF = OF = 1</code> quando la metà alta del risultato non è zero.</li>
+            <li><code>MUL</code> always computes <code>AX = AL * src</code>, even with a 16-bit operand. The real 8088 computes <code>DX:AX = AX * src</code>.</li>
+            <li><code>DIV</code> always divides <code>AX</code> and puts the quotient in <code>AL</code>. The real 8088, with a 16-bit divisor, divides <code>DX:AX</code> and puts the quotient in <code>AX</code>.</li>
+            <li><code>MUL</code> and <code>MULB</code> set the flags from the low byte of the result. The real 8088 sets <code>CF = OF = 1</code> when the high half of the result is not zero.</li>
         </ul>
     </div>
 
-    <h2>Documentazione</h2>
-    <p>La <a href="https://github.com/atom7xyz/antlr-impl/blob/master/src/main/resources/LaTeX/antlr-impl.pdf">documentazione dell'interprete</a> descrive le istruzioni supportate di IJVM e di 8088.</p>
+    <h2>Documentation</h2>
+    <p>The <a href="https://github.com/atom7xyz/antlr-impl/blob/master/src/main/resources/LaTeX/antlr-impl.pdf">interpreter documentation</a> describes the supported IJVM and 8088 instructions.</p>
 </main>
 </body>
 </html>
