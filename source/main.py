@@ -1,3 +1,4 @@
+import ctypes
 import faulthandler
 import os
 import sys
@@ -9,6 +10,7 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 from PyQt5.QtCore import QStandardPaths, QTimer
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QDesktopWidget
 
 from source.comms.events import ClosingEvent
@@ -17,7 +19,7 @@ from source.filesystem import find_path
 from source.interface import MainWindow, Settings
 from source.interface.assets import add_fonts, translateQSS
 from source.interface.modals import warmUpWebEngine
-from source.platform import Desktop, isLinux
+from source.platform import Desktop, isLinux, isWindows
 
 
 def _redirect_stderr() -> None:
@@ -32,7 +34,8 @@ def _redirect_stderr() -> None:
             if not folder:
                 continue
             os.makedirs(folder, exist_ok=True)
-            sys.stderr = open(os.path.join(folder, 'error.log'), 'w')
+            # Line buffered: a fatal Qt error aborts the process without flushing, and the traceback must stay.
+            sys.stderr = open(os.path.join(folder, 'error.log'), 'w', buffering=1, encoding='utf-8')
             return
         except OSError:
             continue
@@ -59,7 +62,12 @@ if __name__ == "__main__":
         if "gnome" in desktops:
             os.environ.setdefault("QT_QPA_PLATFORM", "wayland;xcb")
 
+    if isWindows():
+        # Its own taskbar identity, so that Windows shows the window icon and not the one of python.exe.
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("AssemblyStdio.AssemblyStdio")
+
     app = QApplication(sys.argv)
+    app.setWindowIcon(QIcon(find_path("Logo.svg")))
     app.aboutToQuit.connect(lambda: EventRegister.send(ClosingEvent(), "Main"))
     with open(find_path("style.qss"), "r") as f:
         app.setStyleSheet(translateQSS(f.read()))

@@ -59,9 +59,10 @@ jobs:
         run: |
           $jpypeJar = python -c "import jpype, os; print(os.path.join(os.path.dirname(os.path.dirname(jpype.__file__)), 'org.jpype.jar'))"
           if (-not (Test-Path $jpypeJar)) { throw "org.jpype.jar not found at $jpypeJar" }
-          # Modules used by the interpreter and by JPype's own JAR. jdk.unsupported covers sun.misc.Unsafe.
+          # Modules used by the interpreter and by JPype's own JAR. jdeps does not see the modules loaded by name:
+          # jdk.zipfs is the jar file system of JPype's package import, jdk.unsupported covers sun.misc.Unsafe.
           $modules = (jdeps --ignore-missing-deps --multi-release $env:JAVA_VERSION --print-module-deps $env:JAR $jpypeJar).Trim()
-          $modules = "$modules,jdk.unsupported"
+          $modules = "$modules,jdk.unsupported,jdk.zipfs"
           Write-Host "Java modules: $modules"
           jlink --add-modules $modules --strip-debug --no-man-pages --no-header-files --compress=zip-6 --output build/runtime
           build/runtime/bin/java.exe --list-modules
