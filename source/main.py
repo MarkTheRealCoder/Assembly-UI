@@ -1,13 +1,14 @@
 import faulthandler
 import os
 import sys
+import tempfile
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QStandardPaths, QTimer
 from PyQt5.QtWidgets import QApplication, QDesktopWidget
 
 from source.comms.events import ClosingEvent
@@ -18,18 +19,38 @@ from source.interface.assets import add_fonts, translateQSS
 from source.interface.modals import warmUpWebEngine
 from source.platform import Desktop, isLinux
 
-if __name__ == "__main__":
-    if getattr(sys, 'frozen', False):
-        # A frozen executable has no console, so stderr goes to a file.
-        log_path = os.path.join(os.path.dirname(sys.executable), 'error.log')
-        sys.stderr = open(log_path, 'w')
 
-    faulthandler.enable()
+def _redirect_stderr() -> None:
+    """Send stderr to error.log in the user data folder, or the temp folder if that fails."""
+    candidates = (
+        lambda: QStandardPaths.writableLocation(QStandardPaths.AppDataLocation),
+        tempfile.gettempdir,
+    )
+    for location in candidates:
+        try:
+            folder = location()
+            if not folder:
+                continue
+            os.makedirs(folder, exist_ok=True)
+            sys.stderr = open(os.path.join(folder, 'error.log'), 'w')
+            return
+        except OSError:
+            continue
+
+
+if __name__ == "__main__":
+    # The names decide the user data folder, so set them before the redirect.
     QApplication.setApplicationName("Assembly Stdio")
     QApplication.setApplicationDisplayName("Assembly Stdio")
     QApplication.setApplicationVersion("1.0")
     QApplication.setOrganizationName("Assembly Stdio")
     QApplication.setOrganizationDomain("assemblystdio.dev")
+
+    if getattr(sys, 'frozen', False):
+        # A frozen executable has no console, so stderr goes to a file.
+        _redirect_stderr()
+
+    faulthandler.enable()
     QApplication.setQuitOnLastWindowClosed(True)
 
     # Use native Wayland to receive GNOME's window tiling events.
