@@ -1,11 +1,13 @@
 import faulthandler
 import os
 import subprocess
+import sys
 from typing import NamedTuple, Optional
 
 import jpype
 
 from source.filesystem import find_path
+from source.filesystem.Folder import app_root
 from source.filesystem.documents import Document, FT
 from source.interface import Settings
 from source.platform import isWindows
@@ -47,7 +49,9 @@ class _JavaInterpreterInterface:
         try:
             result = subprocess.run(
                 ["java", "-XshowSettings:properties", "-version"],
-                capture_output=True, text=True, timeout=10
+                capture_output=True, text=True, timeout=10,
+                # A packaged app has no console, so the command must not open one.
+                creationflags=subprocess.CREATE_NO_WINDOW if isWindows() else 0
             )
         except (OSError, subprocess.SubprocessError):
             return None
@@ -58,9 +62,34 @@ class _JavaInterpreterInterface:
         return None
 
     @staticmethod
+    def ___bundled_java_home() -> Optional[str]:
+        """
+        Returns the Java runtime shipped with the application, in a folder named runtime.
+        A packaged app keeps it next to the executable. A source checkout can keep one in the project folder.
+        """
+        bases = [app_root()]
+        if getattr(sys, "frozen", False):
+            bases.insert(0, os.path.dirname(sys.executable))
+        for base in bases:
+            home = os.path.join(base, "runtime")
+            if os.path.isdir(home):
+                return home
+        return None
+
+    @staticmethod
     def ___find_jvm() -> str:
-        """ Finds the JVM library. JPype alone can return a directory on macOS. """
-        for home in (os.environ.get("JAVA_HOME"), _JavaInterpreterInterface.___java_home()):
+        """
+        Finds the JVM library. The bundled runtime comes first, then JAVA_HOME, then the java command on PATH.
+        JPype alone can return a directory on macOS.
+        """
+        bundled = _JavaInterpreterInterface.___bundled_java_home()
+        if bundled and isWindows():
+            # jvm.dll loads the other DLLs of the runtime from its bin folder, which Windows searches only on PATH.
+            os.environ["PATH"] = os.path.join(bundled, "bin") + os.pathsep + os.environ.get("PATH", "")
+        # The java command runs only if the other locations have no JVM.
+        homes = (lambda: bundled, lambda: os.environ.get("JAVA_HOME"), _JavaInterpreterInterface.___java_home)
+        for find_home in homes:
+            home = find_home()
             if not home:
                 continue
             for library in _JavaInterpreterInterface.___JVM_LIBRARIES:
@@ -70,7 +99,7 @@ class _JavaInterpreterInterface:
         try:
             return jpype.getDefaultJVMPath()
         except jpype.JVMNotFoundException as error:
-            raise FileNotFoundError("Java runtime not found. Install a JDK or set JAVA_HOME.") from error
+            raise FileNotFoundError("Java runtime not found. Reinstall the application, install a JDK or set JAVA_HOME.") from error
 
     @staticmethod
     def ___jvm_arguments(jvm_path: str) -> list[str]:

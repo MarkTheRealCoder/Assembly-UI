@@ -1,0 +1,108 @@
+name: Build Windows
+
+# Test build of the Windows folder package. It runs from the Actions tab (Run workflow)
+# and at each push to the branch below.
+on:
+  workflow_dispatch:
+  push:
+    branches: [ci/windows-build]
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.11"
+  JAVA_VERSION: "21"
+  JAR: resources/antlr_lexers/interpreter.jar
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      # Full JDK: jdeps and jlink make the reduced runtime that ships with the app.
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Install the app dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Before the build tools, so the list holds only the packages that ship with the app.
+      - name: Collect the licenses of the Python packages
+        run: |
+          pip install pip-licenses
+          New-Item -ItemType Directory -Force build/licenses | Out-Null
+          pip-licenses --with-license-file --no-license-path --format=plain-vertical `
+            --ignore-packages pip-licenses prettytable wcwidth pip setuptools wheel `
+            --output-file build/licenses/python-packages.txt
+
+      - name: Install the build tools
+        run: pip install "pyinstaller==6.*" pillow
+
+      - name: Make the Java runtime with jlink
+        run: |
+          $jpypeJar = python -c "import jpype, os; print(os.path.join(os.path.dirname(os.path.dirname(jpype.__file__)), 'org.jpype.jar'))"
+          if (-not (Test-Path $jpypeJar)) { throw "org.jpype.jar not found at $jpypeJar" }
+          # Modules used by the interpreter and by JPype's own JAR. jdk.unsupported covers sun.misc.Unsafe.
+          $modules = (jdeps --ignore-missing-deps --multi-release $env:JAVA_VERSION --print-module-deps $env:JAR $jpypeJar).Trim()
+          $modules = "$modules,jdk.unsupported"
+          Write-Host "Java modules: $modules"
+          jlink --add-modules $modules --strip-debug --no-man-pages --no-header-files --compress=zip-6 --output build/runtime
+          build/runtime/bin/java.exe --list-modules
+
+      # Starts the reduced runtime through JPype and runs a small IJVM program.
+      - name: Check the Java runtime
+        run: python packaging/check_runtime.py build/runtime $env:JAR
+
+      - name: Make the icon
+        run: python packaging/make_icon.py build/AssemblyStdio.ico
+
+      - name: Build with PyInstaller
+        run: pyinstaller --noconfirm --clean packaging/AssemblyStdio.spec
+
+      - name: Add the runtime and the licenses
+        run: |
+          $app = "dist/AssemblyStdio"
+          Copy-Item -Recurse build/runtime "$app/runtime"
+          $licenses = New-Item -ItemType Directory -Force "$app/licenses"
+          Copy-Item packaging/licenses/* $licenses
+          Copy-Item build/licenses/python-packages.txt $licenses
+          Copy-Item LICENSE "$licenses/AssemblyStdio-LICENSE.txt"
+          Copy-Item resources/fonts/JetBrainsMono/OFL.txt "$licenses/JetBrainsMono-OFL.txt"
+          $size = (Get-ChildItem -Recurse $app | Measure-Object -Sum Length).Sum / 1MB
+          Write-Host ("Package size: {0:N0} MB" -f $size)
+
+      # The app has no console: if it closes within 20 seconds, the job shows its error.log.
+      - name: Start the app
+        run: |
+          $process = Start-Process -FilePath dist/AssemblyStdio/AssemblyStdio.exe -PassThru
+          Start-Sleep -Seconds 20
+          $logs = Get-ChildItem -Recurse -Filter error.log "$env:APPDATA/Assembly Stdio" -ErrorAction SilentlyContinue
+          foreach ($log in $logs) { Write-Host "== $($log.FullName)"; Get-Content $log.FullName }
+          if ($process.HasExited) { throw "The app closed after start, with exit code $($process.ExitCode)" }
+          Stop-Process -Id $process.Id -Force
+          Write-Host "The app was still running after 20 seconds"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AssemblyStdio-windows-x64
+          # The downloaded ZIP holds the AssemblyStdio folder.
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14

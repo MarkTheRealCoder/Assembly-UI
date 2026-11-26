@@ -1,0 +1,41 @@
+Assembly Stdio - third-party notices
+====================================
+
+Assembly Stdio (Assembly-UI) is distributed under the MIT License, in
+AssemblyStdio-LICENSE.txt. The package also contains the components below,
+each under its own license.
+
+Interpreter (interpreter.jar)
+-----------------------------
+antlr-impl, the IJVM and Intel 8088 interpreter.
+License: GNU General Public License v3.0, in GPL-3.0.txt.
+Source code: https://github.com/atom7xyz/antlr-impl
+
+The JAR includes the ANTLR 4 runtime.
+License: BSD 3-Clause, in ANTLR4-BSD-3-Clause.txt.
+Source code: https://github.com/antlr/antlr4
+
+Java runtime (runtime/)
+-----------------------
+A reduced Eclipse Temurin (OpenJDK) runtime, made with jlink.
+License: GNU General Public License v2.0 with the Classpath Exception.
+The license texts of each module are in runtime/legal/.
+Source code: https://github.com/adoptium/jdk21u
+
+Qt and PyQt5
+------------
+PyQt5, PyQtWebEngine and QScintilla are distributed under the GNU General
+Public License v3.0, in GPL-3.0.txt. Because the application links them, the
+package as a whole is distributed under the terms of the GPL v3.0.
+Qt 5 is distributed under the GNU Lesser General Public License v3.0.
+Source code: https://riverbankcomputing.com/software/pyqt/
+             https://download.qt.io/archive/qt/5.15/
+
+The license texts of all the Python packages in the build, including
+PyQt5, Qt, JPype, psutil, regex, pywin32 and pyqt-toast-notification, are in
+python-packages.txt.
+
+Fonts
+-----
+JetBrains Mono: SIL Open Font License 1.1, in JetBrainsMono-OFL.txt.
+Source: https://github.com/JetBrains/JetBrainsMono
