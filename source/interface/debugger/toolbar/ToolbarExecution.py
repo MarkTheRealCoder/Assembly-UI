@@ -1,14 +1,20 @@
+from typing import TYPE_CHECKING
+
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import QHBoxLayout, QSizePolicy, QFrame
 
-from source.interface.debugger import ExecutionContext
+from source.interface import createLayout
+from source.interface.debugger.toolbar.MemoryInfoButton import MemoryInfoButton
 from source.interface.debugger.toolbar.NumberBasePicker import NumberBasePicker
 from source.interface.debugger.toolbar.RunButton import RunButton
 from source.interface.debugger.toolbar.StepButton import StepButton
 from source.interface.debugger.toolbar.StopButton import StopButton
 from source.interface.debugger.toolbar.TimedExecutionButton import TimedExecutionButton
 from source.interface.debugger.toolbar.TimedExecutionTickPicker import TimedExecutionTickPicker
-from source.interface.shared import createLayout
+
+if TYPE_CHECKING:
+    # Only for the annotations: ExecutionContext imports this toolbar, so the package does not hold it yet.
+    from source.interface.debugger import ExecutionContext
 
 
 class ToolbarGraphics(QFrame):
@@ -36,6 +42,7 @@ class ToolbarGraphics(QFrame):
         self._timedisplay_tick: TimedExecutionTickPicker = TimedExecutionTickPicker(self)
         self._start_timedisplay_button: TimedExecutionButton = TimedExecutionButton(self)
         self._number_base_picker: NumberBasePicker = NumberBasePicker(self)
+        self._memory_info_button: MemoryInfoButton = MemoryInfoButton(self)
 
         self._timedisplay_tick.currentIndexChanged.connect(lambda: self._start_timedisplay_button.update_interval(self._timedisplay_tick.currentData()))
 
@@ -57,6 +64,7 @@ class ToolbarGraphics(QFrame):
         layout.addWidget(self._timedisplay_tick, 1)
         layout.addWidget(self._start_timedisplay_button)
         layout.addStretch(1)
+        layout.addWidget(self._memory_info_button)
         layout.addWidget(self._number_base_picker)
         self.setLayout(layout)
 

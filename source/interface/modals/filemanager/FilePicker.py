@@ -2,9 +2,9 @@ from PyQt5.QtWidgets import QFrame, QSizePolicy, QVBoxLayout
 
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
-from source.interface.modals.ModalWindow import modalOpen
+from source.interface import createLayout, Settings
+from source.interface.modals import modalOpen
 from source.interface.modals.filemanager.paths import PathTree
-from source.interface.shared import createLayout, Settings
 from source.interface.templates import toast_safe_exec
 
 

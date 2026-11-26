@@ -6,9 +6,8 @@ from typing import NamedTuple, Optional
 import jpype
 
 from source.filesystem import find_path
-from source.filesystem.documents import Document
-from source.filesystem.documents.FileTypes import FT
-from source.interface.shared import Settings
+from source.filesystem.documents import Document, FT
+from source.interface import Settings
 from source.platform import isWindows
 
 
@@ -96,7 +95,10 @@ class _JavaInterpreterInterface:
         if _JavaInterpreterInterface.___SESSION is not None:
             return _JavaInterpreterInterface.___SESSION
 
-        jar = Settings.get("editor/interpreter", _type=str) or find_path("interpreter.jar")
+        jar = Settings.get("editor/interpreter", _type=str)
+        if not jar or not os.path.isfile(jar):
+            # A JAR set in the settings that no longer exists falls back to the bundled one.
+            jar = find_path("interpreter.jar")
         if not jar or not os.path.isfile(jar):
             raise FileNotFoundError("Interpreter JAR not found.")
 

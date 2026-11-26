@@ -56,7 +56,7 @@ class BaseWindow(QWidget):
                               win32con.SWP_NOSIZE | win32con.SWP_FRAMECHANGED)
 
     def _setMaxButtonHover(self, hovered: bool):
-        from source.interface.titlebar.Maximize import MaximizeButton
+        from source.interface.titlebar import MaximizeButton
         btn = self.findChild(MaximizeButton)
         if btn and btn.underMouse() != hovered:
             btn.setAttribute(Qt.WA_UnderMouse, hovered)
@@ -112,7 +112,7 @@ class BaseWindow(QWidget):
             elif msg.message == win32con.WM_NCLBUTTONDOWN:
                 if msg.wParam == win32con.HTMAXBUTTON and self._mouse_on_max_btn:
                     # Intercettiamo il click PRIMA che Windows provi a disegnare il quadratino rosa nativo
-                    from source.interface.titlebar.Maximize import MaximizeButton
+                    from source.interface.titlebar import MaximizeButton
                     btn = self.findChild(MaximizeButton)
                     if btn:
                         btn.on_press()

@@ -1,10 +1,15 @@
+from typing import TYPE_CHECKING
+
 from PyQt5.QtWidgets import QFrame, QSizePolicy, QHBoxLayout, QSpacerItem
 
-from source.interface.debugger import ExecutionContext
+from source.interface import createLayout
 from source.interface.debugger.toolbar.ClearButton import ClearButton
 from source.interface.debugger.toolbar.FindButton import FindButton
 from source.interface.debugger.toolbar.ScrollButton import ScrollButton
-from source.interface.shared import createLayout
+
+if TYPE_CHECKING:
+    # Only for the annotations: ExecutionContext imports this toolbar, so the package does not hold it yet.
+    from source.interface.debugger import ExecutionContext
 
 
 class ToolbarGraphics(QFrame):
@@ -31,7 +36,7 @@ class ToolbarGraphics(QFrame):
         layout.addWidget(self._clear_button)
         layout.addSpacerItem(QSpacerItem(20, 20, QSizePolicy.Minimum, QSizePolicy.Minimum))
         layout.addWidget(self._find_button)
-        layout.addSpacerItem(QSpacerItem(80, 20, QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
+        layout.addSpacerItem(QSpacerItem(0, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
         self.setLayout(layout)
 
 

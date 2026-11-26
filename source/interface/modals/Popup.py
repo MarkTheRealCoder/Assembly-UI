@@ -1,8 +1,8 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDialog, QHBoxLayout, QLabel, QPushButton, QVBoxLayout
 
+from source.interface import createLayout
 from source.interface.modals.Dialog import Title
-from source.interface.shared import createLayout
 from source.platform import isMac
 
 

@@ -38,6 +38,11 @@ class _MemoryChunk(QFrame):
         animation.finished.connect(self.___clear_effect)
         animation.start()
 
+    def ___white_flash(self):
+        animation = self.___flash(Qt.white, 800, 0.0, QEasingCurve.OutCubic)
+        animation.finished.connect(self.___clear_effect)
+        animation.start()
+
     def ___blue_flash(self):
         animation = self.___flash(Qt.blue, 2000, 0.0, QEasingCurve.OutCubic)
         animation.finished.connect(self.___clear_effect)
@@ -57,6 +62,10 @@ class _MemoryChunk(QFrame):
 
     def updated(self):
         self.___blue_flash()
+
+    def highlighted(self):
+        """ Short white flash, for example after the user copied the chunk """
+        self.___white_flash()
 
     def rm(self):
         """ Starts the removal animation. Qt removes the widget from its layout when it is deleted. """

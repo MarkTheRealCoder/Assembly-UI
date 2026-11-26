@@ -5,8 +5,8 @@ from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
 from source.filesystem import resolve_app_path
 from source.filesystem.documents import Document, FT
+from source.interface import Settings
 from source.interface.modals.filemanager.complex import FileDialog
-from source.interface.shared import Settings
 from source.interface.templates import create_toast
 
 

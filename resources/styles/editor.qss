@@ -36,8 +36,8 @@ QsciScintilla#Editor {
     color: var(---generic-text-color);
     selection-background-color: var(---generic-highlight-background-color);
     selection-color: var(---generic-text-color);
-    font-family: "Monospace";
-    font-size: 12pt;
+    font-family: "JetBrains Mono";
+    font-size: 11pt;
     border: none;
     margin: 0px;
     padding: 0px;
@@ -77,8 +77,8 @@ QListWidget {
     color: #CCCCCC;
     border: 1px solid #007ACC;
     border-radius: 4px;
-    font-family: "Bahnschrift";
-    font-size: 12pt;
+    font-family: "JetBrains Mono";
+    font-size: 11pt;
     selection-background-color: #2D2D30;
     selection-color: #FFFFFF;
 }
@@ -93,4 +93,10 @@ QListWidget::item:selected {
 }
 QListWidget::item:hover {
     background-color: #2D2D30;
+}
+QToolTip {
+    background-color: var(---generic-light-background-color);
+    color: var(---generic-text-color);
+    border: 1px solid var(---generic-highlight-background-color);
+    padding: 4px;
 }

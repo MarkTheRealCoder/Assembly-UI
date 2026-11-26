@@ -9,12 +9,11 @@ from source.asyncro import Scheduler
 from source.comms import Database
 from source.comms.events import ClosingEvent, NoTabEvent, ReadyEvent, RunEvent, TabAddedEvent, FindShortcutEvent
 from source.comms.handlers import EventRegister
-from source.filesystem.documents import Document
-from source.filesystem.documents import Watcher
+from source.filesystem.documents import Document, Watcher
+from source.interface import createLayout, Settings
 from source.interface.editor.Editor import Editor
 from source.interface.editor.EditorFrame import EditorFrame
 from source.interface.editor.me_system import TabManager, Tab
-from source.interface.shared import createLayout, Settings
 from source.interface.templates import FindWidget
 
 
@@ -60,6 +59,7 @@ class EditorWrapperLogic(EditorWrapperGraphics):
         Settings.addNotificationGroup("editor/current", self.openDocument)
         Database.ON_FILE_REPLACED.connect(self.reloadReplacedFile)
         Database.ON_EXECUTION_LINE.connect(self.showExecutionLine)
+        Database.ON_DIAGNOSTICS.connect(self.showDiagnostics)
         Database.ON_TAB_CLOSE.connect(self.closeTab)
         Database.ON_TAB_SELECTED.connect(self.setCurrentFile)
         Database.ON_TAB_SELECTED.connect(self.getFromDisk)
@@ -73,22 +73,33 @@ class EditorWrapperLogic(EditorWrapperGraphics):
         else:
             Settings.remove("editor/current")
 
-    def openDocument(self, file: str = None):
-        """ Open a file in a new tab, or select its tab if it is already open """
+    def openDocument(self, file: str = None) -> bool:
+        """
+        Open a file in a new tab, or select its tab if it is already open.
+        Return False, leaving the tabs as they are, if the file does not exist or cannot be read.
+        """
         path = Settings.get("editor/current", None) if file is None else file
 
         for docHash, document in self._documents.items():
             if document.getPath() == path:
                 if Database.ON_TAB_SELECTED.getValue() != docHash:
                     self._tab_manager.setActiveTab(docHash)
-                return
+                return True
 
-        doc = Document(path)
+        try:
+            doc = Document(path)
+        except (OSError, TypeError, UnicodeError) as error:
+            logging.getLogger(__name__).warning("Could not open %s: %s", path, error)
+            if file is None:
+                # The current file of the settings is unreadable: point it back to the selected tab.
+                self.setCurrentFile()
+            return False
         docHash = hash(doc)
         self._documents[docHash] = doc
 
         self.setupNewDocument(doc, docHash)
         self.initializeSchedulers(docHash)
+        return True
 
     def showExecutionLine(self):
         """
@@ -105,6 +116,15 @@ class EditorWrapperLogic(EditorWrapperGraphics):
                 editor.setExecutionLine(line, follow=docHash == selected)
             else:
                 editor.setExecutionLine(-1)
+
+    def showDiagnostics(self):
+        """ Underline in the editor of its file the errors reported by the last run of the program """
+        path, diagnostics = Database.ON_DIAGNOSTICS.getValue()
+        selected = Database.ON_TAB_SELECTED.getValue()
+        for docHash, document in self._documents.items():
+            editor = self._frame.getEditor(docHash)
+            if editor is not None and document.getPath() == path:
+                editor.setDiagnostics(diagnostics, follow=docHash == selected)
 
     def reloadReplacedFile(self, path: str):
         """ Reload the open tabs of a file that was replaced on disk """
@@ -249,11 +269,22 @@ class EditorWrapper(EditorWrapperLogic):
         e.accept()
 
     def onReadyEvent(self, event):
-        """ Reopen the files stored at the last closing """
-        files = Settings.get("editor/files", [], list)
-        if files:
-            for f in files:
-                self.openDocument(f)
+        """
+        Reopen the files stored at the last closing and select the current one.
+        Files that no longer exist are skipped: the selection falls back to the first file reopened, and to the empty
+        editor when none of them exists.
+        """
+        current = Settings.get("editor/current", None)
+        files = [f for f in Settings.get("editor/files", [], list) if isinstance(f, str) and f]
+        if current and current not in files:
+            files.append(current)
+        opened = [f for f in files if self.openDocument(f)]
+        if current in opened:
+            self.openDocument(current)
+        elif opened:
+            self.openDocument(opened[0])
+        else:
+            self.reset_variables()
         event.accept()
 
     def eventFilter(self, obj, e: QEvent):

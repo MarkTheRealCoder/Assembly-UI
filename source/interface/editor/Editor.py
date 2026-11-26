@@ -1,15 +1,18 @@
 from PyQt5.Qsci import QsciScintilla, QsciCommandSet, QsciCommand
-from PyQt5.QtCore import Qt
+import re
+
+from PyQt5.QtCore import Qt, QPoint, QTimer
 from PyQt5.QtGui import QColor, QFont, QKeySequence
-from PyQt5.QtWidgets import QWidget, QSizePolicy
+from PyQt5.QtWidgets import QWidget, QSizePolicy, QToolTip
 
 from source.comms import Database
-from source.comms.events.FindShortcut import FindShortcutEvent
+from source.comms.events import FindShortcutEvent
 from source.comms.handlers import EventRegister
 from source.filesystem import find_path
-from source.interface.assets import translateQSS
+from source.interface import handleZoomEvent
+from source.interface.assets import translateQSS, editorFont
 from source.interface.editor.lexers import LexerFactory
-from source.interface.shared import handleZoomEvent
+from source.interpreter import Diagnostic
 
 
 class EditorGraphics(QsciScintilla):
@@ -43,7 +46,7 @@ class EditorGraphics(QsciScintilla):
         self.setMarginWidth(0, self.fontMetrics().width('00000'))
         self.setMarginOptions(QsciScintilla.TextMarginRightJustified)
         self.setMarginSensitivity(0, True)
-        self.setMarginsFont(QFont("Monospace", 8))
+        self.setMarginsFont(editorFont(9))
         self.setMarginsBackgroundColor(QColor("#2D2D30"))
         self.setMarginsForegroundColor(QColor("#569CD6"))
 
@@ -62,8 +65,17 @@ class EditorLogic(EditorGraphics):
 
     SEARCH_INDICATOR = 10
     CURRENT_MATCH_INDICATOR = 11
+    ERROR_INDICATOR = 12
+    WARNING_INDICATOR = 13
     EXECUTION_MARKER = 20
     EXECUTION_ARROW_MARKER = 21
+    ERROR_MARKER = 22
+    WARNING_MARKER = 23
+    ERROR_LINE_MARKER = 24
+
+    ___DWELL_MS = 400
+    ___COMPLETION_DELAY_MS = 400
+    ___WORD = re.compile(r"[A-Za-z0-9_.\-]+")
 
     def __init__(self, mwt: QWidget, ext: str):
         super().__init__(mwt, ext)
@@ -75,6 +87,8 @@ class EditorLogic(EditorGraphics):
 
         self._setupSearchIndicator()
         self._setupExecutionMarker()
+        self._setupDiagnostics()
+        self._setupCompletion()
         self._search_matches = []
         self._current_match_index = -1
 
@@ -89,6 +103,8 @@ class EditorLogic(EditorGraphics):
         """Setup the lexer matching the file extension"""
         lexer = LexerFactory.createLexer(self, ext)
         self.setLexer(lexer)
+        if hasattr(self, "_completion_timer"):
+            self._refreshCompletions()
 
     def configureTextFeatures(self):
         """Configure text editing features like autocompletion and indentation"""
@@ -100,7 +116,8 @@ class EditorLogic(EditorGraphics):
 
         self.setAutoCompletionFillups(" ")
         self.setAutoCompletionFillupsEnabled(True)
-        self.setAutoCompletionSource(QsciScintilla.AcsAll)
+        # Only the keywords and the symbols that the lexer finds outside comments, never every word of the file.
+        self.setAutoCompletionSource(QsciScintilla.AcsAPIs)
 
         self.setAutoIndent(True)
         self.setTabIndents(True)
@@ -145,7 +162,9 @@ class EditorLogic(EditorGraphics):
         self.setMarginType(1, QsciScintilla.SymbolMargin)
         self.setMarginWidth(1, 12)
         self.setMarginBackgroundColor(1, QColor("#2D2D30"))
-        self.setMarginMarkerMask(1, 1 << self.EXECUTION_ARROW_MARKER)
+        self.setMarginMarkerMask(
+            1, (1 << self.EXECUTION_ARROW_MARKER) | (1 << self.ERROR_MARKER) | (1 << self.WARNING_MARKER)
+        )
 
     def setExecutionLine(self, line: int, follow: bool = False):
         """Highlight a line from 1 as the next one to run, or clear the highlight with -1"""
@@ -157,6 +176,139 @@ class EditorLogic(EditorGraphics):
         self.markerAdd(line - 1, self.EXECUTION_ARROW_MARKER)
         if follow:
             self.ensureLineVisible(line - 1)
+
+    def _setupDiagnostics(self):
+        """Configure the squiggles, margin markers and tooltips of the errors reported by the interpreter"""
+        self._diagnostics: list[tuple[int, Diagnostic]] = []
+
+        self.indicatorDefine(QsciScintilla.SquiggleIndicator, self.ERROR_INDICATOR)
+        self.setIndicatorForegroundColor(QColor("#F14C4C"), self.ERROR_INDICATOR)
+        self.indicatorDefine(QsciScintilla.SquiggleIndicator, self.WARNING_INDICATOR)
+        self.setIndicatorForegroundColor(QColor("#CCA700"), self.WARNING_INDICATOR)
+
+        self.markerDefine(QsciScintilla.Circle, self.ERROR_MARKER)
+        self.setMarkerBackgroundColor(QColor("#F14C4C"), self.ERROR_MARKER)
+        self.setMarkerForegroundColor(QColor("#F14C4C"), self.ERROR_MARKER)
+        self.markerDefine(QsciScintilla.Circle, self.WARNING_MARKER)
+        self.setMarkerBackgroundColor(QColor("#CCA700"), self.WARNING_MARKER)
+        self.setMarkerForegroundColor(QColor("#CCA700"), self.WARNING_MARKER)
+        self.markerDefine(QsciScintilla.Background, self.ERROR_LINE_MARKER)
+        self.setMarkerBackgroundColor(QColor("#3C1F1F"), self.ERROR_LINE_MARKER)
+
+        self.SendScintilla(QsciScintilla.SCI_SETMOUSEDWELLTIME, self.___DWELL_MS)
+        self.SCN_DWELLSTART.connect(self._showDiagnosticTooltip)
+        self.SCN_DWELLEND.connect(lambda *_: QToolTip.hideText())
+        self.textChanged.connect(self._dropEditedDiagnostics)
+
+    def _diagnosticRange(self, diagnostic: Diagnostic) -> tuple[int, int]:
+        """Return the columns (start, end) to underline on the line of the diagnostic"""
+        text = self.text(diagnostic.line - 1).rstrip("\r\n")
+        if diagnostic.column < 0:
+            start = len(text) - len(text.lstrip())
+            return start, len(text.rstrip())
+        column = min(diagnostic.column, len(text))
+        token = diagnostic.token
+        if token and token.strip() and text[column:column + len(token)] == token:
+            return column, column + len(token)
+        if column < len(text) and not text[column].isspace():
+            match = self.___WORD.match(text, column)
+            return column, match.end() if match else column + 1
+        # The error is at the end of the line or on blanks, as for a missing operand: underline the text before it.
+        end = len(text[:column].rstrip())
+        start = end
+        while start > 0 and not text[start - 1].isspace():
+            start -= 1
+        return start, end
+
+    def setDiagnostics(self, diagnostics: list[Diagnostic], follow: bool = False):
+        """Underline the errors and warnings of the last run and mark their lines, replacing the previous ones"""
+        self.clearDiagnostics()
+        for diagnostic in diagnostics:
+            if diagnostic.line <= 0 or diagnostic.line > self.lines():
+                continue
+            line = diagnostic.line - 1
+            error = diagnostic.severity == "error"
+            start, end = self._diagnosticRange(diagnostic)
+            if end > start:
+                self.fillIndicatorRange(line, start, line, end,
+                                        self.ERROR_INDICATOR if error else self.WARNING_INDICATOR)
+            handle = self.markerAdd(line, self.ERROR_MARKER if error else self.WARNING_MARKER)
+            if error:
+                self.markerAdd(line, self.ERROR_LINE_MARKER)
+            self._diagnostics.append((handle, diagnostic))
+        if follow and self._diagnostics:
+            self.ensureLineVisible(self._diagnostics[0][1].line - 1)
+
+    def clearDiagnostics(self):
+        """Remove every error and warning shown in the editor"""
+        self._diagnostics = []
+        last = max(self.lines() - 1, 0)
+        for indicator in (self.ERROR_INDICATOR, self.WARNING_INDICATOR):
+            self.clearIndicatorRange(0, 0, last, self.lineLength(last), indicator)
+        for marker in (self.ERROR_MARKER, self.WARNING_MARKER, self.ERROR_LINE_MARKER):
+            self.markerDeleteAll(marker)
+
+    def _diagnosticsAt(self, line: int) -> list[Diagnostic]:
+        """Return the diagnostics on a line from 0, following the lines that moved since the run"""
+        return [diagnostic for handle, diagnostic in self._diagnostics if self.markerLine(handle) == line]
+
+    def _dropEditedDiagnostics(self):
+        """Remove the diagnostics of the line being edited, since its error may be fixed"""
+        if not self._diagnostics:
+            return
+        line, _ = self.getCursorPosition()
+        kept = [(h, d) for h, d in self._diagnostics if self.markerLine(h) not in (line, -1)]
+        if len(kept) == len(self._diagnostics):
+            return
+        self._diagnostics = kept
+        self.clearIndicatorRange(line, 0, line, self.lineLength(line), self.ERROR_INDICATOR)
+        self.clearIndicatorRange(line, 0, line, self.lineLength(line), self.WARNING_INDICATOR)
+        for marker in (self.ERROR_MARKER, self.WARNING_MARKER, self.ERROR_LINE_MARKER):
+            self.markerDelete(line, marker)
+
+    def _showDiagnosticTooltip(self, position: int, x: int, y: int):
+        """Show the messages of a line when the mouse rests on its marker or on an underlined token"""
+        if not self._diagnostics:
+            return
+        in_margin = x < sum(self.marginWidth(m) for m in range(3))
+        if position < 0 and not in_margin:
+            return
+        if not in_margin and not any(
+                self.SendScintilla(QsciScintilla.SCI_INDICATORVALUEAT, i, position)
+                for i in (self.ERROR_INDICATOR, self.WARNING_INDICATOR)):
+            return
+        point = self.SendScintilla(QsciScintilla.SCI_POSITIONFROMPOINT, x, y)
+        messages = [d.message for d in self._diagnosticsAt(self.SendScintilla(QsciScintilla.SCI_LINEFROMPOSITION, point))]
+        if messages:
+            QToolTip.showText(self.viewport().mapToGlobal(QPoint(x, y)), "\n".join(messages), self)
+
+    def _setupCompletion(self):
+        """Keep the completion list up to date with the symbols of the file and silent inside comments"""
+        self._completion_timer = QTimer(self)
+        self._completion_timer.setSingleShot(True)
+        self._completion_timer.setInterval(self.___COMPLETION_DELAY_MS)
+        self._completion_timer.timeout.connect(self._refreshCompletions)
+        self.textChanged.connect(self._completion_timer.start)
+        self.SCN_CHARADDED.connect(self._cancelCompletionInComment)
+
+    def _refreshCompletions(self):
+        lexer = self.lexer()
+        if hasattr(lexer, "refreshCompletions"):
+            lexer.refreshCompletions(self.text())
+
+    def _cancelCompletionInComment(self, _char: int):
+        """Close the completion list opened while typing a comment or a string"""
+        lexer = self.lexer()
+        if not hasattr(lexer, "isInComment") or not self.isListActive():
+            return
+        line, index = self.getCursorPosition()
+        if lexer.isInComment(self.text(line)[:index]):
+            self.cancelList()
+
+    def setText(self, text: str):
+        """Replace the text, dropping the diagnostics that referred to the old one"""
+        self.clearDiagnostics()
+        super().setText(text)
 
     def _setupSearchIndicator(self):
         """Configure the indicators used for search highlights"""

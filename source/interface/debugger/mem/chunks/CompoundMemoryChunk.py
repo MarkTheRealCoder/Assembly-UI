@@ -1,9 +1,9 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QFrame, QSizePolicy, QVBoxLayout, QHBoxLayout, QLabel
 
-from source.interface.debugger.mem.ColoredDrop import ColoredDrop
+from source.interface import createLayout
+from source.interface.debugger.mem import ColoredDrop
 from source.interface.debugger.mem.chunks.MemoryChunk import _MemoryChunk
-from source.interface.shared import createLayout
 from source.platform import roundColors
 
 
@@ -20,7 +20,7 @@ class CompoundMemoryChunkHeader(QFrame):
         label = QLabel(name)
         label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        label.setFixedHeight(label.fontMetrics().ascent() + 2)
+        # No fixed height: the label takes the full height of its style.qss font, descenders such as g, p and _ included.
         label.setContentsMargins(0, 0, 0, 0)
 
         layout.addWidget(label)

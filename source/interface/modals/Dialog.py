@@ -2,7 +2,7 @@ from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QKeyEvent, QPalette
 from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout, QSizePolicy, QLineEdit
 
-from source.interface.shared import createLayout
+from source.interface import createLayout
 
 DIALOG_HEIGHT = 150
 

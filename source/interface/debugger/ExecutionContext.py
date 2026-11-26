@@ -1,16 +1,20 @@
-from PyQt5.QtWidgets import QFrame, QSizePolicy, QHBoxLayout, QVBoxLayout, QSpacerItem
+from PyQt5.QtWidgets import QFrame, QSizePolicy, QHBoxLayout, QVBoxLayout, QTextEdit
 
 from source.comms import Database
 from source.comms.events import ClosingEvent, RunEvent
 from source.comms.handlers import EventRegister
 from source.filesystem.documents import Document
+from source.interface import createLayout, Settings, Splitter
 from source.interface.debugger.mem import MemoryViewer
 from source.interface.debugger.term import Terminal
-from source.interface.debugger.toolbar import ToolbarExecution
-from source.interface.debugger.toolbar import ToolbarTerminal
-from source.interface.shared import createLayout, Settings
+from source.interface.debugger.toolbar import ToolbarExecution, ToolbarTerminal
 from source.interface.templates import FindWidget
-from source.interpreter import Interpreter, InterpreterUpdate, InterpreterWorker
+from source.interpreter import Interpreter, InterpreterUpdate, InterpreterWorker, parseDiagnostics
+
+
+TERMINAL_MIN_WIDTH = 140
+MEMORY_MIN_WIDTH = 200
+TOOLBAR_SEPARATOR_WIDTH = 1
 
 
 class ExecutionContextGraphics(QFrame):
@@ -24,22 +28,54 @@ class ExecutionContextGraphics(QFrame):
         self.toolbar_t: ToolbarTerminal = ToolbarTerminal(self)
         self.toolbar_e: ToolbarExecution = ToolbarExecution(self)
 
-        layout: QHBoxLayout = createLayout(QHBoxLayout, self)
+        # The toolbars span the whole width with fixed 2:3 proportions: the splitter below moves only the
+        # terminal and the memory viewer.
+        toolbars_frame = QFrame(self)
+        toolbars_frame.setObjectName("ExecutionToolbars")
+        toolbars: QHBoxLayout = createLayout(QHBoxLayout, toolbars_frame)
+        toolbars.setSpacing(TOOLBAR_SEPARATOR_WIDTH)
+        for toolbar, stretch in ((self.toolbar_t, 2), (self.toolbar_e, 3)):
+            policy = toolbar.sizePolicy()
+            policy.setHorizontalPolicy(QSizePolicy.Ignored)
+            toolbar.setSizePolicy(policy)
+            toolbars.addWidget(toolbar, stretch)
 
-        vlayout: QVBoxLayout = createLayout(QVBoxLayout)
-        vlayout.addWidget(self.toolbar_t)
+        terminal_pane = QFrame(self)
+        terminal_pane.setObjectName("TerminalPane")
+        vlayout: QVBoxLayout = createLayout(QVBoxLayout, terminal_pane)
         vlayout.addWidget(FindWidget(self,  "terminal"), 1)
         vlayout.addWidget(self.terminal, 3)
 
-        vlayout2: QVBoxLayout = createLayout(QVBoxLayout)
-        vlayout2.addWidget(self.toolbar_e)
+        memory_pane = QFrame(self)
+        memory_pane.setObjectName("MemoryPane")
+        vlayout2: QVBoxLayout = createLayout(QVBoxLayout, memory_pane)
         vlayout2.addWidget(self.memory_viewer, 1)
 
-        layout.addLayout(vlayout, 2)
-        layout.addSpacerItem(QSpacerItem(1, 1, QSizePolicy.Minimum, QSizePolicy.Expanding))
-        layout.addLayout(vlayout2, 3)
+        self.splitter: Splitter = Splitter(self, "Term-MemSplitter", "layout/terminal-memory-splitter")
+        self.splitter.addPane(terminal_pane, TERMINAL_MIN_WIDTH, 2)
+        self.splitter.addPane(memory_pane, MEMORY_MIN_WIDTH, 3)
+        self.splitter.restoreSizes([2, 3])
 
+        layout: QVBoxLayout = createLayout(QVBoxLayout, self)
+        layout.addWidget(toolbars_frame)
+        layout.addWidget(self.splitter, 1)
         self.setLayout(layout)
+        Database.ON_SPLITTER_DRAG.connect(self.___freezeTerminalWrap)
+
+    def ___freezeTerminalWrap(self):
+        """
+        Keep the terminal text wrapped at its width while a splitter handle is dragged.
+        Rewrapping the whole output at every pixel is what makes the drag lag; it happens once on release instead.
+        """
+        if Database.ON_SPLITTER_DRAG.getValue():
+            self.terminal.setLineWrapColumnOrWidth(self.terminal.viewport().width())
+            self.terminal.setLineWrapMode(QTextEdit.FixedPixelWidth)
+        else:
+            self.terminal.setLineWrapMode(QTextEdit.WidgetWidth)
+
+    def splitterMinimumWidth(self) -> int:
+        """ Narrowest width at which the terminal and the memory viewer keep their own minimum """
+        return TERMINAL_MIN_WIDTH + MEMORY_MIN_WIDTH + self.splitter.handleWidth()
 
 
 class ExecutionContextLogic(ExecutionContextGraphics):
@@ -54,6 +90,7 @@ class ExecutionContextLogic(ExecutionContextGraphics):
         self.___worker: InterpreterWorker = None
         self.___output_size: int = 0
         self.___path: str = None
+        self.___diagnostics: list = []
 
     def clearTerminal(self):
         self.terminal.clear()
@@ -79,6 +116,8 @@ class ExecutionContextLogic(ExecutionContextGraphics):
             return False
 
         EventRegister.send(RunEvent(debug), "Editor")
+        self.___diagnostics = []
+        Database.ON_DIAGNOSTICS.setValue((path, []))
         try:
             document = Document(path)
             handle = Interpreter.get_handle(hash(path), document)
@@ -144,6 +183,7 @@ class ExecutionContextLogic(ExecutionContextGraphics):
         worker = self.___worker
         if update.warnings:
             self.terminal.warning(update.warnings)
+            self.___reportDiagnostics(update.warnings)
         if update.output:
             self.___writeOutput(update.output)
         self.memory_viewer.applyUpdate(update)
@@ -156,11 +196,19 @@ class ExecutionContextLogic(ExecutionContextGraphics):
         elif worker is not None:
             worker.acknowledge()
 
+    def ___reportDiagnostics(self, text: str):
+        """ Show in the editor the positioned errors and warnings found in a message of the program """
+        found = parseDiagnostics(text)
+        if found and self.___path:
+            self.___diagnostics.extend(found)
+            Database.ON_DIAGNOSTICS.setValue((self.___path, list(self.___diagnostics)))
+
     def ___finishExecution(self, update: InterpreterUpdate):
         """ Report the result of the program, print the prompt again and restore the controls """
         self.terminal.endProgram()
         if update.state == "FAILED":
             self.terminal.error(update.message or "Execution failed.")
+            self.___reportDiagnostics(update.message)
         elif update.state == "STOPPED":
             self.terminal.warning("Execution stopped.")
         else:

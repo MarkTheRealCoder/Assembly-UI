@@ -1,8 +1,14 @@
-from PyQt5.Qsci import QsciLexerCustom, QsciScintilla, QsciAPIs
+import re
+
+from PyQt5.Qsci import QsciLexerCustom, QsciScintilla
 from PyQt5.QtGui import QColor, QFont
 
+from source.interface.assets import editorFont
 
-class Asm8088Lexer(QsciLexerCustom):
+from .Completion import CompletionSource
+
+
+class Asm8088Lexer(CompletionSource, QsciLexerCustom):
     """Syntax highlighter and autocompletion source for 8088 assembly files"""
 
     Default = 0
@@ -16,16 +22,29 @@ class Asm8088Lexer(QsciLexerCustom):
     Symbol = 8
     Label = 9
 
+    STRINGS = True
+    ___LABEL = re.compile(r"([A-Za-z_][A-Za-z0-9_]*)\s*:")
+    ___CONSTANT = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=")
+
     def __init__(self, parent: QsciScintilla = None):
         super().__init__(parent)
         self._parent: QsciScintilla = self.parent()
         self.setupStyles()
         self.setupKeywords()
-        self.___apis = QsciAPIs(self)
-        for api in self.instructions.union(self.registers).union(self.directives):
-            self.___apis.add(api)
-        self.___apis.prepare()
-        self.setAPIs(self.___apis)
+        self.setupCompletion(self.instructions.union(self.registers).union(self.directives))
+
+    def collectSymbols(self, lines: list[str]) -> set:
+        """Labels (name:), also of data such as 'msg: .ASCII', and constants (NAME = value)"""
+        symbols = set()
+        for line in lines:
+            if match := self.___CONSTANT.match(line):
+                symbols.add(match.group(1))
+            rest = line
+            # A line can start with several labels, as in 'a: b: MOV AX, 1'.
+            while match := self.___LABEL.match(rest.lstrip()):
+                symbols.add(match.group(1))
+                rest = rest.lstrip()[match.end():]
+        return symbols
 
     def autoCompletionWordSeparators(self):
         return [",", " ", "\t", "(", ")", "[", "]", "{", "}", ":", ";", "+", "-", "*", "/", "=", "<", ">", "!", "&", "|", "^", "%", "~", "\"", "'"]
@@ -34,40 +53,40 @@ class Asm8088Lexer(QsciLexerCustom):
         return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_."
 
     def setupStyles(self):
-        self.setDefaultFont(QFont("Bahnschrift", 12))
+        self.setDefaultFont(editorFont())
         self.setDefaultColor(QColor("#CCCCCC"))
         self.setDefaultPaper(QColor("#292727"))
 
         # Directive style (.SECT, .BYTE, etc.)
         self.setColor(QColor("#569CD6"), self.Directive)
-        self.setFont(QFont("Bahnschrift", 12, weight=63), self.Directive)
+        self.setFont(editorFont(weight=QFont.DemiBold), self.Directive)
 
         # Instruction style (MOV, ADD, etc.)
         self.setColor(QColor("#4EC9B0"), self.Instruction)
-        self.setFont(QFont("Bahnschrift", 12, weight=63), self.Instruction)
+        self.setFont(editorFont(weight=QFont.DemiBold), self.Instruction)
 
         # Register style (AX, BX, etc.)
         self.setColor(QColor("#FFC83D"), self.Register)
-        self.setFont(QFont("Bahnschrift", 12), self.Register)
+        self.setFont(editorFont(), self.Register)
 
         self.setColor(QColor("#B5CEA8"), self.Number)
-        self.setFont(QFont("Bahnschrift", 12), self.Number)
+        self.setFont(editorFont(), self.Number)
 
         self.setColor(QColor("#9CDCFE"), self.Identifier)
-        self.setFont(QFont("Bahnschrift", 12), self.Identifier)
+        self.setFont(editorFont(), self.Identifier)
 
         self.setColor(QColor("#6A9955"), self.Comment)
-        self.setFont(QFont("Bahnschrift", 12, italic=True), self.Comment)
+        self.setFont(editorFont(italic=True), self.Comment)
 
         # String style
         self.setColor(QColor("#CE9178"), self.String)
-        self.setFont(QFont("Bahnschrift", 12), self.String)
+        self.setFont(editorFont(), self.String)
 
         self.setColor(QColor("#D4D4D4"), self.Symbol)
-        self.setFont(QFont("Bahnschrift", 12), self.Symbol)
+        self.setFont(editorFont(), self.Symbol)
 
         self.setColor(QColor("#DCDCAA"), self.Label)
-        self.setFont(QFont("Bahnschrift", 12, weight=63), self.Label)
+        self.setFont(editorFont(weight=QFont.DemiBold), self.Label)
 
     def setupKeywords(self):
         self.directives = {

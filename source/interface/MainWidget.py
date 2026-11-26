@@ -1,14 +1,13 @@
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget, QSplitter, QSizePolicy, QVBoxLayout
+from PyQt5.QtWidgets import QWidget, QVBoxLayout
 
 from source.comms.events import EditorResizeEvent
 from source.comms.handlers import EventRegister
 from source.interface.debugger import ExecutionContext
 from source.interface.editor import EditorWrapper
-from source.interface.shared import createLayout
+from source.interface.shared import createLayout, Splitter
 from source.interface.titlebar import Toolbar
 
-INTEGER_MAX = 2147483647
+EDITOR_MIN_WIDTH = 200
 
 
 class MainWidgetGraphics(QWidget):
@@ -27,20 +26,14 @@ class MainWidgetGraphics(QWidget):
         widget.setLayout(layout)
 
     def setSplitter(self, widget):
-        cmResizer: QSplitter = QSplitter(widget)
+        cmResizer: Splitter = Splitter(widget, "Mem-CodeSplitter", "layout/editor-debugger-splitter")
         cmResizer.splitterMoved.connect(lambda: EventRegister.send(EditorResizeEvent(), "Tab"))
-        cmResizer.setOrientation(Qt.Horizontal)
-        cmResizer.setObjectName("Mem-CodeSplitter")
-        cmResizer.setHandleWidth(7)
-        cmResizer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         ew = EditorWrapper(widget)
         ec = ExecutionContext(widget)
 
-        cmResizer.addWidget(ew)
-        cmResizer.addWidget(ec)
-        cmResizer.setSizes([INTEGER_MAX, INTEGER_MAX])
-        cmResizer.setStretchFactor(0, 1)
-        cmResizer.setStretchFactor(1, 1)
+        cmResizer.addPane(ew, EDITOR_MIN_WIDTH)
+        cmResizer.addPane(ec, ec.splitterMinimumWidth())
+        cmResizer.restoreSizes([1, 1])
         return cmResizer
 
 

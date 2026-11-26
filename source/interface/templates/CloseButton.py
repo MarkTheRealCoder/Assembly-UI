@@ -2,11 +2,11 @@ from PyQt5.QtCore import QSize, QTimer
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QSizePolicy
 
-from source.comms.Signals import Variable
+from source.comms import Variable
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
-from source.filesystem.Folder import find_path
-from source.interface.templates import GenericButton
+from source.filesystem import find_path
+from source.interface.templates.Button import GenericButton
 
 
 class CloseButtonGraphics(GenericButton):

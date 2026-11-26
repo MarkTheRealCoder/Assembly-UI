@@ -1,8 +1,8 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QFrame, QVBoxLayout
 
+from source.interface import createLayout
 from source.interface.debugger.mem.ContextWindow import ContextWindow
-from source.interface.shared import createLayout
 
 
 class ContextContainerGraphics(QFrame):

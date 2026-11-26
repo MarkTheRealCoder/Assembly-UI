@@ -2,10 +2,10 @@ from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QFrame, QLineEdit, QLabel, QHBoxLayout, QSpacerItem, QSizePolicy
 
-from source.comms.events.FindShortcut import FindShortcutEvent
+from source.comms.events import FindShortcutEvent
 from source.comms.handlers import EventRegister
 from source.filesystem import find_path
-from source.interface.shared import createLayout
+from source.interface import createLayout
 from source.interface.templates.Button import GenericButton
 from source.interface.templates.Tooltips import Tooltip
 

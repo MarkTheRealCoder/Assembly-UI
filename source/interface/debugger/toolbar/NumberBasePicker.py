@@ -1,5 +1,6 @@
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import QComboBox
+from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtGui import QPalette
+from PyQt5.QtWidgets import QComboBox, QStyle, QStyleOptionComboBox, QStylePainter
 
 from source.interface.templates import Tooltip
 
@@ -19,6 +20,17 @@ class NumberBasePickerGraphics(QComboBox):
         self.tooltip.setFollowing("widget")
         self.tooltip.setAutomatic(True)
         self.updateGraphic()
+
+    def paintEvent(self, event):
+        """ Draw the box as usual and the label centered in the whole box, since there is no arrow """
+        option = QStyleOptionComboBox()
+        self.initStyleOption(option)
+        text = option.currentText
+        option.currentText = ""
+        painter = QStylePainter(self)
+        painter.drawComplexControl(QStyle.CC_ComboBox, option)
+        painter.setPen(self.palette().color(QPalette.ButtonText))
+        painter.drawText(self.rect(), Qt.AlignCenter, text)
 
     def updateGraphic(self):
         """ Show the active base in the tooltip """

@@ -2,12 +2,10 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QLabel, QVBoxLayout, QSizePolicy, QFrame
 
 from source.comms import Database
+from source.interface import createLayout
 from source.interface.editor.Editor import Editor
-from source.interface.modals import DirectoryPicker
-from source.interface.modals import FileCreator
-from source.interface.modals import modalOpen
-from source.interface.modals.filemanager.FilePicker import open_file
-from source.interface.shared import createLayout
+from source.interface.modals import DirectoryPicker, FileCreator, modalOpen
+from source.interface.modals.filemanager import open_file
 
 
 class DefaultFrame(QLabel):

@@ -3,9 +3,8 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QSpacerItem, QSiz
 
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
-from source.interface.shared import createLayout
-from source.interface.templates import CloseButton
-from source.interface.templates import Title
+from source.interface import createLayout
+from source.interface.templates import CloseButton, Title
 from source.interface.templates.window import BaseWindow
 from source.platform import Desktop, isLinux, isMac
 
@@ -31,7 +30,7 @@ def create_window_content(window: BaseWindow) -> QWidget:
     content = QWidget(window)
     container = content
     if isLinux() or isMac():
-        from source.interface.templates.window.base_linux import ResizeFrame
+        from source.interface.templates.window import ResizeFrame
 
         window.setProperty("linuxFrame" if isLinux() else "macFrame", True)
         window.setAttribute(Qt.WA_TranslucentBackground)

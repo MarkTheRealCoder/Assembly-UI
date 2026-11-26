@@ -1,8 +1,8 @@
 from PyQt5.QtCore import QEvent, QSize, Qt
 from PyQt5.QtWidgets import QFrame, QWidget, QSizePolicy, QHBoxLayout, QSpacerItem, QMenuBar, QPushButton
 
-from source.interface.shared import createLayout
-from source.interface.templates.CloseButton import CloseButton
+from source.interface import createLayout
+from source.interface.templates import CloseButton
 from source.interface.titlebar.Files import FileMenu
 from source.interface.titlebar.Icon import IconButton
 from source.interface.titlebar.Maximize import MaximizeButton

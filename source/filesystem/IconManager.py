@@ -2,7 +2,7 @@ from typing import Union
 
 from PyQt5.QtGui import QIcon
 
-from source.filesystem import find_path
+from source.filesystem.Folder import find_path
 from source.filesystem.documents import FT, Filetypes
 
 

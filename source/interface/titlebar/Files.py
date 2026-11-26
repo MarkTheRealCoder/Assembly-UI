@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QMenu, QSizePolicy
 
 from source.interface.modals import modalOpen, DirectoryPicker, FileCreator, FileSaver
-from source.interface.modals.filemanager.FilePicker import open_file
+from source.interface.modals.filemanager import open_file
 from source.interface.templates import GenericButton, create_toast, toast_safe_exec
 from source.platform import Desktop
 

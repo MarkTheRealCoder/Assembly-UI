@@ -6,14 +6,11 @@ from PyQt5.QtWidgets import QFrame, QSizePolicy, QVBoxLayout, QHBoxLayout
 
 from source.filesystem import create_dir, open_dir, resolve_app_path, to_ui_path
 from source.filesystem.documents import Document
-from source.interface.modals import Dialog
-from source.interface.modals.Popup import Popup
+from source.interface import createLayout, Settings
+from source.interface.modals import Dialog, Popup
 from source.interface.modals.filemanager.complex.Button import Button
-from source.interface.modals.filemanager.complex.strings import ExtensionBox
-from source.interface.modals.filemanager.complex.strings import FileBox
-from source.interface.modals.filemanager.complex.strings import PathBox
+from source.interface.modals.filemanager.complex.strings import ExtensionBox, FileBox, PathBox
 from source.interface.modals.filemanager.paths import PathTree
-from source.interface.shared import createLayout, Settings
 
 
 class FileDialogGraphics(QFrame):

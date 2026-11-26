@@ -6,12 +6,10 @@ from PyQt5.QtWidgets import QAbstractItemView, QTreeView, QSizePolicy
 
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
-from source.filesystem import IconManager
-from source.filesystem import find_path, get_available_disks, ls
-from source.filesystem.documents import Document
-from source.filesystem.documents import FT
+from source.filesystem import IconManager, find_path, get_available_disks, ls
+from source.filesystem.documents import Document, FT
+from source.interface import Settings
 from source.interface.assets import translateQSS
-from source.interface.shared import Settings
 from source.platform import isWindows
 
 

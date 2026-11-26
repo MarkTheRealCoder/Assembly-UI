@@ -2,11 +2,11 @@ from PyQt5 import sip
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QFrame, QSizePolicy, QVBoxLayout
 
+from source.interface import createLayout
 from source.interface.debugger.mem.ContextContainer import ContextContainer
 from source.interface.debugger.mem.ContextWindow import ContextWindow
 from source.interface.debugger.mem.MemoryHeader import MemoryHeader
 from source.interface.debugger.mem.chunks import SingleMemoryChunk
-from source.interface.shared import createLayout
 from source.interface.templates import ScrollWrapper
 
 

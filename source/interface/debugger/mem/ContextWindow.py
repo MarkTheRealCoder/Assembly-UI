@@ -1,9 +1,9 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QFrame, QSizePolicy, QVBoxLayout, QHBoxLayout, QLabel
 
+from source.interface import createLayout
 from source.interface.debugger.mem.ColoredDrop import ColoredDrop
 from source.interface.debugger.mem.chunks import CompoundMemoryChunk, SingleMemoryChunk
-from source.interface.shared import createLayout
 from source.platform import roundColors
 
 

@@ -13,10 +13,9 @@ from PyQt5.QtWidgets import QApplication, QDesktopWidget
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
 from source.filesystem import find_path
-from source.interface import MainWindow
+from source.interface import MainWindow, Settings
 from source.interface.assets import add_fonts, translateQSS
 from source.interface.modals import warmUpWebEngine
-from source.interface.shared import Settings
 from source.platform import Desktop, isLinux
 
 if __name__ == "__main__":

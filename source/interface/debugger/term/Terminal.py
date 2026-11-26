@@ -2,12 +2,12 @@ import re
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QTextCharFormat, QColor, QFont, QTextCursor, QKeySequence, QTextFrameFormat, QTextLength, \
-    QTextBlockFormat
+    QTextBlockFormat, QFontMetricsF, QFontInfo
 from PyQt5.QtWidgets import QTextEdit, QAction, QMenu
 
-from source.comms.events.FindShortcut import FindShortcutEvent
+from source.comms.events import FindShortcutEvent
 from source.comms.handlers import EventRegister
-from source.interface.shared import Settings, handleZoomEvent
+from source.interface import Settings, handleZoomEvent
 from source.interface.templates import Tooltip
 
 
@@ -34,6 +34,9 @@ class TerminalLogic(TerminalGraphics):
     WARNING_TAG = "[WARNING]"
     EXCEPTION_TAG = "[EXCEPTION]"
 
+    # Distance between two baselines, in multiples of the font size (CSS line-height).
+    LINE_HEIGHT = 1.2
+
     infoFmt = QTextCharFormat()
     infoTagFmt = QTextCharFormat()
     warnTagFmt = QTextCharFormat()
@@ -59,8 +62,8 @@ class TerminalLogic(TerminalGraphics):
         fmt.setFontWeight(QFont.Bold)
 
     # Space above and below each message line, so consecutive messages stay apart.
-    messageBlockFmt.setTopMargin(3)
-    messageBlockFmt.setBottomMargin(3)
+    messageBlockFmt.setTopMargin(1)
+    messageBlockFmt.setBottomMargin(1)
     highlightFmt.setBackground(QColor("#8800CC"))  # Purple highlight
     currentHighlightFmt.setBackground(QColor("#CC00FF"))  # Brighter purple for current match
 
@@ -120,6 +123,7 @@ class TerminalLogic(TerminalGraphics):
         input_block = self.document().lastBlock()
         while block.isValid() and block != input_block:
             block.setUserState(TerminalLogic.READONLY_STATE)
+            self._setLineHeight(QTextCursor(block))
             block = block.next()
         input_block.setUserState(-1)
 
@@ -196,8 +200,7 @@ class TerminalLogic(TerminalGraphics):
         cursor.setPosition(block_start)
         while cursor.position() <= last_pos:
             cursor.block().setUserState(userState)
-            if block_fmt is not None:
-                cursor.setBlockFormat(block_fmt)
+            self._setLineHeight(cursor, block_fmt)
             if not cursor.movePosition(QTextCursor.NextBlock):
                 break
 
@@ -220,10 +223,26 @@ class TerminalLogic(TerminalGraphics):
         cursor.setPosition(block_start)
         while cursor.position() <= last_pos:
             cursor.block().setUserState(userState)  # 1 = read-only | 2 = read-only but can be modified by code
+            self._setLineHeight(cursor)
             if not cursor.movePosition(QTextCursor.NextBlock):
                 cursor.movePosition(QTextCursor.EndOfBlock)
 
         self._resetCursor()
+
+    def _lineHeightPercent(self) -> float:
+        """Line height as a percentage of the font's own line spacing, which is what Qt expects"""
+        self.ensurePolished()
+        font = self.document().defaultFont()
+        spacing = QFontMetricsF(font).lineSpacing()
+        if spacing <= 0:
+            return 100.0
+        return max(80.0, 100.0 * TerminalLogic.LINE_HEIGHT * QFontInfo(font).pixelSize() / spacing)
+
+    def _setLineHeight(self, cursor: QTextCursor, block_fmt: QTextBlockFormat = None) -> None:
+        """Give the block under the cursor the terminal line height, merged with block_fmt if given"""
+        fmt = QTextBlockFormat(block_fmt) if block_fmt is not None else cursor.blockFormat()
+        fmt.setLineHeight(self._lineHeightPercent(), QTextBlockFormat.ProportionalHeight)
+        cursor.setBlockFormat(fmt)
 
     def _resetCursor(self) -> None:
         cursor = self._set_to_eof()

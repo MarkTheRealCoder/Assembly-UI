@@ -2,15 +2,14 @@ from PyQt5.QtCore import QSize, QEvent, Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QFrame, QHBoxLayout, QSizePolicy
 
-from source.comms.Signals import DataBase
+from source.comms import Database
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
-from source.filesystem.IconManager import IconManager
+from source.filesystem import IconManager
+from source.interface import createLayout
 from source.interface.editor.me_system.tab.Icon import TabIcon
 from source.interface.editor.me_system.tab.Label import TabLabel
-from source.interface.shared import createLayout
-from source.interface.templates import Tooltip
-from source.interface.templates.CloseButton import CloseButton
+from source.interface.templates import Tooltip, CloseButton
 
 # TabManager is 44 px high, and its list uses 1 px for the bottom separator.
 TAB_HEIGHT = 43
@@ -69,7 +68,7 @@ class TabLogic(TabGraphics):
         self.setupLayout(name, ext, _id)
 
 
-        DataBase.ON_TAB_SELECTED.connect(self.selected)
+        Database.ON_TAB_SELECTED.connect(self.selected)
 
     def getId(self) -> int:
         return self.___id
@@ -85,7 +84,7 @@ class TabLogic(TabGraphics):
         self.findChild(TabLabel).setText(text)
 
     def selected(self):
-        self.setProperty("marked", DataBase.ON_TAB_SELECTED.getValue() == self.___id)
+        self.setProperty("marked", Database.ON_TAB_SELECTED.getValue() == self.___id)
         self.style().unpolish(self)
         self.style().polish(self)
 
@@ -103,7 +102,7 @@ class TabLogic(TabGraphics):
                 self.___movable = True
                 self.___initial_pos_x = event.pos().x()
             elif event.type() == QEvent.MouseButtonRelease:
-                DataBase.ON_TAB_SELECTED.setValue(self.___id)
+                Database.ON_TAB_SELECTED.setValue(self.___id)
                 self.___movable = False
                 self.setCursor(Qt.ArrowCursor)
 
@@ -121,7 +120,7 @@ class Tab(TabLogic):
         return super().event(event)
 
     def onClosingEvent(self, event: ClosingEvent):
-        DataBase.ON_TAB_CLOSE.setValue(self.getId())
+        Database.ON_TAB_CLOSE.setValue(self.getId())
         self.deleteLater()
 
 

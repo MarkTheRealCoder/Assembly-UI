@@ -3,9 +3,9 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QFrame, QHBoxLayout
 
 from source.comms import Database
+from source.interface import createLayout
 from source.interface.editor.me_system.Icon import Icon
 from source.interface.editor.me_system.Label import Label
-from source.interface.shared import createLayout
 from source.interface.templates import CloseButton, Tooltip
 
 

@@ -3,8 +3,8 @@ from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QSpacerItem, QSizePolicy
 
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
+from source.interface import createLayout
 from source.interface.modals.Window import add_title_controls, create_window_content
-from source.interface.shared import createLayout
 from source.interface.templates import Title
 from source.interface.templates.window import BaseWindow
 from source.platform import Desktop, isMac
