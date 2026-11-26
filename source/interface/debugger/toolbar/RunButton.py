@@ -10,7 +10,6 @@ class RunButtonGraphics(GenericButton):
     def __init__(self, parent, icon_path):
         super().__init__(parent)
         self.setObjectName("RunButton")
-        # Additional UI setup can be done here
         self.not_active = self.rerenderIcon(QIcon(find_path(icon_path)), "#3FB950")
         self.active = self.rerenderIcon(QIcon(find_path(icon_path)), "#FFFFFF")
         self.setIcon(self.not_active)
@@ -39,7 +38,6 @@ class RunButtonGraphics(GenericButton):
 class RunButtonLogic(RunButtonGraphics):
     def __init__(self, parent, icon_path):
         super().__init__(parent, icon_path)
-        # Implementation of run button logic goes here
 
     def disable(self):
         self.setDisabled(True)
@@ -51,4 +49,3 @@ class RunButtonLogic(RunButtonGraphics):
 class RunButton(RunButtonLogic):
     def __init__(self, parent, icon_path="run.svg"):
         super().__init__(parent, icon_path)
-        # Additional initialization for RunButton

@@ -1,273 +1,185 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <title>IJVM Instructions</title>
-        <meta charset="UTF-8">
-    </head>
+<head>
+    <meta charset="UTF-8">
+    <title>IJVM Instructions</title>
+    <link rel="stylesheet" href="help.css">
+    <script src="help.js" defer></script>
+</head>
+<body>
+<nav>
+    <a href="#struttura">Structure</a>
+    <a href="#esempi">Examples</a>
+    <a href="#istruzioni">Instructions</a>
+    <a href="#operandi">Operands</a>
+    <a href="#metodi">Methods</a>
+    <a href="#limiti">Limits</a>
+</nav>
+<main>
+    <h1>IJVM Instructions</h1>
+    <p class="subtitle">The reduced IJVM instruction set that the interpreter runs. Instructions that are not on this page are not supported.</p>
 
-    <style>
-        .text, .text .monospace > span {
-            font-style: normal;
-            font-size: medium;
+    <h2 id="struttura">Program structure</h2>
+    <p>Sections go in this order. Directives are lower case: <code>.MAIN</code> is an error.</p>
+    <table>
+        <thead><tr><th>Section</th><th>Content</th></tr></thead>
+        <tbody>
+        <tr><td><code>.constant</code> ... <code>.end-constant</code></td><td>Optional. One constant per line: <code>NAME value</code>.</td></tr>
+        <tr><td><code>.main</code> ... <code>.end-main</code></td><td>Required. The main program.</td></tr>
+        <tr><td><code>.method name(p1, p2)</code> ... <code>.end-method</code></td><td>Optional, one per method. The method ends with <code>IRETURN</code>.</td></tr>
+        <tr><td><code>.var</code> ... <code>.end-var</code></td><td>At the start of <code>.main</code> or of a method. One local variable per line.</td></tr>
+        </tbody>
+    </table>
+    <ul>
+        <li>A label is <code>name:</code> on a line by itself. <code>L1: BIPUSH 1</code> is a syntax error.</li>
+        <li>Names can contain <code>-</code>, for example <code>end-while</code>.</li>
+        <li>Comments start with <code>//</code> or with <code>;</code>.</li>
+        <li>Instructions work in upper or lower case.</li>
+        <li>Variable names are case-sensitive. Constant names are not.</li>
+    </ul>
 
-            color: #D2D6D6;
-            font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+    <h2 id="esempi">Examples for your first run</h2>
+    <p>Create a <code>.ijvm</code> file, copy an example into the file and click <strong>Run</strong> or <strong>Debug</strong>.</p>
 
-        .text .monospace {
-            font-family:'Courier New', Courier, monospace;
-        }
+    <h3>1. Hello</h3>
+    <div class="example">
+        <div class="example-header">hello.ijvm<button class="copy" data-done="Copied" data-failed="Select and copy">Copy</button></div>
+        <pre><code>.main
+    BIPUSH 72       // 'H'
+    OUT
+    BIPUSH 101      // 'e'
+    OUT
+    BIPUSH 108      // 'l'
+    OUT
+    BIPUSH 108      // 'l'
+    OUT
+    BIPUSH 111      // 'o'
+    OUT
+    BIPUSH 10       // newline
+    OUT
+.end-main</code></pre>
+    </div>
+    <p class="run">Output: <code>Hello</code></p>
 
-        .text span {
-            font-style: italic;
-        }
+    <h3>2. Input and output</h3>
+    <p>The program adds two one-digit numbers. Each number ends with <code>;</code>.</p>
+    <div class="example">
+        <div class="example-header">sum.ijvm<button class="copy" data-done="Copied" data-failed="Select and copy">Copy</button></div>
+        <pre><code>.main
+    .var
+        a
+    .end-var
+    IN              // first digit
+    BIPUSH 48
+    ISUB            // value = character - '0'
+    ISTORE a
+    IN              // ';'
+    POP
+    IN              // second digit
+    BIPUSH 48
+    ISUB
+    ILOAD a
+    IADD            // a + b
+    BIPUSH 48
+    IADD            // back to ASCII
+    OUT
+    IN              // ';'
+    POP
+.end-main</code></pre>
+    </div>
+    <p class="run">Input <code>3;4;</code> → output <code>7</code>. Type the input in the terminal and press <kbd>Enter</kbd>.</p>
 
-        table {
-            width: 100%;
+    <h3>3. Method with INVOKEVIRTUAL</h3>
+    <div class="example">
+        <div class="example-header">method.ijvm<button class="copy" data-done="Copied" data-failed="Select and copy">Copy</button></div>
+        <pre><code>.constant
+    OBJREF 0x40
+.end-constant
 
-            margin-bottom: 1em; /* So it will be equal to the margin on a regular html paragraph */
-            border-collapse: collapse;
-        }
+.main
+    LDC_W OBJREF    // object reference, popped by INVOKEVIRTUAL
+    BIPUSH 3        // a
+    BIPUSH 4        // b
+    INVOKEVIRTUAL add
+    BIPUSH 48
+    IADD            // result + '0'
+    OUT
+    HALT
+.end-main
 
-        th {
-            background-color: #202020;
-            text-align: center;
-        }
+.method add(a, b)
+    ILOAD a
+    ILOAD b
+    IADD
+    IRETURN
+.end-method</code></pre>
+    </div>
+    <p class="run">Output: <code>7</code>, then the <code>HALT</code> summary. In Debug, the STACK shows the <code>add()</code> frame inside the <code>main()</code> frame.</p>
 
-        th, td {
-            padding: 1%;
-            border: 1px solid gray;
-        }
+    <h2 id="istruzioni">Instructions</h2>
+    <p>The stack contains words (integers). <em>a</em> is the word below the top, <em>b</em> is the word on top.</p>
+    <table>
+        <thead><tr><th>Instruction</th><th>Operands</th><th>Description</th></tr></thead>
+        <tbody>
+        <tr><td><code>BIPUSH</code></td><td><code>number</code></td><td>Pushes the number onto the stack.</td></tr>
+        <tr><td><code>DUP</code></td><td>-</td><td>Copies the top word and pushes the copy onto the stack.</td></tr>
+        <tr><td><code>ERR</code></td><td>-</td><td>Prints <code>ERROR: the program executed ERR.</code> and stops the program with code 1.</td></tr>
+        <tr><td><code>GOTO</code></td><td><code>label</code></td><td>Jumps to the label.</td></tr>
+        <tr><td><code>HALT</code></td><td>-</td><td>Stops the program with code 0 and prints <code>PROGRAM OUTPUT IS:</code> followed by all the <code>OUT</code> characters.</td></tr>
+        <tr><td><code>IADD</code></td><td>-</td><td>Pops <em>a</em> and <em>b</em>, pushes <em>a</em> + <em>b</em>.</td></tr>
+        <tr><td><code>IAND</code></td><td>-</td><td>Pops <em>a</em> and <em>b</em>, pushes the bitwise AND.</td></tr>
+        <tr><td><code>IFEQ</code></td><td><code>label</code></td><td>Pops a word and jumps if the word is 0.</td></tr>
+        <tr><td><code>IFLT</code></td><td><code>label</code></td><td>Pops a word and jumps if the word is less than 0.</td></tr>
+        <tr><td><code>IF_ICMPEQ</code></td><td><code>label</code></td><td>Pops two words and jumps if they are equal.</td></tr>
+        <tr><td><code>IINC</code></td><td><code>variable number</code></td><td>Adds the number to the variable. There is no comma: <code>IINC i 1</code>, <code>IINC j -1</code>.</td></tr>
+        <tr><td><code>ILOAD</code></td><td><code>variable</code></td><td>Pushes the value of the variable onto the stack. The variable must have a value (<code>ISTORE</code> or parameter).</td></tr>
+        <tr><td><code>IN</code></td><td>-</td><td>Reads one input character and pushes its code (0 to 255) onto the stack. If the input is empty, the program waits: type the characters in the terminal and press <kbd>Enter</kbd>. <kbd>Enter</kbd> does not send the newline character.</td></tr>
+        <tr><td><code>INVOKEVIRTUAL</code></td><td><code>method</code></td><td>Calls the method. Pops the arguments and then the object reference (<code>OBJREF</code>). See <a href="#metodi">Methods</a>.</td></tr>
+        <tr><td><code>IOR</code></td><td>-</td><td>Pops <em>a</em> and <em>b</em>, pushes the bitwise OR.</td></tr>
+        <tr><td><code>IRETURN</code></td><td>-</td><td>Pops the top value, ends the method and pushes the value onto the caller's stack.</td></tr>
+        <tr><td><code>ISTORE</code></td><td><code>variable</code></td><td>Pops a word and writes it into the variable.</td></tr>
+        <tr><td><code>ISUB</code></td><td>-</td><td>Pops <em>a</em> and <em>b</em>, pushes <em>a</em> - <em>b</em>. <code>BIPUSH 9</code>, <code>BIPUSH 3</code>, <code>ISUB</code> gives 6.</td></tr>
+        <tr><td><code>LDC_W</code></td><td><code>constant</code></td><td>Pushes the value of the constant onto the stack.</td></tr>
+        <tr><td><code>NOP</code></td><td>-</td><td>Does nothing.</td></tr>
+        <tr><td><code>OUT</code></td><td>-</td><td>Pops a word and prints the character with that code.</td></tr>
+        <tr><td><code>POP</code></td><td>-</td><td>Removes the top word.</td></tr>
+        <tr><td><code>SWAP</code></td><td>-</td><td>Swaps the two top words.</td></tr>
+        </tbody>
+    </table>
 
-        tr {
-            background-color: #303030;
-        }
+    <h2 id="operandi">Operands</h2>
+    <table>
+        <thead><tr><th>Operand</th><th>Description</th></tr></thead>
+        <tbody>
+        <tr><td><code>number</code></td><td>Decimal (<code>27</code>, <code>-1</code>), hexadecimal (<code>0x1B</code>) or octal with the <code>o</code> prefix (<code>o33</code>). <code>027</code> is decimal and equals 27. Characters such as <code>'A'</code> are not supported: use the code (<code>65</code>).</td></tr>
+        <tr><td><code>label</code></td><td>The name of a label in the method.</td></tr>
+        <tr><td><code>variable</code></td><td>The name of a <code>.var</code> variable or of a method parameter.</td></tr>
+        <tr><td><code>method</code></td><td>The name of a <code>.method</code> method.</td></tr>
+        <tr><td><code>constant</code></td><td>The name of a <code>.constant</code> constant.</td></tr>
+        </tbody>
+    </table>
 
-        tr:nth-child(2n) {
-            background-color: #383838;
-        }
+    <h2 id="metodi">Methods</h2>
+    <ol>
+        <li>Push the object reference onto the stack. There is no predefined <code>OBJREF</code>: define a constant (for example <code>OBJREF 0x40</code>) and use <code>LDC_W OBJREF</code>, or push any word.</li>
+        <li>Push the arguments onto the stack, in parameter order.</li>
+        <li>Run <code>INVOKEVIRTUAL method</code>. The method receives the arguments in its parameters.</li>
+        <li>The method ends with <code>IRETURN</code>. After the call, the return value is on top of the caller's stack.</li>
+    </ol>
+    <p>A name cannot be used for both a variable and a method.</p>
 
-        tr.not-implemented {
-            background-color: rgb(62, 0, 0);
-        }
+    <h2 id="limiti">Differences from the textbook IJVM</h2>
+    <div class="note warning">
+        <div class="note-title">Interpreter behaviors to be aware of</div>
+        <ul>
+            <li><code>BIPUSH</code> does not check the byte range: <code>BIPUSH 300</code> pushes 300.</li>
+            <li><code>WIDE</code> and <code>INP</code> are not supported.</li>
+            <li>If <code>.main</code> ends without <code>HALT</code>, the program finishes without the <code>PROGRAM OUTPUT IS:</code> summary.</li>
+        </ul>
+    </div>
 
-        th:nth-child(1), td:nth-child(1), th:nth-child(2), td:nth-child(2) {
-            min-width: 150px;
-        }
-
-        body {
-            background-color: #202020;
-        }
-
-        h1, h2 {
-            text-align: center;
-        }
-
-        li {
-            list-style: none;
-        }
-
-        section {
-            padding: 15px;
-            background-color: rgb(62, 0, 0);
-            border: 1px solid gray;
-            text-align: center;
-        }
-        ::-webkit-scrollbar {
-            width: 5px;
-            height: 5px;
-        }
-
-        /* Track */
-        ::-webkit-scrollbar-track {
-            background: #0B0C10;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #268AAA;
-        }
-
-        ::-webkit-scrollbar-corner {
-            background: #0B0C10;
-        }
-
-        a {
-            color: #2680aa;
-        }
-    </style>
-
-    <body class="text">
-        <h1>Istruzioni IJVM (set ridotto)</h1>
-        <br>
-        <table>
-            <thead>
-                <tr>
-                    <th>KEYWORDS</th>
-                    <th>OPERANDI</th>
-                    <th>DESCRIZIONE</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="monospace">BIPUSH</td>
-                    <td class="monospace">byte</td>
-                    <td>Mette un byte in cima nello stack.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">DUP</td>
-                    <td class="monospace">🞬</td>
-                    <td>Duplica il byte in cima allo stack, <strong>BIPUSH</strong> della copia.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">ERR</td>
-                    <td class="monospace">🞬</td>
-                    <td>Stampa un messaggio di errore e <strong>HALT</strong>.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">GOTO</td>
-                    <td class="monospace">label name</td>
-                    <td>Salta incondizionalmente.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">HALT</td>
-                    <td class="monospace">🞬</td>
-                    <td>Blocca l'esecuzione del programma.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">IADD</td>
-                    <td class="monospace">🞬</td>
-                    <td><strong>POP</strong> di due parole e <strong>PUSH</strong> della somma.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">IAND</td>
-                    <td class="monospace">🞬</td>
-                    <td><strong>POP</strong> di due parole e <strong>PUSH</strong> il valore "boolean AND" delle due.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">IFEQ</td>
-                    <td class="monospace">label name</td>
-                    <td><strong>POP</strong> di una parola e <strong>GOTO</strong> alla <strong>label</strong> se il valore della parola e' zero.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">IFLT</td>
-                    <td class="monospace">label name</td>
-                    <td><strong>POP</strong> di una parola e <strong>GOTO</strong> alla <strong>label</strong> se il valore della parola e' minore di zero.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">IF_ICMPEQ</td>
-                    <td class="monospace">label name</td>
-                    <td><strong>POP</strong> di due parole e <strong>GOTO</strong> alla <strong>label</strong> se sono equivalenti.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">IINC</td>
-                    <td class="monospace">var name, byte</td>
-                    <td>Somma un byte ad una variabile locale.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">ILOAD</td>
-                    <td class="monospace">var name</td>
-                    <td><strong>BIPUSH</strong> di una variabile.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">IN</td>
-                    <td class="monospace">🞬</td>
-                    <td>Legge e <strong>BIPUSH</strong> di un carattere dall'input. Se non e' disponibile alcun carattere, <strong>BIPUSH 0x0</strong>.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">INVOKEVIRTUAL</td>
-                    <td class="monospace">method name</td>
-                    <td>Invoca un metodo, <strong>POP</strong> dell'oggetto e degli eventuali argomenti del metodo.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">IOR</td>
-                    <td class="monospace">🞬</td>
-                    <td><strong>POP</strong> di due parole e <strong>PUSH</strong> il valore "boolean OR" delle due.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">IRETURN</td>
-                    <td class="monospace">🞬</td>
-                    <td>Ritorna dal metodo con un valore intero.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">ISTORE</td>
-                    <td class="monospace">var name</td>
-                    <td><strong>POP</strong> di una parola e memorizzazione in una variabile.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">ISUB</td>
-                    <td class="monospace">🞬</td>
-                    <td><strong>POP</strong> di due parole sottrae la seconda parola con la prima, <strong>BIPUSH</strong> della differenza.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">LDC_W</td>
-                    <td class="monospace">const name</td>
-                    <td><strong>BIPUSH</strong> di una costante.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">NOP</td>
-                    <td class="monospace">🞬</td>
-                    <td>Non fa nulla.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">OUT</td>
-                    <td class="monospace">🞬</td>
-                    <td><strong>POP</strong> di una parola e stampa il carattere corrispondente.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">POP</td>
-                    <td class="monospace">🞬</td>
-                    <td>Rimozione di una parola dalla cima dello stack.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">SWAP</td>
-                    <td class="monospace">🞬</td>
-                    <td>Scambia le prime due parole nello stack.</td>
-                </tr>
-            </tbody>
-        </table>
-        <br>
-        <table>
-            <thead>
-                <tr>
-                    <th>OPERANDI</th>
-                    <th>DESCRIZIONE</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="monospace">byte</td>
-                    <td>Valore numerico nei formati: ottale <span>(es. 027, 019)</span>, decimale <span>(es. 27, 19)</span>, esadecimale <span>(es. 0x1B, 0x13)</span>.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">label name</td>
-                    <td>Il nome di stringa di un'etichetta.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">var name</td>
-                    <td>Il nome di stringa di una variabile locale.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">method name</td>
-                    <td>Il nome di stringa di un metodo.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">const name</td>
-                    <td>Il nome di stringa di una costante.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">N/A</td>
-                    <td>Questa istruzione non richiede operandi.</td>
-                </tr>
-            </tbody>
-        </table>
-        <br>
-        <section>
-            <p>
-                Le istruzioni non presenti in questa lista non sono supportate, 
-                per ulteriori informazioni si veda la 
-                <a href="https://github.com/atom7xyz/antlr-impl/blob/master/src/main/resources/ijvm.pdf">documentazione</a>.
-            </p>
-        </section>
-        <br>
-    </body>
+    <h2>Documentation</h2>
+    <p>The <a href="https://github.com/atom7xyz/antlr-impl/blob/master/src/main/resources/LaTeX/antlr-impl.pdf">interpreter documentation</a> describes the supported IJVM and 8088 instructions.</p>
+</main>
+</body>
 </html>

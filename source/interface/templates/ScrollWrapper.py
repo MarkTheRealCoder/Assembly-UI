@@ -16,7 +16,6 @@ class ScrollWrapperGraphics(QScrollArea):
 class ScrollWrapperLogic(ScrollWrapperGraphics):
     def __init__(self, parent, widget):
         super().__init__(parent, widget)
-        # Implementation of scroll wrapper logic goes here
         self.___widget = self.widget()
 
     def exposeWidget(self) -> QWidget:
@@ -26,6 +25,7 @@ class ScrollWrapperLogic(ScrollWrapperGraphics):
 
 
 class ScrollWrapper(ScrollWrapperLogic):
+    """Scroll area that wraps the widget built by the given factory, with the scrollbar policies given for each direction."""
     SBO = Literal["as_needed", "always_on", "always_off"]
     scrollbaroptions = {
         "as_needed": Qt.ScrollBarPolicy.ScrollBarAsNeeded,
@@ -34,6 +34,5 @@ class ScrollWrapper(ScrollWrapperLogic):
     }
     def __init__(self, parent, widget, vscrollbar_policy: SBO = "always_off", hscrollbar_policy: SBO = "always_off"):
         super().__init__(parent, widget)
-        # Additional initialization for ScrollWrapper
         self.setHorizontalScrollBarPolicy(self.scrollbaroptions.get(hscrollbar_policy, Qt.ScrollBarPolicy.ScrollBarAlwaysOff))
         self.setVerticalScrollBarPolicy(self.scrollbaroptions.get(vscrollbar_policy, Qt.ScrollBarPolicy.ScrollBarAlwaysOff))

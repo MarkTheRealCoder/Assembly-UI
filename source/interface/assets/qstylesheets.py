@@ -2,12 +2,13 @@ import regex
 
 
 def translateQSS(style: str):
+    """ Replace the var(name) references of a stylesheet with the values of its variables block, and drop that block. """
     variables: dict[str: str] = {}
     index = style.find("variables")
     last_index = style.find("}", index)
     substring_variables = style[index:last_index]
     substring_variables = substring_variables.replace("variables", "").replace("{", "")
-    raw = substring_variables.split(";")  # comments_free.split(";")
+    raw = substring_variables.split(";")
     for i in raw:
         try:
             k, v = i.split(":")

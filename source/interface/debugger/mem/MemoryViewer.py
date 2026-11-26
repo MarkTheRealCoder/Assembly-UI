@@ -1,10 +1,12 @@
+from PyQt5 import sip
 from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QFrame, QSizePolicy, QVBoxLayout
 
+from source.interface import createLayout
 from source.interface.debugger.mem.ContextContainer import ContextContainer
 from source.interface.debugger.mem.ContextWindow import ContextWindow
 from source.interface.debugger.mem.MemoryHeader import MemoryHeader
-from source.interface.shared import createLayout
+from source.interface.debugger.mem.chunks import SingleMemoryChunk
 from source.interface.templates import ScrollWrapper
 
 
@@ -12,11 +14,9 @@ class MemoryViewerGraphics(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
         self.setObjectName("MemoryViewer")
-        # Additional UI setup can be done here
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.mem_header = MemoryHeader(self)
         self.mem_wrapper = ScrollWrapper(self, ContextContainer, vscrollbar_policy="as_needed")
-
 
         layout: QVBoxLayout = createLayout(QVBoxLayout, self)
         layout.addWidget(self.mem_header, 0)
@@ -25,26 +25,34 @@ class MemoryViewerGraphics(QFrame):
 
 
 class MemoryViewerLogic(MemoryViewerGraphics):
+    # Delay that lets the layouts place a new node before the viewer scrolls to it.
+    ___FOLLOW_DELAY_MS = 30
+    ___FOLLOW_MARGIN = 12
+
     def __init__(self, parent):
         super().__init__(parent)
-        # Implementation of memory viewer logic goes here
+        self.___follow_new_nodes: bool = False
 
     def addNewContext(self, name: str):
         """ Add a new context to the memory viewer """
         w: ContextContainer = self.mem_wrapper.exposeWidget()
         w.addContext(name)
 
-    def addNodeToContext(self, context_name: str, node_path: str, value: str or int or list[int] or None = None):
+    def addNodeToContext(self, context_name: str, node_path: str, value: str or int or list[int] or None = None,
+                         order: int = None):
         """ Add a new Node into a specific context following the path provided.
             The above-mentioned path must follow the following grammar: id.id1.(...).node_name
             This path will create recursively the nodes: id which contains id1 which contains the other nodes
             that will ultimately contain node_name.
             Example: id -> id1 -> ... -> node_name: value
+            The order is the position of the node among its siblings; None appends it.
+            Returns the outermost node that the call created, or None.
         """
         w: ContextContainer = self.mem_wrapper.exposeWidget()
         context_window: ContextWindow = w.findContext(context_name)
         if context_window is not None:
-            context_window.addNewNode(node_path, value)
+            return context_window.addNewNode(node_path, value, order)
+        return None
 
     def removeNodeFromContext(self, context_name: str, node_path: str):
         """ Remove a node from a specific context following the path provided.
@@ -63,62 +71,63 @@ class MemoryViewerLogic(MemoryViewerGraphics):
         if context_window is not None:
             context_window.popLastNode()
 
+    def loadContexts(self, names: list[str], language: str, debug: bool = False):
+        """
+        Replace the contexts with the ones of a new program.
+        In debug mode the viewer scrolls to each node that the program adds.
+        """
+        w: ContextContainer = self.mem_wrapper.exposeWidget()
+        w.reset()
+        for name in names:
+            w.addContext(name)
+        self.mem_header.updateLanguage(language)
+        self.mem_header.setWaiting(False)
+        self.___follow_new_nodes = debug
+
+    def setNumberBase(self, base: int):
+        """ Show every memory value in base 16, 10 or 8 """
+        SingleMemoryChunk.setNumberBase(base)
+        w: ContextContainer = self.mem_wrapper.exposeWidget()
+        for chunk in w.findChildren(SingleMemoryChunk):
+            chunk.refresh()
+
+    def setWaitingInput(self, waiting: bool):
+        """ Show or hide the animation that tells the user to type an input """
+        self.mem_header.setWaiting(waiting)
+
+    def stopFollowing(self):
+        """ Stop scrolling to new nodes, for example at the end of the program """
+        self.___follow_new_nodes = False
+
+    def ___scrollTo(self, widget):
+        if widget is None or sip.isdeleted(widget) or not widget.isVisible():
+            return
+        self.mem_wrapper.ensureWidgetVisible(widget, self.___FOLLOW_MARGIN, self.___FOLLOW_MARGIN)
+
+    def applyUpdate(self, update):
+        """ Apply an interpreter update as one repaint. """
+        if not update.changed and not update.removed and update.instruction is None:
+            return
+        created = None
+        self.setUpdatesEnabled(False)
+        try:
+            for context, path in update.removed:
+                self.removeNodeFromContext(context, path)
+            for context, path, value, order in update.changed:
+                node = self.addNodeToContext(context, path, value, order)
+                if node is not None:
+                    created = node
+            if update.instruction is not None:
+                self.mem_header.updateInstruction(update.instruction, update.line)
+                self.mem_header.updateScope(update.scope)
+                self.mem_header.updateProgramCounter(max(update.pc, 0))
+        finally:
+            self.setUpdatesEnabled(True)
+
+        if created is not None and self.___follow_new_nodes:
+            QTimer.singleShot(self.___FOLLOW_DELAY_MS, lambda: self.___scrollTo(created))
+
 
 class MemoryViewer(MemoryViewerLogic):
     def __init__(self, parent):
         super().__init__(parent)
-        # Additional initialization for MemoryViewer
-        self.addNewContext("REGISTERS")
-        self.addNewContext("STACK")
-        self.addNewContext("MEMORY")
-        self.addNewContext("FLAGS")
-        self.addNodeToContext("REGISTERS", "AX", None)
-        self.addNodeToContext("REGISTERS", "BX", None)
-        self.addNodeToContext("REGISTERS", "CX", None)
-        self.addNodeToContext("REGISTERS", "DX", None)
-        self.addNodeToContext("REGISTERS", "AX.AH", 0)
-        self.addNodeToContext("REGISTERS", "AX.AL", 0)
-        self.addNodeToContext("REGISTERS", "BX.BH", 0)
-        self.addNodeToContext("REGISTERS", "BX.BL", 0)
-        self.addNodeToContext("REGISTERS", "CX.CH", 0)
-        self.addNodeToContext("REGISTERS", "CX.CL", 0)
-        self.addNodeToContext("REGISTERS", "DX.DH", 0)
-        self.addNodeToContext("REGISTERS", "DX.DL", 0)
-        self.addNodeToContext("REGISTERS", "DX.DL", 2)
-        self.addNodeToContext("STACK", "0x00000000", 0)
-        self.addNodeToContext("STACK", "0x00000004", 0)
-        self.addNodeToContext("STACK", "0x00000008", 0)
-        self.addNodeToContext("STACK", "0x0000000C", 0)
-        self.addNodeToContext("STACK", "0x00000010", 0)
-        self.addNodeToContext("STACK", "0x00000014", 0)
-        self.addNodeToContext("STACK", "0x00000018", 0)
-        self.addNodeToContext("STACK", "0x0000001C", 0)
-        self.addNodeToContext("STACK", "0x00000020", 0)
-        self.addNodeToContext("STACK", "0x00000024", 0)
-        self.addNodeToContext("STACK", "0x00000028", 0)
-        self.addNodeToContext("STACK", "function.function")
-        self.addNodeToContext("STACK", "function.function.0x00000024", 12)
-        self.addNodeToContext("STACK", "function.function.function.function.function.function")
-        self.addNodeToContext("MEMORY", "0x00000000", 0)
-        self.addNodeToContext("MEMORY", "0x00000004", 0)
-        self.addNodeToContext("MEMORY", "0x00000008", 0)
-        self.addNodeToContext("MEMORY", "0x0000000C", 0)
-        self.addNodeToContext("MEMORY", "0x00000010", 0)
-        self.addNodeToContext("MEMORY", "0x00000014", 0)
-        self.addNodeToContext("MEMORY", "0x00000018", 0)
-        self.addNodeToContext("MEMORY", "0x0000001C", 0)
-        self.addNodeToContext("MEMORY", "0x00000020", 0)
-        self.addNodeToContext("FLAGS", "ZF", 0)
-        self.addNodeToContext("FLAGS", "SF", 0)
-        self.addNodeToContext("FLAGS", "OF", 0)
-        self.addNodeToContext("FLAGS", "CF", 0)
-        self.addNodeToContext("FLAGS", "AF", 0)
-
-        QTimer.singleShot(10000, lambda: self.removeNodeFromContext("STACK", "function.function.function.function.function.function"))
-        QTimer.singleShot(11000, lambda: self.removeNodeFromContext("STACK", "function.function.function.function.function"))
-        QTimer.singleShot(12000, lambda: self.removeNodeFromContext("STACK", "function.function.function.function"))
-        QTimer.singleShot(13000, lambda: self.removeNodeFromContext("STACK", "function.function.function"))
-        QTimer.singleShot(14000, lambda: self.removeNodeFromContext("STACK", "function.function"))
-        QTimer.singleShot(15000, lambda: self.removeNodeFromContext("STACK", "function"))
-
-

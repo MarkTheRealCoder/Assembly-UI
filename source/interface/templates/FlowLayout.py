@@ -9,6 +9,7 @@ from PyQt5.QtCore import Qt, QMargins, QPoint, QRect, QSize
 from PyQt5.QtWidgets import QLayout, QSizePolicy
 
 class FlowLayout(QLayout):
+    """Layout that places items left to right and wraps them to the next row."""
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -47,8 +48,9 @@ class FlowLayout(QLayout):
         return True
 
     def heightForWidth(self, width):
-        height = self._do_layout(QRect(0, 0, width, 0), True)
-        return height
+        margins = self.contentsMargins()
+        height = self._do_layout(QRect(0, 0, width - margins.left() - margins.right(), 0), True)
+        return height + margins.top() + margins.bottom()
 
     def setGeometry(self, rect):
         super(FlowLayout, self).setGeometry(rect)
@@ -65,6 +67,15 @@ class FlowLayout(QLayout):
 
         size += QSize(2 * self.contentsMargins().top(), 2 * self.contentsMargins().top())
         return size
+
+    @staticmethod
+    def _fitted_size(item, width: int) -> QSize:
+        """ Size of the item at most as wide as the layout, taller if its content wraps """
+        hint = item.sizeHint()
+        if width <= 0 or hint.width() <= width:
+            return hint
+        height = item.heightForWidth(width) if item.hasHeightForWidth() else -1
+        return QSize(width, max(height, hint.height()) if height >= 0 else hint.height())
 
     def _do_layout(self, rect, test_only):
         x = rect.x()
@@ -84,17 +95,19 @@ class FlowLayout(QLayout):
             )
             space_x = spacing + layout_spacing_x
             space_y = spacing + layout_spacing_y
-            next_x = x + item.sizeHint().width() + space_x
-            if next_x - space_x > rect.right() and line_height > 0:
+            # An item wider than the layout is narrowed to its width, so it wraps its text instead of leaving the box.
+            size = self._fitted_size(item, rect.width())
+            next_x = x + size.width() + space_x
+            if next_x - space_x > rect.right() + 1 and line_height > 0:
                 x = rect.x()
                 y = y + line_height + space_y
-                next_x = x + item.sizeHint().width() + space_x
+                next_x = x + size.width() + space_x
                 line_height = 0
 
             if not test_only:
-                item.setGeometry(QRect(QPoint(x, y), item.sizeHint()))
+                item.setGeometry(QRect(QPoint(x, y), size))
 
             x = next_x
-            line_height = max(line_height, item.sizeHint().height())
+            line_height = max(line_height, size.height())
 
         return y + line_height - rect.y()

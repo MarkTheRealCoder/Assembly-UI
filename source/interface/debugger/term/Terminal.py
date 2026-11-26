@@ -1,12 +1,13 @@
 import re
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QTextCharFormat, QColor, QFont, QTextCursor, QKeySequence, QTextFrameFormat, QTextLength
+from PyQt5.QtGui import QTextCharFormat, QColor, QFont, QTextCursor, QKeySequence, QTextFrameFormat, QTextLength, \
+    QTextBlockFormat, QFontMetricsF, QFontInfo
 from PyQt5.QtWidgets import QTextEdit, QAction, QMenu
 
-from source.comms.events.FindShortcut import FindShortcutEvent
+from source.comms.events import FindShortcutEvent
 from source.comms.handlers import EventRegister
-from source.interface.shared import Settings, handleZoomEvent
+from source.interface import Settings, handleZoomEvent
 from source.interface.templates import Tooltip
 
 
@@ -29,22 +30,40 @@ class TerminalLogic(TerminalGraphics):
     READONLY_STATE = 1
     READONLY_AND_MODIFIABLE_STATE = 2
 
+    INFO_TAG = "[INFO]"
+    WARNING_TAG = "[WARNING]"
+    EXCEPTION_TAG = "[EXCEPTION]"
+
+    # Distance between two baselines, in multiples of the font size (CSS line-height).
+    LINE_HEIGHT = 1.2
+
     infoFmt = QTextCharFormat()
-    warnFmt = QTextCharFormat()
-    errorFmt = QTextCharFormat()
+    infoTagFmt = QTextCharFormat()
+    warnTagFmt = QTextCharFormat()
+    errorTagFmt = QTextCharFormat()
+    messageFmt = QTextCharFormat()
     writeFmt = QTextCharFormat()
     separatorFmt = QTextFrameFormat()
+    messageBlockFmt = QTextBlockFormat()
     highlightFmt = QTextCharFormat()
     currentHighlightFmt = QTextCharFormat()
 
     # The family and size come from the stylesheet, so zoom can change the document font.
-    for fmt in [infoFmt, warnFmt, errorFmt, writeFmt, highlightFmt, currentHighlightFmt]:
+    for fmt in [infoFmt, infoTagFmt, warnTagFmt, errorTagFmt, messageFmt, writeFmt, highlightFmt, currentHighlightFmt]:
         fmt.setFontItalic(False)
 
-    infoFmt.setForeground(QColor("#FFFFFF"))   # White
-    warnFmt.setForeground(QColor("#CCCC00"))   # Yellow
-    errorFmt.setForeground(QColor("#DD0000"))  # Red
-    writeFmt.setForeground(QColor("#00CC00"))  # Green
+    infoFmt.setForeground(QColor("#FFFFFF"))      # White: program output and the prompt
+    infoTagFmt.setForeground(QColor("#4FC3F7"))   # Light blue: [INFO]
+    warnTagFmt.setForeground(QColor("#E5C07B"))   # Yellow: [WARNING]
+    errorTagFmt.setForeground(QColor("#F14C4C"))  # Red: [EXCEPTION]
+    messageFmt.setForeground(QColor("#C8C8C8"))   # Light gray: text of a message
+    writeFmt.setForeground(QColor("#00CC00"))     # Green: user input
+    for fmt in [infoTagFmt, warnTagFmt, errorTagFmt]:
+        fmt.setFontWeight(QFont.Bold)
+
+    # Space above and below each message line, so consecutive messages stay apart.
+    messageBlockFmt.setTopMargin(1)
+    messageBlockFmt.setBottomMargin(1)
     highlightFmt.setBackground(QColor("#8800CC"))  # Purple highlight
     currentHighlightFmt.setBackground(QColor("#CC00FF"))  # Brighter purple for current match
 
@@ -56,7 +75,6 @@ class TerminalLogic(TerminalGraphics):
 
     def __init__(self, parent):
         super().__init__(parent)
-        # Implementation of terminal logic goes here
         self.setUndoRedoEnabled(False)
         self.separator()
 
@@ -65,6 +83,77 @@ class TerminalLogic(TerminalGraphics):
         self._last_search_prompt: str = ""
         self._last_search_regex: bool = False
         self._base_font = None
+        self._input_callback = None
+        self._output_open: bool = False
+
+    def beginProgram(self, input_callback: callable) -> None:
+        """Prepare the terminal for a program and route submitted lines to the callback."""
+        self._clearUserInput()
+        self._input_callback = input_callback
+        self._output_open = False
+
+    def endProgram(self) -> None:
+        """Close the program output and restore the normal terminal input."""
+        self._clearUserInput()
+        self._input_callback = None
+        self._output_open = False
+
+    def writeProgram(self, text: str) -> None:
+        """Append program output above the line that the user is typing."""
+        if not text:
+            return
+        bar = self.verticalScrollBar()
+        follow = bar.value() >= bar.maximum()
+        last = self.document().lastBlock()
+        cursor = QTextCursor(self.document())
+
+        if self._output_open:
+            cursor.setPosition(last.position() - 1)
+        else:
+            cursor.setPosition(last.position())
+            cursor.insertBlock()
+            cursor.movePosition(QTextCursor.PreviousBlock)
+            self._output_open = True
+
+        first_block = cursor.blockNumber()
+        cursor.setCharFormat(TerminalLogic.infoFmt)
+        cursor.insertText(text)
+
+        block = self.document().findBlockByNumber(first_block)
+        input_block = self.document().lastBlock()
+        while block.isValid() and block != input_block:
+            block.setUserState(TerminalLogic.READONLY_STATE)
+            self._setLineHeight(QTextCursor(block))
+            block = block.next()
+        input_block.setUserState(-1)
+
+        if follow:
+            bar.setValue(bar.maximum())
+
+    def submitInput(self) -> None:
+        """Move the typed lines into the read-only output and send them to the program."""
+        lines = self._takeUserInput()
+        if not lines:
+            return
+        self._write("\n".join(lines), TerminalLogic.writeFmt)
+        self._input_callback(lines)
+
+    def _takeUserInput(self) -> list[str]:
+        """Remove the editable text at the end of the document and return its lines."""
+        block = self.document().lastBlock()
+        while block.previous().isValid() and not self.is_block_protected(block.previous()):
+            block = block.previous()
+        cursor = QTextCursor(self.document())
+        cursor.setPosition(block.position())
+        cursor.movePosition(QTextCursor.End, QTextCursor.KeepAnchor)
+        text = cursor.selectedText().replace(" ", "\n")
+        cursor.removeSelectedText()
+        self._resetCursor()
+        return [line for line in text.split("\n") if line]
+
+    def _clearUserInput(self) -> None:
+        """Delete the text typed after the last protected block."""
+        self._takeUserInput()
 
     def _zoomBy(self, steps: int):
         self.ensurePolished()
@@ -89,8 +178,37 @@ class TerminalLogic(TerminalGraphics):
             self.setTextCursor(cursor)
         return cursor
 
+    def _writeMessage(self, tag: str, tag_fmt: QTextCharFormat, text: str) -> None:
+        """Write a message with a colored tag on each line and the text in light gray."""
+        segments = []
+        for line in str(text).splitlines() or [""]:
+            segments.append((tag, tag_fmt))
+            segments.append((f" {line}\n", TerminalLogic.messageFmt))
+        self._writeSegments(segments, TerminalLogic.messageBlockFmt)
+
+    def _writeSegments(self, segments: list[tuple[str, QTextCharFormat]], block_fmt: QTextBlockFormat = None,
+                       userState = READONLY_STATE) -> None:
+        """Append text segments with their formats at the end and protect their blocks."""
+        cursor = self._set_to_eof()
+        self._output_open = False
+        block_start = cursor.position()
+
+        for text, fmt in segments:
+            cursor.insertText(text, fmt)
+
+        last_pos = cursor.position() - 1
+        cursor.setPosition(block_start)
+        while cursor.position() <= last_pos:
+            cursor.block().setUserState(userState)
+            self._setLineHeight(cursor, block_fmt)
+            if not cursor.movePosition(QTextCursor.NextBlock):
+                break
+
+        self._resetCursor()
+
     def _write(self, content: str or QTextFrameFormat, fmt: QTextCharFormat = None, userState = READONLY_STATE, keepPos = False) -> None:
         cursor = self._set_to_eof() if not keepPos else self.textCursor()
+        self._output_open = False
 
         block_start = cursor.position()
 
@@ -105,10 +223,26 @@ class TerminalLogic(TerminalGraphics):
         cursor.setPosition(block_start)
         while cursor.position() <= last_pos:
             cursor.block().setUserState(userState)  # 1 = read-only | 2 = read-only but can be modified by code
+            self._setLineHeight(cursor)
             if not cursor.movePosition(QTextCursor.NextBlock):
                 cursor.movePosition(QTextCursor.EndOfBlock)
 
         self._resetCursor()
+
+    def _lineHeightPercent(self) -> float:
+        """Line height as a percentage of the font's own line spacing, which is what Qt expects"""
+        self.ensurePolished()
+        font = self.document().defaultFont()
+        spacing = QFontMetricsF(font).lineSpacing()
+        if spacing <= 0:
+            return 100.0
+        return max(80.0, 100.0 * TerminalLogic.LINE_HEIGHT * QFontInfo(font).pixelSize() / spacing)
+
+    def _setLineHeight(self, cursor: QTextCursor, block_fmt: QTextBlockFormat = None) -> None:
+        """Give the block under the cursor the terminal line height, merged with block_fmt if given"""
+        fmt = QTextBlockFormat(block_fmt) if block_fmt is not None else cursor.blockFormat()
+        fmt.setLineHeight(self._lineHeightPercent(), QTextBlockFormat.ProportionalHeight)
+        cursor.setBlockFormat(fmt)
 
     def _resetCursor(self) -> None:
         cursor = self._set_to_eof()
@@ -128,7 +262,6 @@ class TerminalLogic(TerminalGraphics):
         start = cursor.selectionStart()
         end = cursor.selectionEnd()
 
-        # Create a cursor to iterate through selection
         check_cursor = self.textCursor()
         check_cursor.setPosition(start)
 
@@ -141,16 +274,24 @@ class TerminalLogic(TerminalGraphics):
         return False
 
     def info(self, text: str) -> None:
-        self._write(f"[INFO]: {text}", TerminalLogic.infoFmt)
+        self._writeMessage(TerminalLogic.INFO_TAG, TerminalLogic.infoTagFmt, text)
 
     def warning(self, text: str) -> None:
-        self._write(text, TerminalLogic.warnFmt)
+        self._writeMessage(TerminalLogic.WARNING_TAG, TerminalLogic.warnTagFmt, text)
 
     def error(self, text: str) -> None:
-        self._write(text, TerminalLogic.errorFmt)
+        self._writeMessage(TerminalLogic.EXCEPTION_TAG, TerminalLogic.errorTagFmt, text)
 
     def separator(self) -> None:
         self._write(TerminalLogic.separatorFmt)
+
+    def prompt(self) -> None:
+        """Write the separator bar and the prompt of the current file, as at the start of the terminal."""
+        self.separator()
+        document = Settings.get("editor/current", None)
+        if document:
+            self.writeModifiable(f"{document} >>")
+        self.scrollDown()
 
     def writeModifiable(self, text: str) -> None:
         keepPos = False
@@ -201,6 +342,7 @@ class TerminalLogic(TerminalGraphics):
 
     def clear(self) -> None:
         self.setText("")
+        self._output_open = False
         self.separator()
         if Settings.get("editor/current", None):
             document = Settings.get("editor/current", None)
@@ -270,7 +412,6 @@ class TerminalLogic(TerminalGraphics):
                 for match in pattern.finditer(text):
                     self._search_matches.append((match.start(), match.end()))
             else:
-                # Plain text search (case-insensitive)
                 lower_text = text.lower()
                 lower_prompt = prompt.lower()
                 start = 0
@@ -325,13 +466,18 @@ class TerminalLogic(TerminalGraphics):
 class Terminal(TerminalLogic):
     def __init__(self, parent):
         super().__init__(parent)
-        # Additional initialization for Terminal
         Settings.addNotificationGroup("editor/current", self.onChangeDocument)
+
+        # The action belongs to the terminal, so its shortcuts work while the terminal has focus.
+        self._clear_action = QAction("Clear Terminal", self)
+        self._clear_action.setShortcuts([QKeySequence(Qt.CTRL + Qt.Key_L), QKeySequence(Qt.CTRL + Qt.SHIFT + Qt.Key_K)])
+        self._clear_action.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+        self._clear_action.triggered.connect(self.clear)
+        self.addAction(self._clear_action)
     
     def onFindShortcutEvent(self, event: FindShortcutEvent):
         """Handle find events from the FindWidget."""
         if event.mustClose():
-            # Clear highlights when find widget closes
             self._clearHighlights()
             self._resetCursor()
             self._search_matches.clear()
@@ -342,16 +488,13 @@ class Terminal(TerminalLogic):
         prompt = event.getPrompt()
         
         if movement != "none":
-            # Navigate between matches
             self._navigateMatch(movement)
         elif prompt is not None:
-            # Perform new search
             self._clearHighlights()
             self._resetCursor()
             self._current_match_index = -1
             self._performSearch(prompt, event.isRegex())
         
-        # Send back occurrence info to FindWidget
         EventRegister.send(
             FindShortcutEvent(
                 False,
@@ -361,6 +504,8 @@ class Terminal(TerminalLogic):
         )
 
     def onChangeDocument(self):
+        if self._input_callback is not None:
+            return
         document = Settings.get("editor/current", None)
         if document:
             self.writeModifiable(f"{document} >>")
@@ -372,26 +517,20 @@ class Terminal(TerminalLogic):
 
     def contextMenuEvent(self, e):
         menu = QMenu(self)
-        for act in [
-
-                ("Paste", [QKeySequence.Paste], self.paste),
-                ("Copy", [QKeySequence.Copy], self.copy),
-                "slash",
-                ("Select All", [QKeySequence.SelectAll], self.selectAll),
-                "slash",
-                ("Clear Terminal", [QKeySequence(Qt.CTRL + Qt.Key_L), QKeySequence(Qt.CTRL + Qt.SHIFT + Qt.Key_K)], self.clear)
-            ]:
-            if act == "slash":
-                menu.addSeparator()
-                continue
-            action = QAction(self)
-            action.setText(act[0])
-            if act[1]:
-                action.setShortcuts(act[1])
-            action.triggered.connect(act[2])
+        for text, shortcut, slot in (("Paste", QKeySequence.Paste, self.paste), ("Copy", QKeySequence.Copy, self.copy)):
+            action = QAction(text, menu)
+            action.setShortcut(shortcut)
+            action.triggered.connect(slot)
             menu.addAction(action)
-
+        menu.addSeparator()
+        select_all = QAction("Select All", menu)
+        select_all.setShortcut(QKeySequence.SelectAll)
+        select_all.triggered.connect(self.selectAll)
+        menu.addAction(select_all)
+        menu.addSeparator()
+        menu.addAction(self._clear_action)
         menu.exec_(e.globalPos())
+        menu.deleteLater()
 
     def keyPressEvent(self, event):
         """Prevent editing read-only blocks"""
@@ -404,19 +543,21 @@ class Terminal(TerminalLogic):
         if self.tooltip.isShown():
             self.tooltip.hideTooltip()
 
-        # BACKSPACE key
+        if self._input_callback is not None and event.key() in (Qt.Key_Return, Qt.Key_Enter):
+            self.submitInput()
+            event.accept()
+            return
+
         if event.key() == Qt.Key_Backspace:
             if not self.backspaceEvent(cursor, current_block):
                 event.ignore()
                 return
 
-        # DELETE key
         elif event.key() == Qt.Key_Delete:
             if not self.deleteEvent(cursor, current_block):
                 event.ignore()
                 return
 
-        # Regular typing
         elif event.text() and not event.modifiers() & (Qt.ControlModifier | Qt.AltModifier):
             if self.is_block_protected(current_block) or self.selection_includes_protected():
                 event.ignore()
@@ -425,13 +566,11 @@ class Terminal(TerminalLogic):
                 cursor.setCharFormat(TerminalLogic.writeFmt)
                 self.setTextCursor(cursor)
 
-        # CUT operation
         elif event.matches(QKeySequence.Cut) or (event.modifiers() & Qt.ControlModifier and event.key() == Qt.Key_X):
             self.tooltip.showTooltip()
             event.ignore()
             return
 
-        # PASTE operation into protected block
         elif event.matches(QKeySequence.Paste) or (
                 event.modifiers() & Qt.ControlModifier and event.key() == Qt.Key_V):
             self.paste()
@@ -448,18 +587,15 @@ class Terminal(TerminalLogic):
 
     def backspaceEvent(self, cursor, current_block):
         if cursor.hasSelection():
-            # Check if selection includes protected blocks
             if self.selection_includes_protected():
                 return False
         else:
-            # Check current position
             if cursor.atBlockStart():
                 # At start of block - would delete from previous block
                 prev_block = current_block.previous()
                 if self.is_block_protected(prev_block):
                     return False
             elif self.is_block_protected(current_block):
-                # Inside protected block
                 return False
         return True
 
@@ -468,12 +604,10 @@ class Terminal(TerminalLogic):
             if self.selection_includes_protected():
                 return False
         else:
-            # Check if at end of protected block
             if cursor.atBlockEnd() and self.is_block_protected(current_block):
                 # Would delete from next block - block this
                 return False
             elif self.is_block_protected(current_block):
-                # Inside protected block
                 return False
         return True
 

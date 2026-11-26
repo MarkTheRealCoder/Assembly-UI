@@ -57,6 +57,19 @@ QSplitter#Mem-CodeSplitter::handle {
     background-color: var(---generic-background-color);
 }
 
+QSplitter#Term-MemSplitter::handle {
+    background-color: var(---generic-background-color);
+}
+
+QFrame#ExecutionToolbars {
+    background-color: var(---generic-background-color);
+}
+
+QSplitter#Mem-CodeSplitter::handle:hover,
+QSplitter#Term-MemSplitter::handle:hover {
+    background-color: var(---generic-highlight-background-color);
+}
+
 QsciScintilla#Editor {
     border: none;
 }
@@ -507,8 +520,8 @@ QTextEdit#Terminal {
     background-color: #292727;
     color: #007700;
     border: none;
-    font-family: "FiraCode";
-    font-size: 13pt;
+    font-family: "JetBrains Mono", "Consolas", monospace;
+    font-size: 11pt;
     font-style: normal;
 }
 
@@ -576,6 +589,18 @@ QPushButton#FinderButton[active="true"], QPushButton#FakeFindButton[findActive="
 QPushButton#ClearButton[active="true"]:hover, QPushButton#RunButton[active="true"],
 QPushButton#RunButton[active="true"]:hover {
     background-color: #3FB950;
+}
+
+QFrame#ToolbarExecution QComboBox#NumberBasePicker {
+    min-width: 44px;
+    max-width: 44px;
+    padding: 0px;
+    font-weight: bold;
+}
+
+QFrame#ToolbarExecution QComboBox#NumberBasePicker::drop-down {
+    width: 0px;
+    border: none;
 }
 
 QFrame#ToolbarExecution QPushButton#StopButton {
@@ -716,7 +741,6 @@ QFrame#ContextWindow CompoundMemoryChunk {
     padding: 0px;
     margin: 0px;
     border-radius: 8px;
-    min-height: 64px;
 }
 
 
@@ -724,8 +748,8 @@ QFrame#ContextWindow CompoundMemoryChunk > QFrame#ContextHeader {
     background-color: rgba(30, 30, 30, 0.5);
     border: none;
     padding: 5px auto;
-    min-height: 16px;
-    max-height: 16px;
+    min-height: 20px;
+    max-height: 20px;
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
 }

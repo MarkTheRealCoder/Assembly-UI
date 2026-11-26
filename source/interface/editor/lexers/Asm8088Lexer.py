@@ -1,9 +1,16 @@
-from PyQt5.Qsci import QsciLexerCustom, QsciScintilla, QsciAPIs
+import re
+
+from PyQt5.Qsci import QsciLexerCustom, QsciScintilla
 from PyQt5.QtGui import QColor, QFont
 
+from source.interface.assets import editorFont
 
-class Asm8088Lexer(QsciLexerCustom):
-    # Style constants
+from .Completion import CompletionSource
+
+
+class Asm8088Lexer(CompletionSource, QsciLexerCustom):
+    """Syntax highlighter and autocompletion source for 8088 assembly files"""
+
     Default = 0
     Directive = 1
     Instruction = 2
@@ -15,16 +22,29 @@ class Asm8088Lexer(QsciLexerCustom):
     Symbol = 8
     Label = 9
 
+    STRINGS = True
+    ___LABEL = re.compile(r"([A-Za-z_][A-Za-z0-9_]*)\s*:")
+    ___CONSTANT = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=")
+
     def __init__(self, parent: QsciScintilla = None):
         super().__init__(parent)
         self._parent: QsciScintilla = self.parent()
         self.setupStyles()
         self.setupKeywords()
-        self.___apis = QsciAPIs(self)
-        for api in self.instructions.union(self.registers).union(self.directives):
-            self.___apis.add(api)
-        self.___apis.prepare()
-        self.setAPIs(self.___apis)
+        self.setupCompletion(self.instructions.union(self.registers).union(self.directives))
+
+    def collectSymbols(self, lines: list[str]) -> set:
+        """Labels (name:), also of data such as 'msg: .ASCII', and constants (NAME = value)"""
+        symbols = set()
+        for line in lines:
+            if match := self.___CONSTANT.match(line):
+                symbols.add(match.group(1))
+            rest = line
+            # A line can start with several labels, as in 'a: b: MOV AX, 1'.
+            while match := self.___LABEL.match(rest.lstrip()):
+                symbols.add(match.group(1))
+                rest = rest.lstrip()[match.end():]
+        return symbols
 
     def autoCompletionWordSeparators(self):
         return [",", " ", "\t", "(", ")", "[", "]", "{", "}", ":", ";", "+", "-", "*", "/", "=", "<", ">", "!", "&", "|", "^", "%", "~", "\"", "'"]
@@ -33,55 +53,47 @@ class Asm8088Lexer(QsciLexerCustom):
         return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_."
 
     def setupStyles(self):
-        # Default style
-        self.setDefaultFont(QFont("Bahnschrift", 12))
+        self.setDefaultFont(editorFont())
         self.setDefaultColor(QColor("#CCCCCC"))
         self.setDefaultPaper(QColor("#292727"))
 
         # Directive style (.SECT, .BYTE, etc.)
         self.setColor(QColor("#569CD6"), self.Directive)
-        self.setFont(QFont("Bahnschrift", 12, weight=63), self.Directive)
+        self.setFont(editorFont(weight=QFont.DemiBold), self.Directive)
 
         # Instruction style (MOV, ADD, etc.)
         self.setColor(QColor("#4EC9B0"), self.Instruction)
-        self.setFont(QFont("Bahnschrift", 12, weight=63), self.Instruction)
+        self.setFont(editorFont(weight=QFont.DemiBold), self.Instruction)
 
         # Register style (AX, BX, etc.)
         self.setColor(QColor("#FFC83D"), self.Register)
-        self.setFont(QFont("Bahnschrift", 12), self.Register)
+        self.setFont(editorFont(), self.Register)
 
-        # Number style
         self.setColor(QColor("#B5CEA8"), self.Number)
-        self.setFont(QFont("Bahnschrift", 12), self.Number)
+        self.setFont(editorFont(), self.Number)
 
-        # Identifier style
         self.setColor(QColor("#9CDCFE"), self.Identifier)
-        self.setFont(QFont("Bahnschrift", 12), self.Identifier)
+        self.setFont(editorFont(), self.Identifier)
 
-        # Comment style
         self.setColor(QColor("#6A9955"), self.Comment)
-        self.setFont(QFont("Bahnschrift", 12, italic=True), self.Comment)
+        self.setFont(editorFont(italic=True), self.Comment)
 
         # String style
         self.setColor(QColor("#CE9178"), self.String)
-        self.setFont(QFont("Bahnschrift", 12), self.String)
+        self.setFont(editorFont(), self.String)
 
-        # Symbol style
         self.setColor(QColor("#D4D4D4"), self.Symbol)
-        self.setFont(QFont("Bahnschrift", 12), self.Symbol)
+        self.setFont(editorFont(), self.Symbol)
 
-        # Label style
         self.setColor(QColor("#DCDCAA"), self.Label)
-        self.setFont(QFont("Bahnschrift", 12, weight=63), self.Label)
+        self.setFont(editorFont(weight=QFont.DemiBold), self.Label)
 
     def setupKeywords(self):
-        # Directives
         self.directives = {
             '.SECT', '.BYTE', '.ASCII', '.SPACE', '.DATA', '.TEXT', '.BSS',
             '.sect', '.byte', '.ascii', '.space', '.data', '.text', '.bss'
         }
 
-        # Instructions
         self.instructions = {
             'MOV', 'PUSH', 'POP', 'ADD', 'ADC', 'SUB', 'SBB', 'MUL', 'DIV',
             'INC', 'DEC', 'CMP', 'AND', 'OR', 'XOR', 'NOT', 'JMP', 'JE', 'JZ',
@@ -89,17 +101,16 @@ class Asm8088Lexer(QsciLexerCustom):
             'JNL', 'JB', 'JNAE', 'JBE', 'JNA', 'JA', 'JNBE', 'JAE', 'JNB',
             'JS', 'JNS', 'JO', 'JNO', 'JP', 'JPE', 'JNP', 'JPO', 'JC', 'JNC',
             'JCXZ', 'LOOP', 'CALL', 'RET', 'MOVB', 'SUBB', 'DIVB', 'CMPB',
-            'ADDB', 'XORB', 'MULB', 'SYS',
+            'ADDB', 'XORB', 'MULB', 'SYS', 'HLT', 'NOP',
             'mov', 'push', 'pop', 'add', 'adc', 'sub', 'sbb', 'mul', 'div',
             'inc', 'dec', 'cmp', 'and', 'or', 'xor', 'not', 'jmp', 'je', 'jz',
             'jne', 'jnz', 'jl', 'jnge', 'jle', 'jng', 'jg', 'jnle', 'jge',
             'jnl', 'jb', 'jnae', 'jbe', 'jna', 'ja', 'jnbe', 'jae', 'jnb',
             'js', 'jns', 'jo', 'jno', 'jp', 'jpe', 'jnp', 'jpo', 'jc', 'jnc',
             'jcxz', 'loop', 'call', 'ret', 'movb', 'subb', 'divb', 'cmpb',
-            'addb', 'xorb', 'mulb', 'sys'
+            'addb', 'xorb', 'mulb', 'sys', 'hlt', 'nop'
         }
 
-        # Registers
         self.registers = {
             'AX', 'BX', 'CX', 'DX', 'SI', 'DI', 'BP', 'SP',
             'AL', 'AH', 'BL', 'BH', 'CL', 'CH', 'DL', 'DH',
@@ -113,18 +124,14 @@ class Asm8088Lexer(QsciLexerCustom):
         if not self._parent:
             return
 
-        # Get the text to style
         text = self._parent.text()[start:end]
         
-        # Start styling from the beginning
         self.startStyling(start)
         
-        # Process character by character
         i = 0
         while i < len(text):
             char = text[i]
             
-            # Skip whitespace
             if char.isspace():
                 self.setStyling(1, self.Default)
                 i += 1
@@ -132,7 +139,6 @@ class Asm8088Lexer(QsciLexerCustom):
             
             # Handle comments (// or ;)
             if i < len(text) - 1 and text[i:i+2] == '//':
-                # Find end of line
                 comment_end = text.find('\n', i)
                 if comment_end == -1:
                     comment_end = len(text)
@@ -141,7 +147,6 @@ class Asm8088Lexer(QsciLexerCustom):
                 i = comment_end
                 continue
             elif char == ';':
-                # Find end of line
                 comment_end = text.find('\n', i)
                 if comment_end == -1:
                     comment_end = len(text)
@@ -166,12 +171,10 @@ class Asm8088Lexer(QsciLexerCustom):
             if char.isdigit() or (char == '0' and i < len(text) - 1 and text[i+1].lower() == 'x'):
                 number_start = i
                 if char == '0' and i < len(text) - 1 and text[i+1].lower() == 'x':
-                    # Hexadecimal
-                    i += 2  # Skip 0x
+                    i += 2
                     while i < len(text) and text[i].lower() in '0123456789abcdef':
                         i += 1
                 else:
-                    # Decimal (possibly negative)
                     if char == '-':
                         i += 1
                     while i < len(text) and text[i].isdigit():
@@ -184,7 +187,6 @@ class Asm8088Lexer(QsciLexerCustom):
             if char.isalpha() or char == '_' or char == '.':
                 word_start = i
                 
-                # Read the complete word
                 while i < len(text) and (text[i].isalnum() or text[i] in '_.-'):
                     i += 1
                 
@@ -193,13 +195,11 @@ class Asm8088Lexer(QsciLexerCustom):
                 
                 # Check if next character is colon (label)
                 if i < len(text) and text[i] == ':':
-                    # Include the colon in the label
                     i += 1
                     word_length += 1
                     self.setStyling(word_length, self.Label)
                     continue
                 
-                # Determine word type
                 if word in self.directives:
                     self.setStyling(word_length, self.Directive)
                 elif word in self.instructions:
@@ -216,7 +216,6 @@ class Asm8088Lexer(QsciLexerCustom):
                 i += 1
                 continue
             
-            # Default for any other character
             self.setStyling(1, self.Default)
             i += 1
 

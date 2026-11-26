@@ -2,21 +2,19 @@ from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QSizePolicy, QFrame, QHBoxLayout, QApplication
 
 from source.comms import Database
-from source.comms.events import EditorResizeEvent
-from source.comms.events import NoTabEvent
-from source.comms.events import TabAddedEvent
-from source.comms.events import TabListScrollEvent
+from source.comms.events import EditorResizeEvent, NoTabEvent, TabAddedEvent, TabListScrollEvent
 from source.comms.handlers import EventRegister
-from source.interface.editor.me_system.TabButton import TabButton
-from source.interface.editor.me_system.TabList import TabList
+from source.interface import createLayout
+from source.interface.editor.me_system import TabButton, TabList
 from source.interface.editor.me_system.tab.Tab import Tab
-from source.interface.shared import createLayout
 
 
 @EventRegister.register(EditorResizeEvent, "Tab", EventRegister.HIGH)
 @EventRegister.register(TabListScrollEvent, "Tab", EventRegister.HIGH)
 @EventRegister.register(TabAddedEvent, "Tab", EventRegister.HIGH)
 class TabManager(QFrame):
+    """Tab bar with the tab list and the overflow button for hidden tabs"""
+
     def __init__(self, parent):
         super().__init__(parent)
         self.___layout: QHBoxLayout = None
@@ -70,6 +68,7 @@ class TabManager(QFrame):
         return self.___list.count() == 1
 
     def setActiveTab(self, _id: int = None):
+        """Select the given tab, or a neighbor of the closed one, or clear the selection"""
         if _id is not None:
             Database.ON_TAB_SELECTED.setValue(_id)
         elif self.___list.count() > 1:

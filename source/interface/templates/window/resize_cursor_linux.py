@@ -31,6 +31,7 @@ def _gnome_setting(key):
 
 
 class LinuxResizeCursors:
+    """Loads the resize cursors from the system Xcursor theme, falling back to the Qt cursors."""
     def __init__(self):
         self._cache = {}
         self._library = None

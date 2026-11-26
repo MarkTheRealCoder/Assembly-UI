@@ -3,7 +3,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QSizePolicy
 
 from source.filesystem import find_path
-from source.interface.shared import Settings
+from source.interface import Settings
 from source.interface.templates import GenericButton
 
 

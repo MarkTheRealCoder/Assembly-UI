@@ -1,17 +1,21 @@
+from typing import TYPE_CHECKING
+
 from PyQt5.QtWidgets import QFrame, QSizePolicy, QHBoxLayout, QSpacerItem
 
-from source.interface.debugger import ExecutionContext
+from source.interface import createLayout
 from source.interface.debugger.toolbar.ClearButton import ClearButton
 from source.interface.debugger.toolbar.FindButton import FindButton
 from source.interface.debugger.toolbar.ScrollButton import ScrollButton
-from source.interface.shared import createLayout
+
+if TYPE_CHECKING:
+    # Only for the annotations: ExecutionContext imports this toolbar, so the package does not hold it yet.
+    from source.interface.debugger import ExecutionContext
 
 
 class ToolbarGraphics(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
         self.setObjectName("ToolbarTerminal")
-        # Additional UI setup can be done here
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setFrameShape(QFrame.StyledPanel)
         self.setFixedHeight(44)
@@ -32,14 +36,13 @@ class ToolbarGraphics(QFrame):
         layout.addWidget(self._clear_button)
         layout.addSpacerItem(QSpacerItem(20, 20, QSizePolicy.Minimum, QSizePolicy.Minimum))
         layout.addWidget(self._find_button)
-        layout.addSpacerItem(QSpacerItem(80, 20, QSizePolicy.MinimumExpanding, QSizePolicy.Minimum))
+        layout.addSpacerItem(QSpacerItem(0, 20, QSizePolicy.Expanding, QSizePolicy.Minimum))
         self.setLayout(layout)
 
 
 class ToolbarLogic(ToolbarGraphics):
     def __init__(self, parent):
         super().__init__(parent)
-        # Implementation of toolbar logic goes here
         self.exec_context: ExecutionContext = parent
 
     def clearTerminal(self):
@@ -62,15 +65,10 @@ class ToolbarLogic(ToolbarGraphics):
 class Toolbar(ToolbarLogic):
     def __init__(self, parent):
         super().__init__(parent)
-        # Additional initialization for Toolbar
-        # todo : implement toolbar comms to debugger and terminal
         self._find_button.clicked.connect(self.findTerminal)
 
         self._clear_button.clicked.connect(self.clearTerminal)
         self._scroll_down_button.clicked.connect(self.scrollDownTerminal)
         self._scroll_up_button.clicked.connect(self.scrollUpTerminal)
-
-
-
 
 

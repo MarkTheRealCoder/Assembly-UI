@@ -13,8 +13,6 @@ class FindButtonGraphics(GenericButton):
         super().__init__(parent)
         self.setObjectName("FakeFindButton")
         self.show_icon = self.rerenderIcon(QIcon(find_path("search-find.svg")), "#569CD6")
-        #self.hide_icon = self.rerenderIcon(QIcon(find_path("close.svg")), "#DA3633")
-        # Additional UI setup can be done here
         self.setIcon(self.show_icon)
         self.setIconSize(QSize(16, 16))
 

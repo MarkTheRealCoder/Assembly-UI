@@ -7,20 +7,20 @@ _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
+from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import QApplication, QDesktopWidget
 
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
 from source.filesystem import find_path
-from source.interface import MainWindow
+from source.interface import MainWindow, Settings
 from source.interface.assets import add_fonts, translateQSS
-from source.interface.shared import Settings
+from source.interface.modals import warmUpWebEngine
 from source.platform import Desktop, isLinux
 
 if __name__ == "__main__":
-    # Verifica se l'applicazione è in modalità frozen (eseguibile)
     if getattr(sys, 'frozen', False):
-        # Se l'applicazione è congelata (exe), reindirizza stderr a un file
+        # A frozen executable has no console, so stderr goes to a file.
         log_path = os.path.join(os.path.dirname(sys.executable), 'error.log')
         sys.stderr = open(log_path, 'w')
 
@@ -51,9 +51,9 @@ if __name__ == "__main__":
     if not app.platformName().startswith("wayland"):
         window.activateWindow()
     window.setFocus()
+    # Start the web engine while no program runs, so the first help page does not block a run.
+    QTimer.singleShot(0, warmUpWebEngine)
     sys.exit(app.exec_())
-
-# todo: Create a JPype impl for using Antonio's Java code
 
 # todo: Modify titlebar and main window to match OS signals
 

@@ -3,11 +3,12 @@ from PyQt5.QtWidgets import QScrollArea, QSizePolicy, QFrame, QHBoxLayout
 
 from source.comms.events import TabListScrollEvent
 from source.comms.handlers import EventRegister
-from source.interface.editor.me_system.tab.Tab import Tab
-from source.interface.shared import createLayout
+from source.interface import createLayout
 
 
 class TabList(QScrollArea):
+    """Horizontally scrollable strip of tabs"""
+
     def __init__(self, parent):
         super().__init__(parent)
         self.configurations()
@@ -23,6 +24,9 @@ class TabList(QScrollArea):
         self.horizontalScrollBar().setObjectName("TabListScrollBar")
 
     def addTab(self, _id: int, name: str, ext: str):
+        # Imported on use: the tab package loads TabManager, which imports this list from the multi-editor system.
+        from source.interface.editor.me_system.tab import Tab
+
         self.widget().addTab(Tab(self.widget(), _id, name, ext))
         self.update()
 
@@ -56,6 +60,7 @@ class _Support(QFrame):
         return self.layout().count()
 
     def moveTab(self, target, v):
+        """Move a tab by v positions towards the start, clamped to the list"""
 
         indx = self.layout().indexOf(target) - v
 

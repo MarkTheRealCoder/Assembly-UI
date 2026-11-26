@@ -3,9 +3,8 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QSpacerItem, QSiz
 
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
-from source.interface.shared import createLayout
-from source.interface.templates import CloseButton
-from source.interface.templates import Title
+from source.interface import createLayout
+from source.interface.templates import CloseButton, Title
 from source.interface.templates.window import BaseWindow
 from source.platform import Desktop, isLinux, isMac
 
@@ -15,6 +14,7 @@ MAC_CONTROLS_HEIGHT = 34
 
 
 def createSubWindow(reason: str, parent, wclass, *args, **kwargs):
+    """Open a sub window, first closing any open one with the same reason."""
     global WINDOWS
     if any(map(lambda w: w.reason() == reason, WINDOWS)):
         dup = list(filter(lambda w: w.reason() == reason, WINDOWS))[0]
@@ -26,10 +26,11 @@ def createSubWindow(reason: str, parent, wclass, *args, **kwargs):
 
 
 def create_window_content(window: BaseWindow) -> QWidget:
+    """Create the content widget of a window, wrapped in a ResizeFrame on Linux and macOS."""
     content = QWidget(window)
     container = content
     if isLinux() or isMac():
-        from source.interface.templates.window.base_linux import ResizeFrame
+        from source.interface.templates.window import ResizeFrame
 
         window.setProperty("linuxFrame" if isLinux() else "macFrame", True)
         window.setAttribute(Qt.WA_TranslucentBackground)
@@ -39,6 +40,7 @@ def create_window_content(window: BaseWindow) -> QWidget:
 
 
 def add_title_controls(window: BaseWindow, layout: QHBoxLayout, title: QWidget, subclass: str):
+    """Add the title and the close button to the layout, with the close control on the left on macOS."""
     if not isMac():
         layout.addWidget(title)
         layout.addWidget(CloseButton(window, subclass))
@@ -110,6 +112,7 @@ class WindowLogic(WindowGraphics):
 
 @EventRegister.register(ClosingEvent, priority=EventRegister.HIGH)
 class Window(WindowLogic):
+    """Frameless tool window that hosts a content widget and closes on the ClosingEvent of its reason."""
     def __init__(self, reason: str, parent, content, *args, **kwargs):
         super().__init__(reason, parent, content, *args, **kwargs)
         EventRegister.mregister(self, ClosingEvent, reason, EventRegister.HIGH)

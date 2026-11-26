@@ -1,6 +1,6 @@
 from PyQt5.QtCore import QEvent
 
-from source.comms.events import Event
+from source.comms.events.Event import Event
 
 
 class RunEvent(Event):

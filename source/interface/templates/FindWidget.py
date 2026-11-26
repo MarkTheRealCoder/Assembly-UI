@@ -2,10 +2,10 @@ from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QFrame, QLineEdit, QLabel, QHBoxLayout, QSpacerItem, QSizePolicy
 
-from source.comms.events.FindShortcut import FindShortcutEvent
+from source.comms.events import FindShortcutEvent
 from source.comms.handlers import EventRegister
 from source.filesystem import find_path
-from source.interface.shared import createLayout
+from source.interface import createLayout
 from source.interface.templates.Button import GenericButton
 from source.interface.templates.Tooltips import Tooltip
 
@@ -14,7 +14,6 @@ class TextBox(QLineEdit):
     def __init__(self, parent):
         super().__init__(parent)
         self.setObjectName("FindTextBox")
-        # Additional UI setup can be done here
         self.setPlaceholderText("Search...")
 
 
@@ -22,7 +21,6 @@ class OccurrenceCounter(QLabel):
     def __init__(self, parent):
         super().__init__(parent)
         self.setObjectName("OccurrenceCounter")
-        # Additional UI setup can be done here
         self.setText("0 results")
 
 
@@ -30,7 +28,6 @@ class GenericFindButton(GenericButton):
     def __init__(self, parent, icon_path: str, tooltip_text: str):
         super().__init__(parent)
         self.setObjectName("FinderButton")
-        # Additional UI setup can be done here
         self.show_icon = self.rerenderIcon(QIcon(find_path(icon_path)), "#569CD6")
         self.setIcon(self.show_icon)
         self.setIconSize(QSize(16, 16))
@@ -57,7 +54,6 @@ class FindWidgetGraphics(QFrame):
     def __init__(self, parent, _source_type: str):
         super().__init__(parent)
         self.setObjectName("FindWidget")
-        # Additional UI setup can be done here
         self.setVisible(False)
 
         self._enable_regex = GenericFindButton(self, "regex.svg", "Enable Regex Search")
@@ -86,12 +82,12 @@ class FindWidgetGraphics(QFrame):
 class FindWidgetLogic(FindWidgetGraphics):
     def __init__(self, parent, _source_type: str):
         super().__init__(parent, _source_type)
-        # Implementation of find widget logic goes here
         self._source_type: str = _source_type
         self._visibility: bool = False
         self.___regex: bool = False
 
     def toggle(self, close: bool = False) -> bool:
+        """Show or hide the bar and return whether it is visible."""
         self._visibility = not close
         self.setVisible(self._visibility)
         return self._visibility
@@ -119,6 +115,7 @@ class FindWidgetLogic(FindWidgetGraphics):
 
 
 class FindWidget(FindWidgetLogic):
+    """Search bar with regex toggle and previous and next buttons, which sends find events for the given source type."""
     def __init__(self, parent, _source_type: str):
         super().__init__(parent, _source_type)
         EventRegister.mregister(self, FindShortcutEvent, f"{_source_type}/find")
@@ -131,7 +128,7 @@ class FindWidget(FindWidgetLogic):
         self._close_button.clicked.connect(self._hide)
 
     def sync(self):
-        """Sync method to update which widget is currently being used for find operations."""
+        """Reset the search box and the result counter when another widget becomes the search target."""
         self._text_box.clear()
         self._occurrence_counter.setText("0 results")
 

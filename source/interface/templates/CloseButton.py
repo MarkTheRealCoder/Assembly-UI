@@ -2,11 +2,11 @@ from PyQt5.QtCore import QSize, QTimer
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QSizePolicy
 
-from source.comms.Signals import Variable
+from source.comms import Variable
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
-from source.filesystem.Folder import find_path
-from source.interface.templates import GenericButton
+from source.filesystem import find_path
+from source.interface.templates.Button import GenericButton
 
 
 class CloseButtonGraphics(GenericButton):
@@ -53,6 +53,7 @@ class CloseButtonLogic(CloseButtonGraphics):
 
 
 class CloseButton(CloseButtonLogic):
+    """Close button that sends a ClosingEvent to its subclass when clicked."""
     def __init__(self, parent, subclass: str = "Main", properties: dict[str, bool] = None):
         super().__init__(parent, properties)
         self.___subclass: str = subclass

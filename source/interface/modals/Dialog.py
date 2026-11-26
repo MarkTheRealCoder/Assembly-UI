@@ -2,7 +2,7 @@ from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QKeyEvent, QPalette
 from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout, QSizePolicy, QLineEdit
 
-from source.interface.shared import createLayout
+from source.interface import createLayout
 
 DIALOG_HEIGHT = 150
 
@@ -14,6 +14,9 @@ class BoxGraphics(QLineEdit):
         self.setReadOnly(False)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setPlaceholderText(prompt)
+        palette = self.palette()
+        palette.setColor(QPalette.PlaceholderText, Qt.GlobalColor.yellow)
+        self.setPalette(palette)
 
 
 class BoxLogic(BoxGraphics):
@@ -25,6 +28,7 @@ class BoxLogic(BoxGraphics):
 
 
 class Box(BoxLogic):
+    """Line edit that runs the action on Enter, shows the dialog error when it fails, and closes the dialog on Escape or focus loss."""
     def __init__(self, parent, prompt: str, action: callable):
         super().__init__(parent, prompt, action)
 
@@ -44,11 +48,6 @@ class Box(BoxLogic):
 
     def focusOutEvent(self, event):
         self.parent().focus.emit("close")
-
-    def paintEvent(self, event):
-        super().paintEvent(event)
-        if not self.text():
-            self.palette().setColor(QPalette.PlaceholderText, Qt.GlobalColor.yellow)
 
 
 class TitleGraphics(QLabel):
@@ -124,6 +123,7 @@ class DialogLogic(DialogGraphics):
 
 
 class Dialog(DialogLogic):
+    """Frameless prompt that asks for a text and passes it to the action, which returns True on success."""
     def __init__(self, parent, title: str, prompt: str, action: callable,
                  error: str = "Action failed, try again."):
         super().__init__(parent, title, prompt, action, error)
@@ -136,6 +136,5 @@ class Dialog(DialogLogic):
 
     def onFocusLose(self):
         self.deleteLater()
-
 
 

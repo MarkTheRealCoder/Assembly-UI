@@ -1,8 +1,8 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDialog, QHBoxLayout, QLabel, QPushButton, QVBoxLayout
 
+from source.interface import createLayout
 from source.interface.modals.Dialog import Title
-from source.interface.shared import createLayout
 from source.platform import isMac
 
 
@@ -49,8 +49,10 @@ class PopupLogic(PopupGraphics):
 
 
 class Popup(PopupLogic):
+    """Modal confirmation with Cancel as the default button."""
     @classmethod
     def ask(cls, parent, title: str, message: str, action: str) -> bool:
+        """Show the popup and return True if the user confirms."""
         popup = cls(parent, title, message, action)
         confirmed = popup.exec_() == QDialog.Accepted
         popup.deleteLater()

@@ -1,15 +1,13 @@
 
-from PyQt5.QtCore import Qt, QEvent
+from PyQt5.QtCore import Qt, QEvent, QTimer
 from PyQt5.QtWidgets import QMainWindow
 
-from source.comms.events import ClosingEvent
-from source.comms.events import ReadyEvent
+from source.comms.events import ClosingEvent, ReadyEvent
 from source.comms.handlers import EventRegister
 from source.interface.MainWidget import MainWidget
 from source.interface.shared import Settings
 from source.interface.templates import run_toast_config
-from source.interface.templates.window import BaseWindow, native_minimize
-from source.interface.templates.window import native_maximize, native_restore
+from source.interface.templates.window import BaseWindow, native_minimize, native_maximize, native_restore
 from source.platform import Desktop, isLinux, isMac
 
 
@@ -25,7 +23,7 @@ class MainWindowGraphics(QMainWindow, BaseWindow):
         self.setFrameless()
         mwt: MainWidget = MainWidget(self)
         if linux or mac:
-            from source.interface.templates.window.base_linux import ResizeFrame
+            from source.interface.templates.window import ResizeFrame
 
             self.setCentralWidget(ResizeFrame(self, mwt))
         else:
@@ -56,6 +54,7 @@ class MainWindow(MainWindowLogic):
         self.___first_time = True
 
     def onClosingEvent(self, event):
+        """ Store the window state and size in the settings before closing """
         isMaximized = self.isFullScreen() or self.isMaximized()
         Settings.silentSet("mainwindow/fullscreen", isMaximized)
         if not isMaximized:
@@ -65,6 +64,7 @@ class MainWindow(MainWindowLogic):
         self.close()
 
     def showEvent(self, event):
+        """ Restore the saved size and state on the first show, then signal that the main window is ready """
         if self.___first_time:
             self.___first_time = False
             size = Settings.get("mainwindow/size", None)
@@ -74,7 +74,8 @@ class MainWindow(MainWindowLogic):
             else:
                 self.resize(size)
             if Settings.get("mainwindow/fullscreen", False, _type=bool):
-                self.showMaximized()
+                # Maximize after the first show: Qt applies the normal geometry when show() ends, which undoes a maximize done here.
+                QTimer.singleShot(0, self.showMaximized)
                 Settings.set("mainwindow/fullscreen", True)
             super().showEvent(event)
             EventRegister.send(ReadyEvent(), arg="Main")

@@ -6,14 +6,11 @@ from PyQt5.QtWidgets import QFrame, QSizePolicy, QVBoxLayout, QHBoxLayout
 
 from source.filesystem import create_dir, open_dir, resolve_app_path, to_ui_path
 from source.filesystem.documents import Document
-from source.interface.modals import Dialog
-from source.interface.modals.Popup import Popup
+from source.interface import createLayout, Settings
+from source.interface.modals import Dialog, Popup
 from source.interface.modals.filemanager.complex.Button import Button
-from source.interface.modals.filemanager.complex.strings import ExtensionBox
-from source.interface.modals.filemanager.complex.strings import FileBox
-from source.interface.modals.filemanager.complex.strings import PathBox
+from source.interface.modals.filemanager.complex.strings import ExtensionBox, FileBox, PathBox
 from source.interface.modals.filemanager.paths import PathTree
-from source.interface.shared import createLayout, Settings
 
 
 class FileDialogGraphics(QFrame):
@@ -65,13 +62,11 @@ class FileDialogLogic(FileDialogGraphics):
         super().__init__(extensions, **kwargs)
 
     def validate(self, path: str):
-        if path.startswith(Document.SEP) and path.endswith(Document.SEP):
-            print("Tutto Ok")
-        else:
-            print("Errore")
+        if not (path.startswith(Document.SEP) and path.endswith(Document.SEP)):
             self._box.setText(Document.SEP + path)
 
     def confirm_replace(self, destination: Path) -> bool:
+        """Ask whether to replace destination and return the answer. Raise IsADirectoryError if it is a folder."""
         if destination.is_dir():
             raise IsADirectoryError(f'"{destination.name}" is a folder.')
         accepted = Popup.ask(
@@ -117,6 +112,7 @@ class FileDialogLogic(FileDialogGraphics):
 
 
 class FileDialog(FileDialogLogic):
+    """Base dialog with a folder tree and path, name and extension fields, shared by the file creation and save dialogs."""
     def __init__(self, extensions: Sequence[str], **kwargs):
         super().__init__(extensions, **kwargs)
         self._tree.onClick(self.set_current_path)

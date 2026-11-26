@@ -2,13 +2,14 @@ from PyQt5.Qsci import QsciLexerCustom, QsciScintilla
 from PyQt5.QtGui import QColor, QFont
 
 from source.filesystem.documents import FT
+from source.interface.assets import editorFont
 
 from .Asm8088Lexer import Asm8088Lexer
 from .IJVMLexer import IJVMLexer
 
 
 class LexerFactory:
-    """Factory class to create appropriate lexers based on file type or content"""
+    """Factory class to create appropriate lexers based on file type"""
     
     @staticmethod
     def createLexer(parent: QsciScintilla, ext: str):
@@ -29,7 +30,6 @@ class LexerFactory:
         if file_type == FT.FIJVM:
             return IJVMLexer(parent)
         
-        # Default lexer if no specific match
         return DefaultLexer(parent)
 
 
@@ -41,7 +41,7 @@ class DefaultLexer(QsciLexerCustom):
         self._parent: QsciScintilla = self.parent()
         self.setDefaultPaper(QColor("#1E1E1E"))
         self.setDefaultColor(QColor("#CCCCCC"))
-        self.setDefaultFont(QFont("Monospace", 12))
+        self.setDefaultFont(editorFont())
 
     def styleText(self, start, end):
         # Simple styling - just use default
@@ -57,11 +57,11 @@ class DefaultLexer(QsciLexerCustom):
         return "Text"
 
 
-# Backward compatibility - maintain the original Lexer class
+# Kept for backward compatibility
 class Lexer(DefaultLexer):
     """
     Legacy Lexer class for backward compatibility
-    This will be the default lexer used when no specific file type is detected
+    Behaves like DefaultLexer but reports itself as an assembly lexer
     """
     
     def __init__(self, parent: QsciScintilla = None):

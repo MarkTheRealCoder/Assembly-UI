@@ -4,11 +4,11 @@ from PyQt5.QtWidgets import QFrame, QHBoxLayout, QSizePolicy, QVBoxLayout
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
 from source.filesystem import create_dir
-from source.interface.modals.Dialog import Dialog
-from source.interface.modals.filemanager.complex.Button import Button
+from source.interface import createLayout, Settings
+from source.interface.modals import Dialog
+from source.interface.modals.filemanager.complex import Button
 from source.interface.modals.filemanager.complex.strings import PathBox
 from source.interface.modals.filemanager.paths import PathTree
-from source.interface.shared import createLayout, Settings
 
 
 class DirectoryPickerGraphics(QFrame):
@@ -69,6 +69,7 @@ class DirectoryPickerLogic(DirectoryPickerGraphics):
 
 
 class DirectoryPicker(DirectoryPickerLogic):
+    """Folder tree where a double click sets the working directory."""
     def __init__(self):
         super().__init__()
         self._tree.selectionModel().selectionChanged.connect(self.sync_selection)

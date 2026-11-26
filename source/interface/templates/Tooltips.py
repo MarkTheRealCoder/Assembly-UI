@@ -10,10 +10,10 @@ class TooltipGraphics(QLabel):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("Tooltip")
-        self.arrow_size = 8  # Dimensione della freccia
-        self.arrow_position = None  # Posizione della freccia: top, bottom, left, right
+        self.arrow_size = 8
+        self.arrow_position = None  # above, below, left or right
         self.arrow_offset = 0  # Offset dalla posizione centrale
-        self._border_color = QColor(255, 255, 255)  # Colore del bordo di default
+        self._border_color = QColor(255, 255, 255)
 
         self.setAttribute(Qt.WA_NoSystemBackground, True)
         self.setAttribute(Qt.WA_OpaquePaintEvent, False)
@@ -33,7 +33,6 @@ class TooltipGraphics(QLabel):
                 border-radius: 3px;
             }
         """)
-        # Forza il refresh dello stile
         self.style().unpolish(self)
         self.style().polish(self)
 
@@ -50,7 +49,6 @@ class TooltipGraphics(QLabel):
         width = base_hint.width()
         height = base_hint.height()
 
-        # Aggiungi spazio per la freccia
         if self.arrow_position in ["above", "below"]:
             height += self.arrow_size
         elif self.arrow_position in ["left", "right"]:
@@ -73,7 +71,7 @@ class TooltipGraphics(QLabel):
 
         return rect
 
-    def getBackgroundColor(self):#
+    def getBackgroundColor(self):
         """Ottiene il colore di sfondo dagli stylesheets o dal palette"""
         return self.palette().color(QPalette.Window)
 
@@ -149,11 +147,9 @@ class TooltipGraphics(QLabel):
         mask_painter.setPen(QPen(Qt.color1))  # Bianco = visibile
         mask_painter.setBrush(QBrush(Qt.color1))
 
-        # Disegna le aree che devono essere visibili
         content_rect = self.get_content_rect().adjusted(0, 0, 0, 0)
         mask_painter.fillRect(content_rect, Qt.color1)
 
-        # Disegna la freccia
         arrow_points = self._get_arrow_points()
         mask_painter.drawPolygon(arrow_points)
 
@@ -170,38 +166,30 @@ class TooltipGraphics(QLabel):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.SmoothPixmapTransform)
 
-        # Ottieni i colori dal tema/stylesheet
-        bg_color = self.getBackgroundColor() # QColor(37, 37, 38)  # #252526 -> in rgb = (37, 37, 38)
+        bg_color = self.getBackgroundColor()
         text_color = self.getTextColor()
-        border_color = self.getBorderColor() # QColor(255, 255, 255)
+        border_color = self.getBorderColor()
 
-        # Disegna il background del contenuto
         content_rect = self.get_content_rect().adjusted(0, 0, -1, -1)
         painter.fillRect(content_rect, bg_color)
 
-        # Disegna un bordo se necessario
         border_pen = QPen(border_color)
         painter.setPen(border_pen)
         painter.drawRect(content_rect)
 
-        # Disegna il testo
         painter.setClipRect(content_rect)
         painter.setPen(text_color)
         painter.setFont(self.font())
 
-        # Usa l'allineamento del label
         alignment = self.alignment()
         if alignment == 0:  # Se non è impostato alcun allineamento
             alignment = Qt.AlignHCenter | Qt.AlignVCenter
 
-        # Aggiungi padding al testo
         text_rect = content_rect.adjusted(5, 2, -5, -2)
         painter.drawText(text_rect, alignment, self.text())
 
-        # Reset clipping
         painter.setClipping(False)
 
-        # Disegna la freccia con lo stesso colore del background
         painter.setPen(QPen(border_color))
         painter.setBrush(QBrush(border_color))
         arrow_points = self._get_arrow_points()
@@ -218,19 +206,16 @@ class TooltipGraphics(QLabel):
     def set_arrow_position(self, position: Literal["above", "below", "right", "left"]):
         """Imposta la posizione della freccia"""
         self.arrow_position = position
-        self.adjustSize()  # Ricalcola la dimensione includendo la freccia
-        self._update_mask()  # Aggiorna la maschera
+        self.adjustSize()
+        self._update_mask()
         self.update()
 
     def set_arrow_size(self, size: int):
         """Imposta la dimensione della freccia"""
         self.arrow_size = size
-        self.adjustSize()  # Ricalcola la dimensione includendo la freccia
-        self._update_mask()  # Aggiorna la maschera
+        self.adjustSize()
+        self._update_mask()
         self.update()
-
-#    border: 1px solid var(---generic-highlight-text-color);
-#    background-color: var(---generic-light-background-color);
 
 
 class TooltipLogic(TooltipGraphics):
@@ -272,7 +257,7 @@ class TooltipLogic(TooltipGraphics):
         }
 
     def _show(self):
-        geo = self.___geometry_elements() # this x and y are the top-left of the element followed
+        geo = self.___geometry_elements()
         width, height = self.sizeHint().width(), self.sizeHint().height()
         final_pos: tuple[int, int] = (0, 0)
         position, moving = self.___default_position
@@ -283,13 +268,13 @@ class TooltipLogic(TooltipGraphics):
             elif moving == "end":
                 final_pos = (final_pos[0] + geo["width"], final_pos[1])
         elif position == "below":
-            final_pos = (geo["x"] - (width // 2), geo["y"] + geo["height"]) # + height
+            final_pos = (geo["x"] - (width // 2), geo["y"] + geo["height"])
             if moving == "center":
                 final_pos = (final_pos[0] + (geo["width"] // 2), final_pos[1])
             elif moving == "end":
                 final_pos = (final_pos[0] + geo["width"], final_pos[1])
         elif position == "right":
-            final_pos = (geo["x"] + geo["width"], geo["y"] - (height // 2)) # + width
+            final_pos = (geo["x"] + geo["width"], geo["y"] - (height // 2))
             if moving == "center":
                 final_pos = (final_pos[0], final_pos[1] + (geo["height"] // 2))
             elif moving == "end":
@@ -363,6 +348,7 @@ class TooltipLogic(TooltipGraphics):
 
 
 class Tooltip(TooltipLogic):
+    """Tooltip with an arrow, shown below, above or beside its parent or the mouse, either after a hover delay or on demand."""
     def __init__(self, parent, text: str):
         super().__init__(parent, text)
         self.hide()

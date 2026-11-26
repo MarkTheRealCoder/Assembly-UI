@@ -1,14 +1,16 @@
 import os
-from typing import Literal, Optional
+from typing import Literal, Optional, TYPE_CHECKING
 
-from PyQt5.QtCore import Qt, QEvent, QPoint, QSettings
+from PyQt5.QtCore import Qt, QEvent, QPoint, QSettings, QByteArray, QSize
 from PyQt5.QtGui import QMouseEvent, QPainter, QColor, QPixmap, QIcon
 from PyQt5.QtSvg import QSvgRenderer
-from PyQt5.QtWidgets import QWidget, QLayout, QFrame, QSizePolicy, QGridLayout
+from PyQt5.QtWidgets import QWidget, QLayout, QFrame, QSizePolicy, QGridLayout, QSplitter, QSplitterHandle
 
-from source.comms import Variable
-from source.filesystem.Folder import settings_path
-from source.interface import MainWindow
+from source.comms import Variable, Database
+from source.filesystem import settings_path
+if TYPE_CHECKING:
+    # Only for the annotations: MainWindow imports, through the interface, the modules that use this file.
+    from source.interface.MainWindow import MainWindow
 
 
 class Settings:
@@ -76,13 +78,91 @@ class Settings:
         Settings.SETTINGS.sync()
 
 
-
 def createLayout(l: type, parent: Optional[QWidget] = None):
     layout = l(parent)
     layout.setContentsMargins(0, 0, 0, 0)
     layout.setSpacing(0)
     layout.setSizeConstraint(QLayout.SetNoConstraint)
     return layout
+
+
+SPLITTER_HANDLE_WIDTH = 7
+
+
+class SplitterHandle(QSplitterHandle):
+    """ Handle that tells the rest of the interface when a drag starts and ends """
+
+    def mousePressEvent(self, event):
+        super().mousePressEvent(event)
+        if event.button() == Qt.LeftButton:
+            Database.ON_SPLITTER_DRAG.setValue(True)
+
+    def mouseReleaseEvent(self, event):
+        super().mouseReleaseEvent(event)
+        if event.button() == Qt.LeftButton:
+            Database.ON_SPLITTER_DRAG.setValue(False)
+            self.splitter().saveSizes()
+
+
+class SplitterGraphics(QSplitter):
+    def __init__(self, parent: QWidget, name: str, orientation: Qt.Orientation = Qt.Horizontal):
+        super().__init__(orientation, parent)
+        self.setObjectName(name)
+        self.setHandleWidth(SPLITTER_HANDLE_WIDTH)
+        self.setChildrenCollapsible(False)
+        self.setOpaqueResize(True)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+    def createHandle(self) -> QSplitterHandle:
+        return SplitterHandle(self.orientation(), self)
+
+    def minimumSizeHint(self) -> QSize:
+        # QSplitter leaves out its own frame, such as the border set in style.qss: without it the window could get
+        # narrower than the panes, which would then cover the outer border.
+        frame = self.rect().size() - self.contentsRect().size()
+        return super().minimumSizeHint() + frame
+
+
+class SplitterLogic(SplitterGraphics):
+    """ Panes slide smoothly down to their own minimum, without collapsing, and the position is kept in the settings """
+
+    def __init__(self, parent: QWidget, name: str, settings_key: str, orientation: Qt.Orientation = Qt.Horizontal):
+        super().__init__(parent, name, orientation)
+        self.___settings_key: str = settings_key
+
+    def addPane(self, pane: QWidget, minimum: int, stretch: int = 1):
+        """
+        Add a pane that the splitter can shrink down to minimum pixels.
+        The size hints of the content are ignored, so no inner widget stops the handle before that minimum.
+        """
+        policy = pane.sizePolicy()
+        if self.orientation() == Qt.Horizontal:
+            policy.setHorizontalPolicy(QSizePolicy.Ignored)
+            pane.setMinimumWidth(minimum)
+        else:
+            policy.setVerticalPolicy(QSizePolicy.Ignored)
+            pane.setMinimumHeight(minimum)
+        pane.setSizePolicy(policy)
+        self.addWidget(pane)
+        self.setStretchFactor(self.indexOf(pane), stretch)
+
+    def restoreSizes(self, ratios: list[int]):
+        """ Restore the position stored by the user, or split the space by the ratios """
+        state = Settings.get(self.___settings_key, None)
+        if isinstance(state, QByteArray) and self.restoreState(state):
+            self.setChildrenCollapsible(False)
+            return
+        total = 1_000_000
+        self.setSizes([total * ratio // sum(ratios) for ratio in ratios])
+
+    def saveSizes(self):
+        """ Store the position. Called on release: at every mouse move it would rewrite the whole INI file """
+        Settings.silentSet(self.___settings_key, self.saveState())
+
+
+class Splitter(SplitterLogic):
+    def __init__(self, parent: QWidget, name: str, settings_key: str, orientation: Qt.Orientation = Qt.Horizontal):
+        super().__init__(parent, name, settings_key, orientation)
 
 
 def handleZoomEvent(widget: QWidget, event, zoom_by: callable, reset: callable) -> bool:
@@ -187,7 +267,6 @@ class DraggableFrame(QFrame):
             # 8421
             x, y, w, h = geo.topLeft().x(), geo.topLeft().y(), geo.width(), geo.height()
 
-            # Top
             if 1 & self.position:
                 new_height = geo.height() + difference.y()
                 exceding_height = self.exceedingMinimumHeight(new_height)
@@ -199,7 +278,6 @@ class DraggableFrame(QFrame):
                 y = geo.topLeft().y() - difference.y() - border_size
                 h = new_height + border_size
 
-            # Bottom
             elif 2 & self.position:
                 new_height = geo.height() - difference.y()
                 exceding_height = self.exceedingMinimumHeight(new_height)
@@ -209,7 +287,6 @@ class DraggableFrame(QFrame):
 
                 h = new_height + border_size
 
-            # Left
             if 4 & self.position:
                 new_width = geo.width() + difference.x()
                 exceding_width = self.exceedingMinimumWidth(new_width)
@@ -221,7 +298,6 @@ class DraggableFrame(QFrame):
                 x = geo.topLeft().x() - difference.x() - border_size
                 w = new_width + border_size
 
-            # Right
             elif 8 & self.position:
                 new_width = geo.width() - difference.x()
                 exceding_width = self.exceedingMinimumWidth(new_width)

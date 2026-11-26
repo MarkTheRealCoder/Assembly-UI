@@ -14,6 +14,7 @@ class MARGINS(Structure):
     ]
 
 class WindowsEffectHelper:
+    """Applies the DWM frame effects to a frameless Qt window."""
 
     def __init__(self):
         # C Libraries which are really necessary to apply Windows OS effect to Qt frameless window
@@ -24,8 +25,8 @@ class WindowsEffectHelper:
         self.__dwmExtendFrameIntoClientArea = dwmapi.DwmExtendFrameIntoClientArea
         self.__dwmSetWindowAttribute = dwmapi.DwmSetWindowAttribute
 
-    # set fancy effect
     def setBasicEffect(self, hWnd, hint):
+        """Extend the DWM frame into the client area, round the corners and set the window style from the hint buttons."""
         hWnd = int(hWnd)
         margins = MARGINS(-1, -1, -1, -1)
         self.__dwmExtendFrameIntoClientArea(hWnd, byref(margins))

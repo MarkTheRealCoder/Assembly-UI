@@ -1,526 +1,277 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <title>8088 Assembly Instructions</title>
-        <meta charset="UTF-8">
-    </head>
+<head>
+    <meta charset="UTF-8">
+    <title>8088 Instructions</title>
+    <link rel="stylesheet" href="help.css">
+    <script src="help.js" defer></script>
+</head>
+<body>
+<nav>
+    <a href="#struttura">Structure</a>
+    <a href="#esempi">Examples</a>
+    <a href="#dati">Data</a>
+    <a href="#aritmetica">Arithmetic</a>
+    <a href="#logica">Logic</a>
+    <a href="#salti">Jumps</a>
+    <a href="#sistema">System</a>
+    <a href="#operandi">Operands</a>
+    <a href="#direttive">Directives</a>
+    <a href="#flag">Flags</a>
+    <a href="#limiti">Limits</a>
+</nav>
+<main>
+    <h1>8088 Instructions</h1>
+    <p class="subtitle">The reduced Intel 8088 instruction set that the interpreter runs. Instructions that are not on this page are not supported.</p>
 
-    <style>
-        .text, .text .monospace > span {
-            font-style: normal;
-            font-size: medium;
+    <h2 id="struttura">Program structure</h2>
+    <ul>
+        <li>Constants go at the beginning, in the form <code>NAME = value</code>. The system call constants (<code>_EXIT</code>, <code>_GETCHAR</code>, <code>_PRINTF</code>) are not predefined: the program must define them.</li>
+        <li><code>.SECT .TEXT</code> contains the instructions. Execution starts from the first instruction of this section: the <code>main:</code> label is not required.</li>
+        <li><code>.SECT .DATA</code> contains data with an initial value. <code>.SECT .BSS</code> contains free space.</li>
+        <li>A label is <code>name:</code>, alone on a line or before an instruction.</li>
+        <li>Comments start with <code>//</code> or with <code>;</code>.</li>
+        <li>The program ends with the <code>EXIT</code> system call, with <code>HLT</code>, or after the last instruction.</li>
+    </ul>
+    <p>Instructions, directives and registers work in upper or lower case (<code>MOV AX, 5</code> or <code>mov ax, 5</code>). Labels and constants are case-sensitive.</p>
 
-            color: #D2D6D6;
-            font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+    <h2 id="esempi">Examples for your first run</h2>
+    <p>Create a <code>.a8088</code> file, copy an example into the file and click <strong>Run</strong> or <strong>Debug</strong>.</p>
 
-        .text .monospace {
-            font-family:'Courier New', Courier, monospace;
-        }
+    <h3>1. Hello, World!</h3>
+    <div class="example">
+        <div class="example-header">hello.a8088<button class="copy" data-done="Copied" data-failed="Select and copy">Copy</button></div>
+        <pre><code>_EXIT = 1
+_PRINTF = 127
 
-        .text span {
-            font-style: italic;
-        }
+.SECT .TEXT
+    PUSH 0              // value (this format does not use it)
+    PUSH msg            // address of the format string
+    PUSH _PRINTF
+    SYS                 // SYS pops 127, the format and the value off the stack
+    PUSH 0              // exit code
+    PUSH _EXIT
+    SYS
 
-        table {
-            width: 100%;
+.SECT .DATA
+msg: .ASCII "Hello, World!\n\0"</code></pre>
+    </div>
+    <p class="run">Output: <code>Hello, World!</code></p>
 
-            margin-bottom: 1em; /* So it will be equal to the margin on a regular html paragraph */
-            border-collapse: collapse;
-        }
+    <h3>2. Input and output</h3>
+    <p>The program reads a number ending with <code>;</code> and prints twice the number.</p>
+    <div class="example">
+        <div class="example-header">double.a8088<button class="copy" data-done="Copied" data-failed="Select and copy">Copy</button></div>
+        <pre><code>_EXIT = 1
+_GETCHAR = 117
+_PRINTF = 127
 
-        th {
-            background-color: #202020;
-            text-align: center;
-        }
+.SECT .TEXT
+    MOV BX, 0           // BX = number read
+read:
+    PUSH _GETCHAR
+    SYS                 // AL = next input character
+    CMPB AL, 59         // 59 = ';' ends the number
+    JE done
+    SUBB AL, 48         // ASCII digit -> value
+    XORB AH, AH
+    MOV CX, AX          // CX = digit
+    MOV AX, BX          // AX = BX * 10
+    ADD AX, AX
+    MOV DX, AX
+    ADD AX, AX
+    ADD AX, AX
+    ADD AX, DX
+    ADD AX, CX          // AX = BX * 10 + digit
+    MOV BX, AX
+    JMP read
+done:
+    MOV AX, BX
+    ADD AX, BX          // AX = 2 * number
+    PUSH AX
+    PUSH fmt
+    PUSH _PRINTF
+    SYS
+    PUSH 0
+    PUSH _EXIT
+    SYS
 
-        th, td {
-            padding: 1%;
-            border: 1px solid gray;
-        }
+.SECT .DATA
+fmt: .ASCII "%d\n\0"</code></pre>
+    </div>
+    <p class="run">Input <code>123;</code> → output <code>246</code>. Type the input in the terminal and press <kbd>Enter</kbd>.</p>
 
-        tr {
-            background-color: #303030;
-        }
+    <h3>3. Subroutine with CALL and RET</h3>
+    <div class="example">
+        <div class="example-header">square.a8088<button class="copy" data-done="Copied" data-failed="Select and copy">Copy</button></div>
+        <pre><code>_EXIT = 1
+_PRINTF = 127
 
-        tr:nth-child(2n) {
-            background-color: #383838;
-        }
+.SECT .TEXT
+    PUSH 7              // argument
+    CALL square
+    ADD SP, 2           // removes the argument
+    PUSH AX
+    PUSH fmt
+    PUSH _PRINTF
+    SYS
+    PUSH 0
+    PUSH _EXIT
+    SYS
 
-        tr.not-implemented {
-            background-color: rgb(62, 0, 0);
-        }
+square:                 // AX = argument * argument
+    PUSH BP
+    MOV BP, SP
+    MOV AX, [BP+4]      // [BP+2] = return address, [BP+4] = argument
+    MUL AL              // AX = AL * AL
+    POP BP
+    RET
 
-        th:nth-child(1), td:nth-child(1), th:nth-child(2), td:nth-child(2) {
-            min-width: 150px;
-        }
+.SECT .DATA
+fmt: .ASCII "7 * 7 = %d\n\0"</code></pre>
+    </div>
+    <p class="run">Output: <code>7 * 7 = 49</code>. In Debug, the STACK shows the words of <code>square</code> in a group with its name.</p>
 
-        body {
-            background-color: #202020;
-        }
+    <h2 id="dati">Data transfer</h2>
+    <table>
+        <thead><tr><th>Instruction</th><th>Operands</th><th>Description</th></tr></thead>
+        <tbody>
+        <tr><td><code>MOV</code></td><td><code>dest, src</code></td><td>Copies <code>src</code> into <code>dest</code>.</td></tr>
+        <tr><td><code>MOVB</code></td><td><code>dest, src</code></td><td>Copies a byte. Registers must be 8-bit. In memory it writes a single byte.</td></tr>
+        <tr><td><code>PUSH</code></td><td><code>src</code></td><td>Pushes a word onto the stack: <code>SP</code> decreases by 2.</td></tr>
+        <tr><td><code>POP</code></td><td><code>dest</code></td><td>Pops a word off the stack and copies it into <code>dest</code>: <code>SP</code> increases by 2.</td></tr>
+        </tbody>
+    </table>
 
-        h1, h2 {
-            text-align: center;
-        }
+    <h2 id="aritmetica">Arithmetic</h2>
+    <table>
+        <thead><tr><th>Instruction</th><th>Operands</th><th>Description</th></tr></thead>
+        <tbody>
+        <tr><td><code>ADD</code></td><td><code>dest, src</code></td><td><code>dest = dest + src</code>.</td></tr>
+        <tr><td><code>ADDB</code></td><td><code>dest, src</code></td><td>Sum of two bytes.</td></tr>
+        <tr><td><code>ADC</code></td><td><code>dest, src</code></td><td><code>dest = dest + src + CF</code>.</td></tr>
+        <tr><td><code>SUB</code></td><td><code>dest, src</code></td><td><code>dest = dest - src</code>.</td></tr>
+        <tr><td><code>SUBB</code></td><td><code>dest, src</code></td><td>Subtraction of two bytes.</td></tr>
+        <tr><td><code>SBB</code></td><td><code>dest, src</code></td><td><code>dest = dest - src - CF</code>.</td></tr>
+        <tr><td><code>CMP</code></td><td><code>op1, op2</code></td><td>Computes <code>op1 - op2</code> and sets the flags. The operands do not change.</td></tr>
+        <tr><td><code>CMPB</code></td><td><code>op1, op2</code></td><td>Like <code>CMP</code>, on two bytes.</td></tr>
+        <tr><td><code>MUL</code></td><td><code>src</code></td><td><code>AX = AL * src</code>, truncated to 16 bits. <code>DX</code> does not change.</td></tr>
+        <tr><td><code>MULB</code></td><td><code>src</code></td><td><code>AX = AL * src</code>, with an 8-bit <code>src</code>. The result goes into <code>AH:AL</code>.</td></tr>
+        <tr><td><code>DIV</code></td><td><code>src</code></td><td>Divides <code>AX</code> by <code>src</code>: quotient in <code>AL</code>, remainder in <code>AH</code>. <code>DX</code> is not part of the dividend. A quotient greater than 255 loses its high bits. Division by zero stops the program with an error.</td></tr>
+        <tr><td><code>DIVB</code></td><td><code>src</code></td><td>Divides <code>AL</code> by <code>src</code> (8-bit): quotient in <code>AL</code>, remainder in <code>AH</code>. The initial value of <code>AH</code> does not matter.</td></tr>
+        <tr><td><code>INC</code></td><td><code>dest</code></td><td><code>dest = dest + 1</code>. <code>CF</code> does not change.</td></tr>
+        <tr><td><code>DEC</code></td><td><code>dest</code></td><td><code>dest = dest - 1</code>. <code>CF</code> does not change.</td></tr>
+        </tbody>
+    </table>
 
-        li {
-            list-style: none;
-        }
+    <h2 id="logica">Logic</h2>
+    <table>
+        <thead><tr><th>Instruction</th><th>Operands</th><th>Description</th></tr></thead>
+        <tbody>
+        <tr><td><code>AND</code></td><td><code>dest, src</code></td><td>Bitwise AND. <code>CF = 0</code>.</td></tr>
+        <tr><td><code>OR</code></td><td><code>dest, src</code></td><td>Bitwise OR. <code>CF = 0</code>.</td></tr>
+        <tr><td><code>XOR</code></td><td><code>dest, src</code></td><td>Bitwise XOR. <code>CF = 0</code>. <code>XOR AX, AX</code> sets <code>AX</code> to zero.</td></tr>
+        <tr><td><code>XORB</code></td><td><code>dest, src</code></td><td>Bitwise XOR of two bytes.</td></tr>
+        <tr><td><code>NOT</code></td><td><code>dest</code></td><td>Inverts every bit. Does not change the flags.</td></tr>
+        </tbody>
+    </table>
 
-        section {
-            padding: 15px;
-            background-color: rgb(62, 0, 0);
-            border: 1px solid gray;
-            text-align: center;
-        }
-        ::-webkit-scrollbar {
-            width: 5px;
-            height: 5px;
-        }
+    <h2 id="salti">Jumps and subroutines</h2>
+    <p>Use jumps after a <code>CMP</code>. "Signed" means the values are in two's complement.</p>
+    <table>
+        <thead><tr><th>Instruction</th><th>Operands</th><th>Jumps if</th></tr></thead>
+        <tbody>
+        <tr><td><code>JMP</code></td><td><code>label</code></td><td>Always.</td></tr>
+        <tr><td><code>JE</code> / <code>JZ</code></td><td><code>label</code></td><td>Equal: <code>ZF = 1</code>.</td></tr>
+        <tr><td><code>JNE</code> / <code>JNZ</code></td><td><code>label</code></td><td>Not equal: <code>ZF = 0</code>.</td></tr>
+        <tr><td><code>JL</code> / <code>JNGE</code></td><td><code>label</code></td><td>Less, signed: <code>SF ≠ OF</code>.</td></tr>
+        <tr><td><code>JLE</code> / <code>JNG</code></td><td><code>label</code></td><td>Less or equal, signed: <code>ZF = 1</code> or <code>SF ≠ OF</code>.</td></tr>
+        <tr><td><code>JG</code> / <code>JNLE</code></td><td><code>label</code></td><td>Greater, signed: <code>ZF = 0</code> and <code>SF = OF</code>.</td></tr>
+        <tr><td><code>JGE</code> / <code>JNL</code></td><td><code>label</code></td><td>Greater or equal, signed: <code>SF = OF</code>.</td></tr>
+        <tr><td><code>JB</code> / <code>JNAE</code> / <code>JC</code></td><td><code>label</code></td><td>Below, unsigned: <code>CF = 1</code>.</td></tr>
+        <tr><td><code>JBE</code> / <code>JNA</code></td><td><code>label</code></td><td>Below or equal, unsigned: <code>CF = 1</code> or <code>ZF = 1</code>.</td></tr>
+        <tr><td><code>JA</code> / <code>JNBE</code></td><td><code>label</code></td><td>Above, unsigned: <code>CF = 0</code> and <code>ZF = 0</code>.</td></tr>
+        <tr><td><code>JAE</code> / <code>JNB</code> / <code>JNC</code></td><td><code>label</code></td><td>Above or equal, unsigned: <code>CF = 0</code>.</td></tr>
+        <tr><td><code>JS</code> / <code>JNS</code></td><td><code>label</code></td><td><code>SF = 1</code> / <code>SF = 0</code>.</td></tr>
+        <tr><td><code>JO</code> / <code>JNO</code></td><td><code>label</code></td><td><code>OF = 1</code> / <code>OF = 0</code>.</td></tr>
+        <tr><td><code>JP</code> / <code>JPE</code></td><td><code>label</code></td><td>Even parity: <code>PF = 1</code>.</td></tr>
+        <tr><td><code>JNP</code> / <code>JPO</code></td><td><code>label</code></td><td>Odd parity: <code>PF = 0</code>.</td></tr>
+        <tr><td><code>JCXZ</code></td><td><code>label</code></td><td><code>CX = 0</code>.</td></tr>
+        <tr><td><code>LOOP</code></td><td><code>label</code></td><td>Decreases <code>CX</code> by 1, then jumps if <code>CX ≠ 0</code>.</td></tr>
+        <tr><td><code>CALL</code></td><td><code>label</code></td><td>Always. Pushes the address of the next instruction onto the stack.</td></tr>
+        <tr><td><code>RET</code></td><td>-</td><td>Pops the return address off the stack and jumps to that address.</td></tr>
+        </tbody>
+    </table>
 
-        /* Track */
-        ::-webkit-scrollbar-track {
-            background: #0B0C10;
-        }
+    <h2 id="sistema">System instructions</h2>
+    <table>
+        <thead><tr><th>Instruction</th><th>Operands</th><th>Description</th></tr></thead>
+        <tbody>
+        <tr><td><code>SYS</code></td><td>-</td><td>System call. <code>SYS</code> pops the call number off the stack and then its arguments: no <code>ADD SP, n</code> is needed after <code>SYS</code>. An unknown number does nothing and leaves the arguments on the stack.</td></tr>
+        <tr><td><code>HLT</code></td><td>-</td><td>Stops the program with code 0 and prints <code>Program halted.</code></td></tr>
+        <tr><td><code>NOP</code></td><td>-</td><td>Does nothing.</td></tr>
+        </tbody>
+    </table>
+    <h3>System calls</h3>
+    <table>
+        <thead><tr><th>Number</th><th>Name</th><th>Usage</th><th>Description</th></tr></thead>
+        <tbody>
+        <tr><td><code>1</code></td><td><code>EXIT</code></td><td><code>PUSH code</code><br><code>PUSH _EXIT</code><br><code>SYS</code></td><td>Ends the program and prints <code>Program exited with code: N</code>.</td></tr>
+        <tr><td><code>117</code></td><td><code>GETCHAR</code></td><td><code>PUSH _GETCHAR</code><br><code>SYS</code></td><td>Reads one input character and puts its code (0 to 255) in <code>AL</code>. <code>AH</code> does not change. If the input is empty, the program waits: type the characters in the terminal and press <kbd>Enter</kbd>. <kbd>Enter</kbd> does not send the newline character.</td></tr>
+        <tr><td><code>127</code></td><td><code>PRINTF</code></td><td><code>PUSH value</code><br><code>PUSH format</code><br><code>PUSH _PRINTF</code><br><code>SYS</code></td><td>Prints the <code>format</code> string with a single value. Use <code>%d</code>, <code>%x</code>, <code>%o</code> or <code>%c</code>, only once: two specifiers cause an error. The value is an unsigned word: -1 becomes 65535. The string must end with <code>\0</code> (at most 256 bytes).</td></tr>
+        </tbody>
+    </table>
 
-        ::-webkit-scrollbar-thumb {
-            background: #268AAA;
-        }
+    <h2 id="operandi">Operands</h2>
+    <table>
+        <thead><tr><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+        <tr><td>16-bit registers</td><td><code>AX</code>, <code>BX</code>, <code>CX</code>, <code>DX</code>, <code>SI</code>, <code>DI</code>, <code>BP</code>, <code>SP</code>.</td></tr>
+        <tr><td>8-bit registers</td><td><code>AL</code>, <code>AH</code>, <code>BL</code>, <code>BH</code>, <code>CL</code>, <code>CH</code>, <code>DL</code>, <code>DH</code>. Instructions ending in <code>B</code> (<code>MOVB</code>, <code>ADDB</code>, ...) accept only these registers.</td></tr>
+        <tr><td>Segment registers</td><td><code>CS</code>, <code>DS</code>, <code>ES</code>, <code>SS</code>. All are 0 at the start. <code>CS</code> is read-only.</td></tr>
+        <tr><td>Immediates</td><td>Decimal (<code>27</code>, <code>-1</code>), hexadecimal (<code>0x1B</code>) and octal with a leading zero, as in C (<code>033</code> equals 27). <code>09</code> is decimal. Characters such as <code>'A'</code> are not supported: use the code (<code>65</code>).</td></tr>
+        <tr><td>Labels and constants</td><td><code>loop</code>, <code>msg</code>, <code>_EXIT</code>. <code>label+n</code>, <code>label-n</code> and <code>label1-label2</code> are also valid.</td></tr>
+        <tr><td>Memory</td><td><code>[BX]</code>, <code>[SI]</code>, <code>[BP+4]</code>, <code>[BP-2]</code>, <code>[label]</code>, <code>[label+2]</code>, <code>[label-1]</code>, <code>[label+BX]</code>, <code>[BX+SI+2]</code>. The <code>(BX)</code> form is also valid. With <code>BP</code> the address is in the stack segment. The access size is one byte with instructions ending in <code>B</code> or with an 8-bit register (<code>MOV [x], AL</code>), otherwise one word.</td></tr>
+        </tbody>
+    </table>
 
-        ::-webkit-scrollbar-corner {
-            background: #0B0C10;
-        }
+    <h2 id="direttive">Directives</h2>
+    <table>
+        <thead><tr><th>Directive</th><th>Example</th><th>Description</th></tr></thead>
+        <tbody>
+        <tr><td><code>=</code></td><td><code>_EXIT = 1</code></td><td>Defines a constant.</td></tr>
+        <tr><td><code>.SECT</code></td><td><code>.SECT .TEXT</code></td><td>Starts the <code>.TEXT</code>, <code>.DATA</code> or <code>.BSS</code> section.</td></tr>
+        <tr><td><code>.ASCII</code></td><td><code>msg: .ASCII "Hello\n\0"</code></td><td>In <code>.DATA</code>: writes the characters of the string, one byte per character. The valid sequences are <code>\0</code>, <code>\n</code>, <code>\t</code>, <code>\r</code> and <code>\\</code>. The string does not get an automatic <code>\0</code>.</td></tr>
+        <tr><td><code>.BYTE</code></td><td><code>v: .BYTE 1, 0x2, 03</code></td><td>In <code>.DATA</code>: writes one or more bytes.</td></tr>
+        <tr><td><code>.SPACE</code></td><td><code>buf: .SPACE 10</code></td><td>In <code>.BSS</code> or in <code>.DATA</code>: reserves <code>n</code> zeroed bytes.</td></tr>
+        </tbody>
+    </table>
+    <p>Every line in <code>.DATA</code> and <code>.BSS</code> must have its own label: the interpreter ignores a line without a label. <code>.DATA</code> starts at address <code>0x1000</code> and <code>.BSS</code> at address <code>0x2000</code>. In the MEMORY context each cell is a non-zero byte of these sections. The bytes of a label are in a group with the label's name and address, for example <code>msg (0x1000)</code>, and each cell is named after its offset: <code>msg+0</code>, <code>msg+1</code>. A byte outside any label is named after its address.</p>
 
-        a {
-            color: #2680aa;
-        }
+    <h2 id="flag">Flags</h2>
+    <table>
+        <thead><tr><th>Flag</th><th>Name</th><th>Is 1 when</th></tr></thead>
+        <tbody>
+        <tr><td><code>ZF</code></td><td>Zero</td><td>The result is zero.</td></tr>
+        <tr><td><code>SF</code></td><td>Sign</td><td>The highest bit of the result is 1 (negative result).</td></tr>
+        <tr><td><code>CF</code></td><td>Carry</td><td>The operation has a carry or a borrow (unsigned).</td></tr>
+        <tr><td><code>OF</code></td><td>Overflow</td><td>The signed result does not fit in the register.</td></tr>
+        <tr><td><code>PF</code></td><td>Parity</td><td>The low byte of the result has an even number of 1 bits.</td></tr>
+        </tbody>
+    </table>
 
-    </style>
+    <h2 id="limiti">Differences from the real 8088</h2>
+    <div class="note warning">
+        <div class="note-title">Interpreter behaviors to be aware of</div>
+        <ul>
+            <li><code>MUL</code> always computes <code>AX = AL * src</code>, even with a 16-bit operand. The real 8088 computes <code>DX:AX = AX * src</code>.</li>
+            <li><code>DIV</code> always divides <code>AX</code> and puts the quotient in <code>AL</code>. The real 8088, with a 16-bit divisor, divides <code>DX:AX</code> and puts the quotient in <code>AX</code>.</li>
+            <li><code>MUL</code> and <code>MULB</code> set the flags from the low byte of the result. The real 8088 sets <code>CF = OF = 1</code> when the high half of the result is not zero.</li>
+        </ul>
+    </div>
 
-    <body class="text">
-        <h1>Istruzioni 8088 (set ridotto)</h1>
-        <br>
-        <h2>Istruzioni di Trasferimento Dati</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>ISTRUZIONE</th>
-                    <th>OPERANDI</th>
-                    <th>DESCRIZIONE</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="monospace">MOV</td>
-                    <td class="monospace">dest, src</td>
-                    <td>Sposta il valore sorgente nella destinazione.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">MOVB</td>
-                    <td class="monospace">dest, src</td>
-                    <td>Sposta un byte dalla sorgente alla destinazione.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">PUSH</td>
-                    <td class="monospace">operand</td>
-                    <td>Inserisce un valore nello stack.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">POP</td>
-                    <td class="monospace">dest</td>
-                    <td>Rimuove un valore dallo stack e lo memorizza nella destinazione.</td>
-                </tr>
-            </tbody>
-        </table>
-        <br>
-        
-        <h2>Istruzioni Aritmetiche</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>ISTRUZIONE</th>
-                    <th>OPERANDI</th>
-                    <th>DESCRIZIONE</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="monospace">ADD</td>
-                    <td class="monospace">dest, src</td>
-                    <td>Somma il valore sorgente alla destinazione.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">ADDB</td>
-                    <td class="monospace">dest, src</td>
-                    <td>Somma un byte sorgente al byte destinazione.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">ADC</td>
-                    <td class="monospace">dest, src</td>
-                    <td>Somma con riporto: aggiunge sorgente e carry flag alla destinazione.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">SUB</td>
-                    <td class="monospace">dest, src</td>
-                    <td>Sottrae il valore sorgente dalla destinazione.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">SUBB</td>
-                    <td class="monospace">dest, src</td>
-                    <td>Sottrae un byte sorgente dal byte destinazione.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">SBB</td>
-                    <td class="monospace">dest, src</td>
-                    <td>Sottrazione con prestito: sottrae sorgente e carry flag dalla destinazione.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">MUL</td>
-                    <td class="monospace">operand</td>
-                    <td>Moltiplica AL per l'operando, risultato in AX.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">MULB</td>
-                    <td class="monospace">operand</td>
-                    <td>Moltiplica AL per l'operando byte, risultato in AL:AH.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">DIV</td>
-                    <td class="monospace">operand</td>
-                    <td>Divide AX per l'operando, quoziente in AL, resto in AH.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">DIVB</td>
-                    <td class="monospace">operand</td>
-                    <td>Divide AL per l'operando byte, quoziente in AL, resto in AH.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">INC</td>
-                    <td class="monospace">operand</td>
-                    <td>Incrementa l'operando di 1.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">DEC</td>
-                    <td class="monospace">operand</td>
-                    <td>Decrementa l'operando di 1.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">CMP</td>
-                    <td class="monospace">op1, op2</td>
-                    <td>Confronta due operandi impostando i flag (op1 - op2).</td>
-                </tr>
-                <tr>
-                    <td class="monospace">CMPB</td>
-                    <td class="monospace">op1, op2</td>
-                    <td>Confronta due operandi byte impostando i flag.</td>
-                </tr>
-            </tbody>
-        </table>
-        <br>
-        
-        <h2>Istruzioni Logiche</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>ISTRUZIONE</th>
-                    <th>OPERANDI</th>
-                    <th>DESCRIZIONE</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="monospace">AND</td>
-                    <td class="monospace">dest, src</td>
-                    <td>AND logico bit per bit tra destinazione e sorgente.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">OR</td>
-                    <td class="monospace">dest, src</td>
-                    <td>OR logico bit per bit tra destinazione e sorgente.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">XOR</td>
-                    <td class="monospace">dest, src</td>
-                    <td>XOR logico bit per bit tra destinazione e sorgente.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">XORB</td>
-                    <td class="monospace">dest, src</td>
-                    <td>XOR logico bit per bit tra due byte.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">NOT</td>
-                    <td class="monospace">operand</td>
-                    <td>Complemento logico bit per bit dell'operando.</td>
-                </tr>
-            </tbody>
-        </table>
-        <br>
-        
-        <h2>Istruzioni di Controllo del Flusso</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>ISTRUZIONE</th>
-                    <th>OPERANDI</th>
-                    <th>DESCRIZIONE</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="monospace">JMP</td>
-                    <td class="monospace">label</td>
-                    <td>Salto incondizionato all'etichetta.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">JE / JZ</td>
-                    <td class="monospace">label</td>
-                    <td>Salta se uguale (Zero Flag = 1).</td>
-                </tr>
-                <tr>
-                    <td class="monospace">JNE / JNZ</td>
-                    <td class="monospace">label</td>
-                    <td>Salta se non uguale (Zero Flag = 0).</td>
-                </tr>
-                <tr>
-                    <td class="monospace">JL / JNGE</td>
-                    <td class="monospace">label</td>
-                    <td>Salta se minore (Sign Flag ≠ Overflow Flag).</td>
-                </tr>
-                <tr>
-                    <td class="monospace">JLE / JNG</td>
-                    <td class="monospace">label</td>
-                    <td>Salta se minore o uguale (ZF=1 OR SF≠OF).</td>
-                </tr>
-                <tr>
-                    <td class="monospace">JG / JNLE</td>
-                    <td class="monospace">label</td>
-                    <td>Salta se maggiore (ZF=0 AND SF=OF).</td>
-                </tr>
-                <tr>
-                    <td class="monospace">JGE / JNL</td>
-                    <td class="monospace">label</td>
-                    <td>Salta se maggiore o uguale (Sign Flag = Overflow Flag).</td>
-                </tr>
-                <tr>
-                    <td class="monospace">JB / JNAE / JC</td>
-                    <td class="monospace">label</td>
-                    <td>Salta se sotto (Carry Flag = 1) - confronto unsigned.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">JBE / JNA</td>
-                    <td class="monospace">label</td>
-                    <td>Salta se sotto o uguale (CF=1 OR ZF=1) - confronto unsigned.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">JA / JNBE</td>
-                    <td class="monospace">label</td>
-                    <td>Salta se sopra (CF=0 AND ZF=0) - confronto unsigned.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">JAE / JNB / JNC</td>
-                    <td class="monospace">label</td>
-                    <td>Salta se sopra o uguale (Carry Flag = 0) - confronto unsigned.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">JS</td>
-                    <td class="monospace">label</td>
-                    <td>Salta se segno negativo (Sign Flag = 1).</td>
-                </tr>
-                <tr>
-                    <td class="monospace">JNS</td>
-                    <td class="monospace">label</td>
-                    <td>Salta se segno positivo (Sign Flag = 0).</td>
-                </tr>
-                <tr>
-                    <td class="monospace">JO</td>
-                    <td class="monospace">label</td>
-                    <td>Salta se overflow (Overflow Flag = 1).</td>
-                </tr>
-                <tr>
-                    <td class="monospace">JNO</td>
-                    <td class="monospace">label</td>
-                    <td>Salta se non overflow (Overflow Flag = 0).</td>
-                </tr>
-                <tr>
-                    <td class="monospace">JP / JPE</td>
-                    <td class="monospace">label</td>
-                    <td>Salta se parità pari (Parity Flag = 1).</td>
-                </tr>
-                <tr>
-                    <td class="monospace">JNP / JPO</td>
-                    <td class="monospace">label</td>
-                    <td>Salta se parità dispari (Parity Flag = 0).</td>
-                </tr>
-                <tr>
-                    <td class="monospace">JCXZ</td>
-                    <td class="monospace">label</td>
-                    <td>Salta se CX è zero.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">LOOP</td>
-                    <td class="monospace">label</td>
-                    <td>Decrementa CX e salta se CX ≠ 0.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">CALL</td>
-                    <td class="monospace">label</td>
-                    <td>Chiama una subroutine, salva l'indirizzo di ritorno nello stack.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">RET</td>
-                    <td class="monospace">🞬</td>
-                    <td>Ritorna da una subroutine, recupera l'indirizzo dallo stack.</td>
-                </tr>
-            </tbody>
-        </table>
-        <br>
-        
-        <h2>Istruzioni di Sistema</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>ISTRUZIONE</th>
-                    <th>OPERANDI</th>
-                    <th>DESCRIZIONE</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="monospace">SYS</td>
-                    <td class="monospace">🞬</td>
-                    <td>Chiamata di sistema. Il numero della syscall deve essere nello stack.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">HLT</td>
-                    <td class="monospace">🞬</td>
-                    <td>Ferma l'esecuzione del programma.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">NOP</td>
-                    <td class="monospace">🞬</td>
-                    <td>Nessuna operazione - non fa nulla.</td>
-                </tr>
-            </tbody>
-        </table>
-        <br>
-        
-        <h2>Tipi di Operandi</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>TIPO</th>
-                    <th>DESCRIZIONE</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="monospace">register16</td>
-                    <td>Registri a 16 bit: <span>AX, BX, CX, DX, SI, DI, BP, SP</span></td>
-                </tr>
-                <tr>
-                    <td class="monospace">register8</td>
-                    <td>Registri a 8 bit: <span>AL, AH, BL, BH, CL, CH, DL, DH</span></td>
-                </tr>
-                <tr>
-                    <td class="monospace">segment</td>
-                    <td>Registri di segmento: <span>CS, DS, ES, SS</span></td>
-                </tr>
-                <tr>
-                    <td class="monospace">immediate</td>
-                    <td>Valori immediati nei formati: ottale <span>(es. 027)</span>, decimale <span>(es. 27)</span>, esadecimale <span>(es. 0x1B)</span></td>
-                </tr>
-                <tr>
-                    <td class="monospace">memory</td>
-                    <td>Riferimenti di memoria: <span>[BX], [BP+8], [SI+DI], [label]</span></td>
-                </tr>
-                <tr>
-                    <td class="monospace">label</td>
-                    <td>Etichette per salti e chiamate: <span>loop_start, end_program</span></td>
-                </tr>
-                <tr>
-                    <td class="monospace">🞬</td>
-                    <td>Questa istruzione non richiede operandi.</td>
-                </tr>
-            </tbody>
-        </table>
-        <br>
-        
-        <h2>Chiamate di Sistema (SYS)</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>NUMERO</th>
-                    <th>NOME</th>
-                    <th>DESCRIZIONE</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="monospace">1</td>
-                    <td class="monospace">EXIT</td>
-                    <td>Termina il programma. Codice di uscita nello stack.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">117</td>
-                    <td class="monospace">GETCHAR</td>
-                    <td>Legge un carattere dall'input, lo memorizza in AL.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">127</td>
-                    <td class="monospace">PRINTF</td>
-                    <td>Stampa una stringa formattata. Formato e valore nello stack.</td>
-                </tr>
-            </tbody>
-        </table>
-        <br>
-        
-        <h2>Flag del Processore</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>FLAG</th>
-                    <th>NOME</th>
-                    <th>DESCRIZIONE</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="monospace">ZF</td>
-                    <td class="monospace">Zero Flag</td>
-                    <td>Impostato quando il risultato di un'operazione è zero.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">SF</td>
-                    <td class="monospace">Sign Flag</td>
-                    <td>Impostato quando il risultato di un'operazione è negativo.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">CF</td>
-                    <td class="monospace">Carry Flag</td>
-                    <td>Impostato quando c'è un riporto o un prestito nell'operazione.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">OF</td>
-                    <td class="monospace">Overflow Flag</td>
-                    <td>Impostato quando c'è un overflow aritmetico in complemento a due.</td>
-                </tr>
-                <tr>
-                    <td class="monospace">PF</td>
-                    <td class="monospace">Parity Flag</td>
-                    <td>Impostato quando il numero di bit 1 nel risultato è pari.</td>
-                </tr>
-            </tbody>
-        </table>
-        <br>
-        
-        <section>
-            <p>
-                Le istruzioni non presenti in questa lista non sono supportate, 
-                per ulteriori informazioni si veda la 
-                <a href="https://github.com/atom7xyz/antlr-impl/blob/master/src/main/resources/8088.pdf">documentazione</a>.
-            </p>
-        </section>
-        <br>
-    </body>
+    <h2>Documentation</h2>
+    <p>The <a href="https://github.com/atom7xyz/antlr-impl/blob/master/src/main/resources/LaTeX/antlr-impl.pdf">interpreter documentation</a> describes the supported IJVM and 8088 instructions.</p>
+</main>
+</body>
 </html>

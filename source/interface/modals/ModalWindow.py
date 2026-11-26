@@ -3,8 +3,8 @@ from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout, QSpacerItem, QSizePolicy
 
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
+from source.interface import createLayout
 from source.interface.modals.Window import add_title_controls, create_window_content
-from source.interface.shared import createLayout
 from source.interface.templates import Title
 from source.interface.templates.window import BaseWindow
 from source.platform import Desktop, isMac
@@ -13,6 +13,7 @@ WINDOW_ACTIVE = None
 
 
 def modalOpen(parent, anywidget, title: str, size: QSize = None):
+    """Open anywidget in a modal window, unless one is already open."""
     global WINDOW_ACTIVE
     if WINDOW_ACTIVE is None:
         size = size if size is not None else Desktop.sizeHint(2/5, 3/5)
@@ -70,6 +71,7 @@ class ModalWindowLogic(ModalWindowGraphics):
 @EventRegister.register(ClosingEvent, "Main")
 @EventRegister.register(ClosingEvent, "Tool", EventRegister.LOW)
 class ModalWindow(ModalWindowLogic):
+    """Frameless modal window that hosts a widget and closes on the Main and Tool ClosingEvent."""
     def __init__(self, parent, widget, size: QSize, title: str):
         super().__init__(parent, widget, size, title)
 

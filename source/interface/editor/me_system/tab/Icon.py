@@ -1,7 +1,7 @@
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtWidgets import QPushButton, QSizePolicy
 
-from source.filesystem.IconManager import IconManager
+from source.filesystem import IconManager
 
 
 class TabIcon(QPushButton):

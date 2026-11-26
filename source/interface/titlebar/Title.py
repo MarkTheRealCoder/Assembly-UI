@@ -2,9 +2,8 @@ from PyQt5.QtCore import Qt, pyqtProperty
 from PyQt5.QtGui import QColor, QPainter, QFontMetrics
 
 from source.filesystem import open_dir
-from source.interface.shared import Settings
-from source.interface.templates import Title as BaseTitle
-from source.interface.templates import Tooltip
+from source.interface import Settings
+from source.interface.templates import Title as BaseTitle, Tooltip
 from source.platform import Desktop, isMac
 
 
@@ -30,11 +29,9 @@ class Title(BaseTitle):
         self.setLabel()
 
     def setupFontAndAlignment(self):
-        # Set scalable font
         font = Desktop.createScalableFont("Anonymous Pro", 12, False)
         self.setFont(font)
         
-        # Ensure center alignment
         self.setAlignment(Qt.AlignCenter)
 
     def maximizeWindow(self):

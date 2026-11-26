@@ -1,4 +1,3 @@
-from .Renderer import Renderer
+from .Renderer import Renderer, warmUpWebEngine
 
-__all__ = ["Renderer"]
-
+__all__ = ["Renderer", "warmUpWebEngine"]

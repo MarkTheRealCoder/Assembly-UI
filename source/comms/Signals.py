@@ -53,5 +53,9 @@ class DataBase:
 
     # Global events
     ON_FILE_REPLACED: Variable = Variable(str)              # ON FILE REPLACED FROM A FILE DIALOG
-    #ON_SPLITTER_MOVE: Variable = Variable(bool)             # ON SPLITTER MOVE
+    ON_SPLITTER_DRAG: Variable = Variable(bool)             # TRUE WHILE THE USER DRAGS A SPLITTER HANDLE
+
+    # Execution
+    ON_EXECUTION_LINE: Variable = Variable(tuple)           # (PATH, LINE) OF THE NEXT INSTRUCTION, LINE -1 TO CLEAR
+    ON_DIAGNOSTICS: Variable = Variable(tuple)              # (PATH, [Diagnostic]) REPORTED BY THE LAST RUN, [] TO CLEAR
 

@@ -1,9 +1,9 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QFrame, QSizePolicy, QVBoxLayout, QHBoxLayout, QLabel
 
-from source.interface.debugger.mem.ColoredDrop import ColoredDrop
+from source.interface import createLayout
+from source.interface.debugger.mem import ColoredDrop
 from source.interface.debugger.mem.chunks.MemoryChunk import _MemoryChunk
-from source.interface.shared import createLayout
 from source.platform import roundColors
 
 
@@ -20,7 +20,7 @@ class CompoundMemoryChunkHeader(QFrame):
         label = QLabel(name)
         label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        label.setFixedHeight(label.fontMetrics().ascent() + 2)
+        # No fixed height: the label takes the full height of its style.qss font, descenders such as g, p and _ included.
         label.setContentsMargins(0, 0, 0, 0)
 
         layout.addWidget(label)
@@ -31,32 +31,40 @@ class CompoundMemoryChunkGraphics(_MemoryChunk):
     def __init__(self, parent, name: str, color: str = None):
         super().__init__(parent)
         self.setObjectName("CompoundMemoryChunk")
-        # Additional UI setup can be done here
         color = roundColors('Compound') if color is None else color
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        # The chunk takes the height of its content; only the width follows the parent.
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.setStyleSheet(f"QFrame#CompoundMemoryChunk {{ border-left: 1px solid {color}; }}")
         layout: QVBoxLayout = createLayout(QVBoxLayout, self)
         layout.setAlignment(Qt.AlignTop)
-        layout.addWidget(CompoundMemoryChunkHeader(name, color=color), 1)
+        layout.addWidget(CompoundMemoryChunkHeader(name, color=color))
         inner_layout: QVBoxLayout = createLayout(QVBoxLayout)
         inner_layout.setContentsMargins(8, 8, 8, 8)
         inner_layout.setSpacing(4)
-        layout.addLayout(inner_layout, 2)
+        layout.addLayout(inner_layout)
         self.setLayout(layout)
+        self._inner_layout = inner_layout
 
 
 class CompoundMemoryChunkLogic(CompoundMemoryChunkGraphics):
     def __init__(self, parent, name: str, color: str):
         super().__init__(parent, name, color)
-        # Implementation of compound memory chunk logic goes here
         self._key = name
+        self._nodes: dict = {}
 
     def getKey(self) -> str:
         return self._key
+
+    def getNodes(self) -> dict:
+        """ Returns the child nodes indexed by key. """
+        return self._nodes
+
+    def getInnerLayout(self) -> QVBoxLayout:
+        """ Returns the layout that contains the child nodes. """
+        return self._inner_layout
 
 
 class CompoundMemoryChunk(CompoundMemoryChunkLogic):
     def __init__(self, parent, name: str, color: str = None):
         super().__init__(parent, name, roundColors(name) if color is None else color)
-        # Additional initialization for CompoundMemoryChunk
 

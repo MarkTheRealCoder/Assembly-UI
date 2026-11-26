@@ -7,6 +7,8 @@ from source.interface.editor.me_system.Container import \
 
 
 class HiddenTabList(QMenu):
+    """Menu listing the tabs that do not fit in the tab bar"""
+
     def __init__(self, parent):
         super().__init__(parent)
         self.configurations()

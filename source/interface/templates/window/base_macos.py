@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QWidget
 
 
 class BaseWindow(QWidget):
+    """Frameless window whose resizing is handled by the ResizeFrame."""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._windowEffect = None

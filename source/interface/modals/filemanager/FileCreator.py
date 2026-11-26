@@ -4,12 +4,13 @@ from source.comms import Database
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
 from source.filesystem import create_file, resolve_app_path
+from source.interface import Settings
 from source.interface.modals.filemanager.complex import FileDialog
-from source.interface.shared import Settings
 from source.interface.templates import create_toast
 
 
 class FileCreator(FileDialog):
+    """Dialog that creates a file in the chosen folder and opens it, asking before replacing an existing one."""
     def __init__(self):
         super().__init__(["a8088", "ijvm"])
         self.confirm.onClick(self.___confirm)

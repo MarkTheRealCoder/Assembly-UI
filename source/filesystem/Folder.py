@@ -67,7 +67,7 @@ def get_available_disks():
 
 def resolve_app_path(ui_path: str) -> str:
     from source.filesystem.documents import Document
-    from source.interface.shared import Settings
+    from source.interface import Settings
 
     root = os.path.normpath(Settings.get("application/cwd"))
     path = ui_path or ""
@@ -83,7 +83,7 @@ def resolve_app_path(ui_path: str) -> str:
 
 def to_ui_path(absolute_path: str) -> str:
     from source.filesystem.documents import Document
-    from source.interface.shared import Settings
+    from source.interface import Settings
 
     root = os.path.normpath(Settings.get("application/cwd"))
     abs_norm = os.path.normpath(absolute_path.rstrip("/\\"))

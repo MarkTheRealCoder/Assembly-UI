@@ -2,17 +2,19 @@ from PyQt5.QtWidgets import QFrame, QSizePolicy, QVBoxLayout
 
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
-from source.interface.modals.ModalWindow import modalOpen
+from source.interface import createLayout, Settings
+from source.interface.modals import modalOpen
 from source.interface.modals.filemanager.paths import PathTree
-from source.interface.shared import createLayout, Settings
 from source.interface.templates import toast_safe_exec
 
 
 def open_file(window):
+    """Open the file picker in a modal window."""
     toast_safe_exec(window, lambda: modalOpen(window, FilePicker(), "Open a File"))()
 
 
 class FilePicker(QFrame):
+    """File tree that opens the file double clicked."""
     def __init__(self):
         super().__init__(None)
 
