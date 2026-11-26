@@ -26,7 +26,7 @@
     <ol>
         <li>Select <strong>File &gt; Change Working Path</strong> and pick the folder of your programs. <strong>Open</strong> shows only the files in this folder.</li>
         <li>Select <strong>File &gt; New</strong> and create a <code>.a8088</code> or an <code>.ijvm</code> file. The editor also opens <code>.asm</code> and <code>.jas</code> files.</li>
-        <li>Copy an example program from <strong>Help &gt; 8088 Instructions</strong> or <strong>Help &gt; IJVM Instructions</strong> (section <em>Esempi</em>) into the file.</li>
+        <li>Copy an example program from <strong>Help &gt; 8088 Instructions</strong> or <strong>Help &gt; IJVM Instructions</strong> (section <em>Examples for your first run</em>) into the file.</li>
         <li>Click <strong>Run</strong> to execute the program, or <strong>Debug</strong> to stop before the first instruction.</li>
     </ol>
     <p>The output, the input and the messages appear in the terminal. The memory viewer shows the state of the program.</p>
@@ -40,8 +40,8 @@
                 <li>On macOS, the window buttons are on the left, and the <strong>File</strong> and <strong>Help</strong> menus are in the macOS menu bar. On Windows, the maximize button shows the Snap Layouts.</li>
                 <li>The title shows the working directory. Double-click it to maximize or restore the window. Drag it to move the window.</li>
                 <li><kbd>Ctrl</kbd>+click the title (<kbd>Cmd</kbd>+click on macOS) to open the working directory in the file browser.</li>
-                <li>Drag the border between the editor and the debugger to resize the two panels.</li>
-                <li>The app remembers the open files and the size of the window.</li>
+                <li>Drag the border between the editor and the debugger, or between the terminal and the memory viewer, to resize the panels. Each panel slides down to its own minimum width.</li>
+                <li>The app remembers the open files, the size of the window, whether it is maximized and the position of the two borders. At launch it skips the files that no longer exist.</li>
             </ul>
         </div>
         <div class="card">
@@ -61,13 +61,15 @@
         <div class="card">
             <h3>Editing</h3>
             <ul>
-                <li>The syntax colors follow the file extension.</li>
-                <li>The autocompletion suggests the instructions and the words of the file after the first character.</li>
+                <li>The syntax colors follow the file extension. The editor and the terminal use the bundled JetBrains Mono font.</li>
+                <li>The autocompletion suggests, after the first character, the keywords of the language and the symbols declared in the file: labels and constants in 8088, labels, methods, parameters, variables and constants in IJVM. It does not open inside comments or strings.</li>
                 <li>The editor saves the file while you type, before each run, when you change tab and when you close the app.</li>
                 <li><kbd>Ctrl+X</kbd> and <kbd>Ctrl+C</kbd> cut or copy the selection. With no selection, they cut or copy the whole line.</li>
                 <li><kbd>Ctrl+Shift+Up</kbd> and <kbd>Ctrl+Shift+Down</kbd> move the selected lines.</li>
                 <li><kbd>Ctrl+D</kbd> duplicates the line, <kbd>Ctrl+Shift+L</kbd> deletes it, and <kbd>Ctrl+T</kbd> swaps it with the line above.</li>
                 <li><kbd>Ctrl+F</kbd> opens the search bar, with plain text or regular expressions. The search ignores the case.</li>
+                <li>After a run, the editor of the file underlines the syntax, semantic and runtime errors of the interpreter with a red wave, and the warnings with a yellow wave. A dot in the margin marks the line, and an error line has a dark red background.</li>
+                <li>Rest the mouse on the dot or on the underlined text to read the message. The marks of a line go away when you edit it, and the next run replaces them.</li>
             </ul>
         </div>
         <div class="card">
@@ -93,6 +95,7 @@
         <tr><td>Step 1 / Step 10</td><td>In debug mode, execute 1 or 10 instructions.</td></tr>
         <tr><td>Automatic stepping</td><td>In debug mode, pick an interval (500 ms, 1, 2, 3, 4, 5 or 10 s) and click the metronome button. The program executes one instruction at each interval. Click the button again to stop.</td></tr>
         <tr><td>HEX / DEC / OCT</td><td>Pick the base of the memory values: hexadecimal (default), decimal or octal. The change applies to every value at once.</td></tr>
+        <tr><td>Info</td><td>The <strong>i</strong> button at the right end of the toolbar shows how to copy the memory values and how to change their display.</td></tr>
         </tbody>
     </table>
 
@@ -112,7 +115,8 @@
             <ul>
                 <li>A new value flashes green, a changed value flashes blue and a removed value flashes red.</li>
                 <li>In debug mode, the viewer scrolls to each new value or frame.</li>
-                <li>The copy button of a value puts <code>name: value</code> on the clipboard, in the current base.</li>
+                <li>Double-click a value to put <code>name: value</code> on the clipboard, as it is shown. The value flashes white.</li>
+                <li>A value that is the code of a visible ASCII character, a tab or a newline has the ASCII button. Click it to show the character, for example <code>'A'</code>, and click it again to show the number.</li>
                 <li>At the end of a run the viewer keeps the final state. The next run clears it.</li>
             </ul>
         </div>
@@ -180,7 +184,9 @@
         <tr><td><kbd>Ctrl+Shift+Up</kbd> / <kbd>Ctrl+Shift+Down</kbd></td><td>Editor</td><td>Move the selected lines.</td></tr>
         <tr><td><kbd>Ctrl+D</kbd></td><td>Editor</td><td>Duplicate the line.</td></tr>
         <tr><td><kbd>Ctrl+Shift+L</kbd></td><td>Editor</td><td>Delete the line.</td></tr>
+        <tr><td><kbd>Ctrl+T</kbd></td><td>Editor</td><td>Swap the line with the line above.</td></tr>
         <tr><td><kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Y</kbd></td><td>Editor</td><td>Undo, redo.</td></tr>
+        <tr><td>Double-click</td><td>Memory viewer</td><td>Copy a value to the clipboard.</td></tr>
         <tr><td><kbd>Ctrl+L</kbd> / <kbd>Ctrl+Shift+K</kbd></td><td>Terminal</td><td>Clear the terminal.</td></tr>
         <tr><td><kbd>Enter</kbd></td><td>Terminal</td><td>Send the typed line to the running program.</td></tr>
         <tr><td><kbd>Ctrl</kbd>+click</td><td>Title</td><td>Open the working directory in the file browser.</td></tr>

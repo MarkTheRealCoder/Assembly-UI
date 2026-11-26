@@ -11,8 +11,8 @@ class MemoryInfoButtonGraphics(GenericButton):
         "Memory values\n"
         "\n"
         "• Double-click a value to copy it to the clipboard.\n"
-        "• Press T on a value to show it as an ASCII character,\n"
-        "   press it again to show the number.\n"
+        "• Click the ASCII button of a value to show its character,\n"
+        "   click it again to show the number.\n"
         "• Pick HEX, DEC or OCT to change the base of the numbers."
     )
 
