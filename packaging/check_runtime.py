@@ -8,6 +8,7 @@ instead of the first run on a user's computer.
 """
 import os
 import sys
+import threading
 
 import jpype
 
@@ -39,6 +40,22 @@ def main() -> int:
     jpype.startJVM("-Xmx256m", jvmpath=jvm, classpath=[jar], convertStrings=False)
     version = jpype.JClass("java.lang.System").getProperty("java.version")
     print(f"JVM {version} started from {jvm}")
+
+    # InterpreterWorker detaches its thread through a Java package import, which needs the jdk.zipfs module.
+    errors = []
+
+    def detach():
+        try:
+            jpype.java.lang.Thread.detach()
+        except Exception as error:
+            errors.append(error)
+
+    worker = threading.Thread(target=detach)
+    worker.start()
+    worker.join()
+    if errors:
+        print(f"A Python thread cannot use the Java packages: {errors[0]!r}")
+        return 1
 
     session_class = jpype.JClass("xyz.atom7.bridge.DebugSession")
     session = session_class.create("ijvm", PROGRAM)
