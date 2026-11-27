@@ -5,11 +5,15 @@ Makes the release package from the PyInstaller output, the Java runtime and the 
 
 It reads dist/ (PyInstaller), build/runtime (jlink) and build/licenses/python-packages.txt, and writes:
 - package/AssemblyStdio/, the folder that users get
-- release/AssemblyStdio-<target>.zip on Windows and macOS, or .tar.gz on Linux
+- release/AssemblyStdio-<target>.zip on Windows, .tar.gz on Linux, or .pkg on macOS
 
-On macOS the folder holds AssemblyStdio.app, with the runtime in Contents/Resources/runtime, and licenses/.
+On macOS the folder holds only AssemblyStdio.app, with the runtime in Contents/Resources/runtime and the licenses
+in Contents/Resources/licenses. The .pkg installer puts the app in /Applications. The installer is not signed:
+macOS asks to confirm it once, in Privacy & Security, but the files that it installs are not in quarantine, so
+the app then opens without warnings.
 """
 import os
+import plistlib
 import shutil
 import subprocess
 import sys
@@ -18,6 +22,8 @@ import zipfile
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 NAME = "AssemblyStdio"
+TITLE = "Assembly Stdio"
+BUNDLE_ID = "dev.assemblystdio.AssemblyStdio"
 MACOS = sys.platform == "darwin"
 WINDOWS = sys.platform == "win32"
 
@@ -70,7 +76,8 @@ def assemble() -> str:
         app = os.path.join(package, f"{NAME}.app")
         shutil.copytree(path("dist", f"{NAME}.app"), app, symlinks=True)
         shutil.copytree(path("build", "runtime"), os.path.join(app, "Contents", "Resources", "runtime"), symlinks=True)
-        copy_licenses(os.path.join(package, "licenses"))
+        # Inside the bundle, since the installer copies only the app to /Applications.
+        copy_licenses(os.path.join(app, "Contents", "Resources", "licenses"))
         sign_macos_app(app)
         return os.path.join(app, "Contents", "MacOS", NAME)
 
@@ -80,17 +87,71 @@ def assemble() -> str:
     return os.path.join(package, f"{NAME}.exe" if WINDOWS else NAME)
 
 
+def macos_installer(target: str, output: str) -> None:
+    """ Makes an installer that puts AssemblyStdio.app in /Applications. """
+    work = path("build", "pkg")
+    shutil.rmtree(work, ignore_errors=True)
+    resources = os.path.join(work, "resources")
+    os.makedirs(resources)
+    root = path("package", NAME)
+    version = os.environ.get("APP_VERSION", "0.0.0")
+
+    # A relocatable bundle would be installed over any copy of the app found elsewhere on the Mac.
+    component_plist = os.path.join(work, "component.plist")
+    subprocess.run(["pkgbuild", "--analyze", "--root", root, component_plist], check=True)
+    with open(component_plist, "rb") as f:
+        components = plistlib.load(f)
+    for component in components:
+        component["BundleIsRelocatable"] = False
+    with open(component_plist, "wb") as f:
+        plistlib.dump(components, f)
+
+    component_pkg = os.path.join(work, f"{NAME}.pkg")
+    subprocess.run([
+        "pkgbuild", "--root", root, "--component-plist", component_plist, "--identifier", BUNDLE_ID,
+        "--version", version, "--install-location", "/Applications", component_pkg,
+    ], check=True)
+
+    shutil.copy2(path("LICENSE"), os.path.join(resources, "LICENSE.txt"))
+    with open(os.path.join(resources, "welcome.txt"), "w", encoding="utf-8") as f:
+        f.write(f"{TITLE} {version}\n\n"
+                f"This installer puts {TITLE} in the Applications folder. "
+                f"It includes its own Java runtime, so nothing else needs to be installed.\n")
+    # An Intel build also runs on Apple Silicon, through Rosetta.
+    architectures = "arm64" if target.endswith("arm64") else "x86_64,arm64"
+    distribution = os.path.join(work, "distribution.xml")
+    with open(distribution, "w", encoding="utf-8") as f:
+        f.write(f"""<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="2">
+    <title>{TITLE}</title>
+    <welcome file="welcome.txt"/>
+    <license file="LICENSE.txt"/>
+    <options customize="never" require-scripts="false" hostArchitectures="{architectures}"/>
+    <domains enable_localSystem="true"/>
+    <choices-outline>
+        <line choice="{BUNDLE_ID}"/>
+    </choices-outline>
+    <choice id="{BUNDLE_ID}" visible="false">
+        <pkg-ref id="{BUNDLE_ID}"/>
+    </choice>
+    <pkg-ref id="{BUNDLE_ID}" version="{version}" onConclusion="none">{NAME}.pkg</pkg-ref>
+</installer-gui-script>
+""")
+    subprocess.run([
+        "productbuild", "--distribution", distribution, "--resources", resources, "--package-path", work, output,
+    ], check=True)
+
+
 def archive(target: str) -> str:
-    """ Archives package/AssemblyStdio, keeping the folder as the root of the archive. """
+    """ Archives package/AssemblyStdio, keeping the folder as the root of the archive, or makes the macOS installer. """
     release = path("release")
     shutil.rmtree(release, ignore_errors=True)
     os.makedirs(release)
     source = path("package", NAME)
 
     if MACOS:
-        # ditto keeps the symbolic links and the attributes of the app bundle, as the Finder does.
-        output = os.path.join(release, f"{NAME}-{target}.zip")
-        subprocess.run(["ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", source, output], check=True)
+        output = os.path.join(release, f"{NAME}-{target}.pkg")
+        macos_installer(target, output)
     elif WINDOWS:
         output = os.path.join(release, f"{NAME}-{target}.zip")
         with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as archive_file:

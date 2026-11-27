@@ -39,14 +39,32 @@ Assembly UI for UniCA's ARE course. Part of the "Assembly Stdio" project.
 
 ## Getting started
 
-### Requirements
+### Download
+
+The [Releases](https://github.com/MarkTheRealCoder/Assembly-UI/releases) page has a package for each system. Each package includes its own Java runtime, so nothing else needs to be installed.
+
+| System | File | Install |
+| --- | --- | --- |
+| **macOS**, Apple Silicon | `AssemblyStdio-macos-arm64.pkg` | Open the installer. It puts **Assembly Stdio** in Applications |
+| **macOS**, Intel | `AssemblyStdio-macos-x64.pkg` | Same as above |
+| **Windows** | `AssemblyStdio-windows-x64.zip` | Extract the folder and open `AssemblyStdio.exe` |
+| **Linux** | `AssemblyStdio-linux-x64.tar.gz` | Extract the folder and run `AssemblyStdio` |
+
+The packages are not signed, so the system asks you to confirm them once:
+
+- **macOS:** the first time you open the installer, macOS says that it cannot verify it. Close the message, open **System Settings > Privacy & Security**, and click **Open Anyway** next to the message about `AssemblyStdio-macos-….pkg`. The installed app then opens without warnings.
+- **Windows:** if SmartScreen stops `AssemblyStdio.exe`, click **More info**, then **Run anyway**.
+
+### Run from source
+
+#### Requirements
 
 - Python 3.9 or later
 - A Java runtime, version 11 or later
 
 The application finds Java through `JAVA_HOME` or through the `java` command on `PATH`.
 
-### Install and run
+#### Install and run
 
 With [uv](https://docs.astral.sh/uv/):
 

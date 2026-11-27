@@ -1,8 +1,8 @@
 name: Build
 
-# Builds the folder package for Windows, Linux and macOS (Apple Silicon and Intel).
-# - Run workflow (Actions tab) or a push to the branch below: the 4 archives are uploaded as artifacts.
-# - A tag such as v1.0.0: the archives are also attached to a GitHub Release of that tag.
+# Builds the package for Windows (.zip), Linux (.tar.gz) and macOS (.pkg installer, Apple Silicon and Intel).
+# - Run workflow (Actions tab) or a push to the branch below: the 4 packages are uploaded as artifacts.
+# - A tag such as v1.0.0: the packages are also attached to a GitHub Release of that tag.
 on:
   workflow_dispatch:
   push:
@@ -118,23 +118,32 @@ jobs:
         id: package
         run: python packaging/assemble.py "${{ matrix.target }}"
 
+      # The job installs the .pkg as a user would, then starts the installed app in the next step.
+      - name: Install the macOS package
+        if: runner.os == 'macOS'
+        run: |
+          sudo installer -pkg "${{ steps.package.outputs.archive }}" -target /
+          codesign --verify --deep --strict --verbose=2 /Applications/AssemblyStdio.app
+          echo "APP_EXECUTABLE=/Applications/AssemblyStdio.app/Contents/MacOS/AssemblyStdio" >> "$GITHUB_ENV"
+
       # The app has no console: if it closes within 20 seconds, the job shows its error.log.
       - name: Start the app
         run: |
+          executable="${APP_EXECUTABLE:-${{ steps.package.outputs.executable }}}"
           if [[ "$RUNNER_OS" == "Linux" ]]; then
-            xvfb-run -a python packaging/smoke_test.py "${{ steps.package.outputs.executable }}"
+            xvfb-run -a python packaging/smoke_test.py "$executable"
           else
-            python packaging/smoke_test.py "${{ steps.package.outputs.executable }}"
+            python packaging/smoke_test.py "$executable"
           fi
 
-      # Download it from the run page. The downloaded ZIP contains the archive of the package.
+      # Download it from the run page. The downloaded ZIP contains the package.
       - uses: actions/upload-artifact@v4
         with:
           name: AssemblyStdio-${{ matrix.target }}
           path: ${{ steps.package.outputs.archive }}
           if-no-files-found: error
           retention-days: 14
-          # The archive is already compressed.
+          # The package is already compressed.
           compression-level: 0
 
   release:
