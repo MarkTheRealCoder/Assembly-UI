@@ -6,9 +6,10 @@ from PyQt5.QtGui import QColor, QFont
 from source.interface.assets import editorFont
 
 from .Completion import CompletionSource
+from .Styling import Utf8Styling
 
 
-class Asm8088Lexer(CompletionSource, QsciLexerCustom):
+class Asm8088Lexer(Utf8Styling, CompletionSource, QsciLexerCustom):
     """Syntax highlighter and autocompletion source for 8088 assembly files"""
 
     Default = 0
@@ -124,9 +125,7 @@ class Asm8088Lexer(CompletionSource, QsciLexerCustom):
         if not self._parent:
             return
 
-        text = self._parent.text()[start:end]
-        
-        self.startStyling(start)
+        text = self.beginStyling(start, end)
         
         i = 0
         while i < len(text):

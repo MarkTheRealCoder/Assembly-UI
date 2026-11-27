@@ -6,9 +6,10 @@ from PyQt5.QtGui import QColor, QFont
 from source.interface.assets import editorFont
 
 from .Completion import CompletionSource
+from .Styling import Utf8Styling
 
 
-class IJVMLexer(CompletionSource, QsciLexerCustom):
+class IJVMLexer(Utf8Styling, CompletionSource, QsciLexerCustom):
     """Syntax highlighter and autocompletion source for IJVM files"""
 
     Default = 0
@@ -112,9 +113,7 @@ class IJVMLexer(CompletionSource, QsciLexerCustom):
         if not self._parent:
             return
 
-        text = self._parent.text()[start:end]
-        
-        self.startStyling(start)
+        text = self.beginStyling(start, end)
         
         i = 0
         while i < len(text):

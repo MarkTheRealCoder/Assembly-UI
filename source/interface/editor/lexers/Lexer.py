@@ -46,9 +46,9 @@ class DefaultLexer(QsciLexerCustom):
     def styleText(self, start, end):
         # Simple styling - just use default
         if self._parent:
-            text = self._parent.text()[start:end]
+            # Scintilla counts in bytes: the range from start to end is already the length to style.
             self.startStyling(start)
-            self.setStyling(len(text), 0)
+            self.setStyling(end - start, 0)
 
     def description(self, style):
         return "Default text lexer"
