@@ -18,11 +18,7 @@ def add_fonts():
     """ Register the bundled fonts with the application """
     QFontDatabase.addApplicationFont(find_path("AnonymousPro.ttf"))
     QFontDatabase.addApplicationFont(find_path("FiraCode.ttf"))
-    QFontDatabase.addApplicationFont(find_path("Inconsolata.ttf"))
-    QFontDatabase.addApplicationFont(find_path("Bahnschrift.ttf"))
-    QFontDatabase.addApplicationFont(find_path("Monaco.ttf"))
     QFontDatabase.addApplicationFont(find_path("Fixedsys.ttf"))
-    QFontDatabase.addApplicationFont(find_path("OCR-A.ttf"))
     for file in _JETBRAINS_MONO:
         QFontDatabase.addApplicationFont(find_path(file))
 

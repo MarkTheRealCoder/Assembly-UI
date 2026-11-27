@@ -18,10 +18,8 @@ class WindowsEffectHelper:
 
     def __init__(self):
         # C Libraries which are really necessary to apply Windows OS effect to Qt frameless window
-        user32 = windll.LoadLibrary("user32")
         dwmapi = windll.LoadLibrary("dwmapi")
 
-        self.__windowCompositionAttribute = user32.SetWindowCompositionAttribute
         self.__dwmExtendFrameIntoClientArea = dwmapi.DwmExtendFrameIntoClientArea
         self.__dwmSetWindowAttribute = dwmapi.DwmSetWindowAttribute
 
@@ -33,7 +31,6 @@ class WindowsEffectHelper:
 
         # Disabilita i pulsanti DWM nativi
         DWMWA_CAPTION_BUTTON_BOUNDS = 5
-        DWMWA_NONCLIENT_RTL_LAYOUT = 6
         disable = c_int(0)
         self.__dwmSetWindowAttribute(hWnd, DWMWA_CAPTION_BUTTON_BOUNDS, byref(disable), 4)
 

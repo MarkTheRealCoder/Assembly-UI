@@ -7,12 +7,8 @@ class RunEvent(Event):
 
     Ready = QEvent.registerEventType()
 
-    def __init__(self, debug=False):
+    def __init__(self):
         super().__init__(RunEvent.Ready)
-        self.___debug: bool = debug
-
-    def is_debug(self) -> bool:
-        return self.___debug
 
     @staticmethod
     def gtype():

@@ -64,9 +64,6 @@ class TabManager(QFrame):
     def addTab(self, _id: int, name: str, ext: str):
         self.___list.addTab(_id, name, ext)
 
-    def isFirst(self):
-        return self.___list.count() == 1
-
     def setActiveTab(self, _id: int = None):
         """Select the given tab, or a neighbor of the closed one, or clear the selection"""
         if _id is not None:

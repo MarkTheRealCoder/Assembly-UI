@@ -1,18 +1,4 @@
 variables {
-    
-    ---legacy-background-color: #0B0C10;
-    ---legacy-light-background-color: #0F2235;
-    ---legacy-highlight-background-color: #2D223D;
-    ---legacy-text-color: #E48300;
-    ---legacy-highlightable-text: #258FF9;
-    ---legacy-highlight-text-color: #A4FFFC;
-    ---legacy-extras-color: #268AAA;
-    ---legacy-light-tab-border-color: #72569f;
-    ---legacy-tab-color: #191b27;
-    ---legacy-light-tab-color: #222434;
-    ---legacy-high-contrast-text-highlight: #00AAFF;
-
-    
     ---generic-background-color: #1E1E1E;
     ---generic-light-background-color: #252526;
     ---generic-highlight-background-color: #2D2D30;
@@ -23,7 +9,6 @@ variables {
     ---generic-light-tab-border-color: #007ACC;
     ---generic-tab-color: #2D2D30;
     ---generic-light-tab-color: #37373D;
-    ---old-high-contrast-text-highlight: #FFC83D;
     ---toolbar-start-color: #0F2A4F;
     ---toolbar-end-color: #1C1C19;
 }
@@ -445,7 +430,7 @@ QLabel#Dialog > QLineEdit {
     background-color: var(---generic-highlight-background-color);
     border: none;
     margin: 40% 20%;
-    font-family: "Monaco";
+    font-family: "JetBrains Mono";
     font-size: larger;
     font-weight: 200;
 }
@@ -456,64 +441,6 @@ QLabel#Tooltip {
     qproperty-borderColor: #706D6D;
     padding: 5px;
     font-size: 14px;
-}
-
-QTabWidget {
-    background-color: var(---generic-light-background-color);
-    border: none;
-}
-
-QTabWidget::pane {
-    border: none;
-    background-color: var(---generic-light-background-color);
-}
-
-QTabBar::tab {
-    background-color: var(---generic-tab-color);
-    color: var(---generic-extras-color);
-    padding: 10px;
-    border: 1px solid var(---generic-tab-color);
-    width: 100px;
-}
-
-QTabBar::tab:selected {
-    background-color: var(---generic-light-tab-color);
-    color: var(---generic-text-color);
-    border: 1px solid var(---generic-light-tab-border-color);
-    border-bottom: none;
-}
-
-QFrame#TitledLine {
-    min-height: 50px;
-}
-
-QLabel#TitledLineLabel {
-    font-weight: bold;
-    font-size: 22px;
-    font-family: "sans-serif";
-    padding-left: 25px;
-    padding-right: 5px;
-    color: white;
-}
-QFrame#TitledLineLine {
-    color: white;        /* line color */
-    background: white;   /* important for visible line */
-    max-height: 1px;   /* thickness */
-    margin-right: 50px;
-}
-
-QPushButton#ResetButton {
-    background-color: var(---generic-highlight-background-color);
-    border: 1px solid var(---generic-light-tab-color);
-    border-radius: 15px;
-    height: 30px;
-    width: 30px;
-    color: white;
-}
-
-QPushButton#ResetButton:hover {
-    background-color: darkred;
-    color: white;
 }
 
 QTextEdit#Terminal {

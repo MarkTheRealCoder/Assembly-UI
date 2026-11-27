@@ -2,7 +2,6 @@ from PyQt5.QtCore import QSize, QTimer
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QSizePolicy
 
-from source.comms import Variable
 from source.comms.events import ClosingEvent
 from source.comms.handlers import EventRegister
 from source.filesystem import find_path
@@ -35,11 +34,6 @@ class CloseButtonLogic(CloseButtonGraphics):
         super().__init__(parent, properties=properties)
         self.___args = ()
         self.___iden = {}
-        self.___signals: list[Variable] = []
-
-    def setEventArgs(self, *args):
-        self.___args = args
-        return self
 
     def setEventIdentifiers(self, **iden):
         self.___iden = iden

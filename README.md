@@ -131,7 +131,7 @@ The UI loads the interpreter in-process through [JPype](https://jpype.readthedoc
 Assembly-UI/
 ├── main.py                 Application entry point
 ├── resources/
-│   ├── antlr_lexers/       Interpreter JAR and lexer grammars
+│   ├── antlr_lexers/       Interpreter JAR
 │   ├── external/           Built-in language guides
 │   ├── fonts/              Bundled fonts, including JetBrains Mono
 │   ├── icons/              Interface icons

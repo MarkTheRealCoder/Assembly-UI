@@ -150,9 +150,6 @@ class _JavaInterpreterInterface:
 class _Interpreter:
     """ Commands and payload decoding for one Java session. """
 
-    class FeedException(Exception):
-        pass
-
     class RuntimeException(Exception):
         pass
 

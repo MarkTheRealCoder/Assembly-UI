@@ -83,9 +83,6 @@ class Document:
     def getName(self):
         return self.___name
 
-    def getFolder(self):
-        return self.___folder
-
     def getExtension(self):
         return self.___extension
 

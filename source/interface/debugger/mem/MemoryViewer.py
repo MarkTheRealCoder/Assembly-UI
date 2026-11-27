@@ -33,11 +33,6 @@ class MemoryViewerLogic(MemoryViewerGraphics):
         super().__init__(parent)
         self.___follow_new_nodes: bool = False
 
-    def addNewContext(self, name: str):
-        """ Add a new context to the memory viewer """
-        w: ContextContainer = self.mem_wrapper.exposeWidget()
-        w.addContext(name)
-
     def addNodeToContext(self, context_name: str, node_path: str, value: str or int or list[int] or None = None,
                          order: int = None):
         """ Add a new Node into a specific context following the path provided.
@@ -63,13 +58,6 @@ class MemoryViewerLogic(MemoryViewerGraphics):
         context_window: ContextWindow = w.findContext(context_name)
         if context_window is not None:
             context_window.removeNode(node_path)
-
-    def popLastFromContext(self, context_name: str):
-        """ Remove the last node from a specific context. """
-        w: ContextContainer = self.mem_wrapper.exposeWidget()
-        context_window: ContextWindow = w.findContext(context_name)
-        if context_window is not None:
-            context_window.popLastNode()
 
     def loadContexts(self, names: list[str], language: str, debug: bool = False):
         """

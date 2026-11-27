@@ -95,16 +95,6 @@ def to_ui_path(absolute_path: str) -> str:
     return Document.SEP + abs_norm.replace(os.sep, Document.SEP)
 
 
-def find_dir(directory: str) -> str:
-    location = resources_root()
-    result: str = ""
-    for root, directories, files in os.walk(location):
-        if directory in directories:
-            result = os.path.join(root, directory)
-            break
-    return result
-
-
 def open_dir(path: str):
     QDesktopServices.openUrl(QUrl.fromLocalFile(path))
 

@@ -75,7 +75,6 @@ class DialogGraphics(QLabel):
 
     def __init__(self, parent, title: str, prompt: str, action: callable, error: str):
         super().__init__(parent)
-        self._title = title
         self._error_message = error
         self.configurations(title, prompt, action)
 

@@ -115,7 +115,7 @@ class ExecutionContextLogic(ExecutionContextGraphics):
             self.terminal.prompt()
             return False
 
-        EventRegister.send(RunEvent(debug), "Editor")
+        EventRegister.send(RunEvent(), "Editor")
         self.___diagnostics = []
         Database.ON_DIAGNOSTICS.setValue((path, []))
         try:

@@ -39,3 +39,11 @@ Fonts
 -----
 JetBrains Mono: SIL Open Font License 1.1, in JetBrainsMono-OFL.txt.
 Source: https://github.com/JetBrains/JetBrainsMono
+
+Anonymous Pro, by Mark Simonson: SIL Open Font License 1.1.
+Source: https://www.marksimonson.com/fonts/view/anonymous-pro
+
+Fira Code: SIL Open Font License 1.1.
+Source: https://github.com/tonsky/FiraCode
+
+Fixedsys Excelsior 3.01, by Darien Valentine: distributed by its author for free use.

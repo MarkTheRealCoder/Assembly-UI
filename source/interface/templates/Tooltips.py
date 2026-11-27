@@ -210,13 +210,6 @@ class TooltipGraphics(QLabel):
         self._update_mask()
         self.update()
 
-    def set_arrow_size(self, size: int):
-        """Imposta la dimensione della freccia"""
-        self.arrow_size = size
-        self.adjustSize()
-        self._update_mask()
-        self.update()
-
 
 class TooltipLogic(TooltipGraphics):
     def __init__(self, parent, text: str):
@@ -316,10 +309,6 @@ class TooltipLogic(TooltipGraphics):
     def isAutomatic(self) -> bool:
         """Check if the tooltip is automatic"""
         return self.___is_automatic
-
-    def setSemiPermanent(self, enable: bool):
-        """Set whether the tooltip remains visible until explicitly dismissed"""
-        self.___semi_permanent = enable
 
     def isSemiPermanent(self) -> bool:
         """Check if the tooltip is semi-permanent"""

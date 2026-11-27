@@ -1,6 +1,4 @@
-import hashlib
 import os
-import random
 
 
 def isWindows():
@@ -11,16 +9,6 @@ def isMac():
 
 def isLinux():
     return os.name == "posix" and os.uname().sysname == "Linux"
-
-
-def randomColor():
-        return "#"+''.join([random.choice('0123456789ABCDEF') for _ in range(6)])
-
-
-def getColorFromStr(s: str):
-    hash_object = hashlib.md5(s.encode())
-    hex_hash = hash_object.hexdigest()
-    return f"#{hex_hash[:6]}"
 
 
 def roundColors(scope: str, scopes: dict[str: int] = {}):
