@@ -65,15 +65,17 @@ class _JavaInterpreterInterface:
     def ___bundled_java_home() -> Optional[str]:
         """
         Returns the Java runtime shipped with the application, in a folder named runtime.
-        A packaged app keeps it next to the executable. A source checkout can keep one in the project folder.
+        A packaged app keeps it next to the executable, or in Contents/Resources of the macOS app bundle.
+        A source checkout can keep one in the project folder.
         """
         bases = [app_root()]
         if getattr(sys, "frozen", False):
-            bases.insert(0, os.path.dirname(sys.executable))
+            executable_folder = os.path.dirname(sys.executable)
+            bases[:0] = [executable_folder, os.path.join(executable_folder, os.pardir, "Resources")]
         for base in bases:
             home = os.path.join(base, "runtime")
             if os.path.isdir(home):
-                return home
+                return os.path.normpath(home)
         return None
 
     @staticmethod

@@ -1,0 +1,159 @@
+name: Build
+
+# Builds the folder package for Windows, Linux and macOS (Apple Silicon and Intel).
+# - Run workflow (Actions tab) or a push to the branch below: the 4 archives are uploaded as artifacts.
+# - A tag such as v1.0.0: the archives are also attached to a GitHub Release of that tag.
+on:
+  workflow_dispatch:
+  push:
+    branches: [ci/windows-build]
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.11"
+  JAVA_VERSION: "21"
+  JAR: resources/antlr_lexers/interpreter.jar
+
+jobs:
+  build:
+    name: ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      # One platform that fails does not stop the others.
+      fail-fast: false
+      matrix:
+        include:
+          - target: windows-x64
+            os: windows-latest
+          # The oldest Ubuntu to support: a build made on it runs on the later versions too (glibc).
+          - target: linux-x64
+            os: ubuntu-22.04
+          - target: macos-arm64
+            os: macos-15
+          # The last Intel macOS image of GitHub Actions.
+          - target: macos-x64
+            os: macos-15-intel
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set the version
+        run: |
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then version="${GITHUB_REF_NAME#v}"; else version="0.0.0-dev"; fi
+          echo "APP_VERSION=$version" >> "$GITHUB_ENV"
+          echo "Version: $version"
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      # Full JDK: jdeps and jlink make the reduced runtime that ships with the app.
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      # Qt needs these X11 libraries; PyInstaller collects them into the package. xvfb runs the app without a screen.
+      - name: Install the Linux libraries
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 \
+            libxcb-xinerama0 libxcb-xkb1 libxcb-shape0 libxcb-xfixes0 libegl1 libgl1 libnss3 libxcomposite1 \
+            libxdamage1 libxrandr2 libxtst6 libxkbfile1 libasound2 libdbus-1-3 xvfb
+
+      - name: Install the app dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Before the build tools, so the list holds only the packages that ship with the app.
+      - name: Collect the licenses of the Python packages
+        run: |
+          pip install pip-licenses
+          mkdir -p build/licenses
+          pip-licenses --with-license-file --no-license-path --format=plain-vertical \
+            --ignore-packages pip-licenses prettytable wcwidth pip setuptools wheel \
+            --output-file build/licenses/python-packages.txt
+
+      - name: Install the build tools
+        run: pip install "pyinstaller==6.*" pillow
+
+      - name: Make the Java runtime with jlink
+        run: |
+          jpype_jar=$(python -c "import jpype, os; print(os.path.join(os.path.dirname(os.path.dirname(jpype.__file__)), 'org.jpype.jar'))")
+          [[ -f "$jpype_jar" ]] || { echo "org.jpype.jar not found at $jpype_jar"; exit 1; }
+          # Modules used by the interpreter and by JPype's own JAR. jdeps does not see the modules loaded by name:
+          # jdk.zipfs is the jar file system of JPype's package import, jdk.unsupported covers sun.misc.Unsafe.
+          modules=$(jdeps --ignore-missing-deps --multi-release "$JAVA_VERSION" --print-module-deps "$JAR" "$jpype_jar" | tr -d '\r')
+          modules="$modules,jdk.unsupported,jdk.zipfs"
+          echo "Java modules: $modules"
+          jlink --add-modules "$modules" --strip-debug --no-man-pages --no-header-files --compress=zip-6 --output build/runtime
+          build/runtime/bin/java --list-modules
+
+      # Starts the reduced runtime through JPype and runs a small IJVM program.
+      - name: Check the Java runtime
+        run: python packaging/check_runtime.py build/runtime "$JAR"
+
+      - name: Make the icon
+        if: runner.os != 'Linux'
+        run: |
+          if [[ "$RUNNER_OS" == "macOS" ]]; then icon=build/AssemblyStdio.icns; else icon=build/AssemblyStdio.ico; fi
+          python packaging/make_icon.py "$icon"
+
+      - name: Build with PyInstaller
+        run: pyinstaller --noconfirm --clean packaging/AssemblyStdio.spec
+
+      - name: Assemble and archive the package
+        id: package
+        run: python packaging/assemble.py "${{ matrix.target }}"
+
+      # The app has no console: if it closes within 20 seconds, the job shows its error.log.
+      - name: Start the app
+        run: |
+          if [[ "$RUNNER_OS" == "Linux" ]]; then
+            xvfb-run -a python packaging/smoke_test.py "${{ steps.package.outputs.executable }}"
+          else
+            python packaging/smoke_test.py "${{ steps.package.outputs.executable }}"
+          fi
+
+      # Download it from the run page. The downloaded ZIP contains the archive of the package.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AssemblyStdio-${{ matrix.target }}
+          path: ${{ steps.package.outputs.archive }}
+          if-no-files-found: error
+          retention-days: 14
+          # The archive is already compressed.
+          compression-level: 0
+
+  release:
+    name: GitHub Release
+    if: github.ref_type == 'tag'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: AssemblyStdio-*
+          path: release
+          merge-multiple: true
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -l release
+          gh release create "$GITHUB_REF_NAME" release/* --repo "$GITHUB_REPOSITORY" --title "Assembly Stdio $GITHUB_REF_NAME" --generate-notes

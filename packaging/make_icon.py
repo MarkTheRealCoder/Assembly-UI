@@ -1,7 +1,7 @@
 """
-Renders resources/icons/Logo.svg to the Windows icon of the executable.
+Renders resources/icons/Logo.svg to the icon of the executable: .ico for Windows, .icns for macOS.
 
-    python packaging/make_icon.py <output .ico>
+    python packaging/make_icon.py <output .ico or .icns>
 """
 import io
 import os
@@ -13,7 +13,9 @@ from PyQt5.QtGui import QGuiApplication, QImage, QPainter
 from PyQt5.QtSvg import QSvgRenderer
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
-SIZES = [16, 24, 32, 48, 64, 128, 256]
+ICO_SIZES = [16, 24, 32, 48, 64, 128, 256]
+# The .icns writer of Pillow makes the smaller sizes from a 1024 px image.
+RENDER_SIZE = 1024
 
 
 def main() -> int:
@@ -23,7 +25,7 @@ def main() -> int:
     if not renderer.isValid():
         print("Logo.svg is not a valid SVG")
         return 1
-    image = QImage(256, 256, QImage.Format_ARGB32)
+    image = QImage(RENDER_SIZE, RENDER_SIZE, QImage.Format_ARGB32)
     image.fill(Qt.transparent)
     painter = QPainter(image)
     renderer.render(painter)
@@ -33,7 +35,11 @@ def main() -> int:
     buffer = QBuffer(data)
     buffer.open(QIODevice.WriteOnly)
     image.save(buffer, "PNG")
-    Image.open(io.BytesIO(bytes(data))).save(sys.argv[1], sizes=[(size, size) for size in SIZES])
+    icon = Image.open(io.BytesIO(bytes(data)))
+    if sys.argv[1].lower().endswith(".icns"):
+        icon.save(sys.argv[1], format="ICNS")
+    else:
+        icon.save(sys.argv[1], format="ICO", sizes=[(size, size) for size in ICO_SIZES])
     del app
     print(f"Icon written to {sys.argv[1]}")
     return 0
