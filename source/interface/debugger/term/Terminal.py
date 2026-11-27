@@ -153,6 +153,16 @@ class TerminalLogic(TerminalGraphics):
         """Delete the text typed after the last protected block."""
         self._takeUserInput()
 
+    @staticmethod
+    def _fontSize(font: QFont) -> float:
+        return font.pixelSize() if font.pixelSize() > 0 else font.pointSizeF()
+
+    def zoomLevel(self) -> int:
+        """Return the zoom steps applied to the font of the style sheet"""
+        if self._base_font is None:
+            return 0
+        return round(self._fontSize(self.document().defaultFont()) - self._fontSize(self._base_font))
+
     def _zoomBy(self, steps: int):
         self.ensurePolished()
         document = self.document()
@@ -470,7 +480,19 @@ class Terminal(TerminalLogic):
         self._clear_action.setShortcutContext(Qt.WidgetWithChildrenShortcut)
         self._clear_action.triggered.connect(self.clear)
         self.addAction(self._clear_action)
-    
+
+        # The zoom of the last session waits for the first show, when the style sheet has set the font.
+        self._pending_zoom: int = Settings.get("terminal/zoom", 0, int)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        if self._pending_zoom:
+            self._zoomBy(self._pending_zoom)
+        self._pending_zoom = 0
+
+    def zoomLevel(self) -> int:
+        return self._pending_zoom or super().zoomLevel()
+
     def onFindShortcutEvent(self, event: FindShortcutEvent):
         """Handle find events from the FindWidget."""
         if event.mustClose():

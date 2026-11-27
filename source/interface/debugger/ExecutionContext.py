@@ -241,4 +241,5 @@ class ExecutionContext(ExecutionContextLogic):
 
     def onClosingEvent(self, e: ClosingEvent):
         self.shutdownExecution()
+        Settings.silentSet("terminal/zoom", self.terminal.zoomLevel())
         e.accept()
