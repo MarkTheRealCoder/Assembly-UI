@@ -56,6 +56,7 @@ class EditorWrapperLogic(EditorWrapperGraphics):
         self.setupConnections()
 
     def setupConnections(self):
+        Database.ON_EDITOR_ZOOM.setValue(Settings.get("editor/zoom", 0, int))
         Settings.addNotificationGroup("editor/current", self.openDocument)
         Database.ON_FILE_REPLACED.connect(self.reloadReplacedFile)
         Database.ON_EXECUTION_LINE.connect(self.showExecutionLine)
@@ -265,6 +266,7 @@ class EditorWrapper(EditorWrapperLogic):
             self._scheduler = None
         self._savePending()
         Settings.silentSet("editor/files", list(map(lambda x: str(x), self._documents.values())))
+        Settings.silentSet("editor/zoom", Database.ON_EDITOR_ZOOM.getValue())
         self._documents = {}
         e.accept()
 

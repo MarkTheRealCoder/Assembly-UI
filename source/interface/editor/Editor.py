@@ -83,7 +83,9 @@ class EditorLogic(EditorGraphics):
         self.configureTextFeatures()
         self.configureCommands()
         self.installEventFilter(self)
-        self.SCN_ZOOM.connect(self._updateZoomMargin)
+        self.SCN_ZOOM.connect(self._onZoom)
+        self._applySharedZoom()
+        Database.ON_EDITOR_ZOOM.connect(self._applySharedZoom)
 
         self._setupSearchIndicator()
         self._setupExecutionMarker()
@@ -92,9 +94,18 @@ class EditorLogic(EditorGraphics):
         self._search_matches = []
         self._current_match_index = -1
 
-    def _updateZoomMargin(self):
-        """Keep the line numbers visible at every zoom level"""
+    def _onZoom(self):
+        """Keep the line numbers visible at every zoom level and share the level with the other editors"""
         self.setMarginWidth(0, "00000")
+        level = self.SendScintilla(QsciScintilla.SCI_GETZOOM)
+        if level != Database.ON_EDITOR_ZOOM.getValue():
+            Database.ON_EDITOR_ZOOM.setValue(level)
+
+    def _applySharedZoom(self, *_):
+        """Use the zoom level shared by all the editors"""
+        level = Database.ON_EDITOR_ZOOM.getValue()
+        if self.SendScintilla(QsciScintilla.SCI_GETZOOM) != level:
+            self.zoomTo(level)
 
     def _resetZoom(self):
         self.zoomTo(0)

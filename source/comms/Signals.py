@@ -42,6 +42,7 @@ class DataBase:
     # Global events
     ON_FILE_REPLACED: Variable = Variable(str)              # ON FILE REPLACED FROM A FILE DIALOG
     ON_SPLITTER_DRAG: Variable = Variable(bool)             # TRUE WHILE THE USER DRAGS A SPLITTER HANDLE
+    ON_EDITOR_ZOOM: Variable = Variable(int)                # ZOOM LEVEL SHARED BY ALL THE EDITORS
 
     # Execution
     ON_EXECUTION_LINE: Variable = Variable(tuple)           # (PATH, LINE) OF THE NEXT INSTRUCTION, LINE -1 TO CLEAR
