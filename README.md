@@ -43,17 +43,39 @@ Assembly UI for UniCA's ARE course. Part of the "Assembly Stdio" project.
 
 The [Releases](https://github.com/MarkTheRealCoder/Assembly-UI/releases) page has a package for each system. Each package includes its own Java runtime, so nothing else needs to be installed.
 
-| System | File | Install |
-| --- | --- | --- |
-| **macOS**, Apple Silicon | `AssemblyStdio-macos-arm64.pkg` | Open the installer. It puts **Assembly Stdio** in Applications |
-| **macOS**, Intel | `AssemblyStdio-macos-x64.pkg` | Same as above |
-| **Windows** | `AssemblyStdio-windows-x64.zip` | Extract the folder and open `AssemblyStdio.exe` |
-| **Linux** | `AssemblyStdio-linux-x64.tar.gz` | Extract the folder and run `AssemblyStdio` |
+| System | File |
+| --- | --- |
+| **macOS**, Apple Silicon | `AssemblyStdio-macos-arm64.pkg` |
+| **macOS**, Intel | `AssemblyStdio-macos-x64.pkg` |
+| **Windows** 10 and 11, 64-bit | `AssemblyStdio-windows-x64.zip` |
+| **Linux**, 64-bit | `AssemblyStdio-linux-x64.tar.gz` |
 
-The packages are not signed, so the system asks you to confirm them once:
+The packages are not signed, so macOS and Windows ask you to confirm them the first time.
 
-- **macOS:** the first time you open the installer, macOS says that it cannot verify it. Close the message, open **System Settings > Privacy & Security**, and click **Open Anyway** next to the message about `AssemblyStdio-macos-….pkg`. The installed app then opens without warnings.
-- **Windows:** if SmartScreen stops `AssemblyStdio.exe`, click **More info**, then **Run anyway**.
+#### macOS
+
+1. Open `AssemblyStdio-macos-….pkg`. macOS says that it cannot verify the installer: close the message.
+2. Open **System Settings > Privacy & Security** and click **Open Anyway** next to the message about the installer.
+3. Follow the installer. It puts **Assembly Stdio** in Applications, and the app then opens without warnings.
+
+#### Windows
+
+1. Extract the ZIP, for example with right-click > **Extract All**. Do not run the app from inside the ZIP.
+2. Move the extracted `AssemblyStdio` folder where you want to keep it, for example in your user folder. Keep the files together: `AssemblyStdio.exe` needs the `_internal` and `runtime` folders next to it.
+3. Open `AssemblyStdio.exe`. If SmartScreen says that Windows protected your PC, click **More info**, then **Run anyway**.
+
+To start the app from the Start menu, right-click `AssemblyStdio.exe` and choose **Pin to Start**.
+
+#### Linux
+
+The package needs glibc 2.35 or later: Ubuntu 22.04, Debian 12, Fedora 36, or a later release. It runs on X11, and on Wayland through XWayland.
+
+```bash
+tar -xzf AssemblyStdio-linux-x64.tar.gz
+./AssemblyStdio/AssemblyStdio
+```
+
+Keep the files of the `AssemblyStdio` folder together: the executable needs the `_internal` and `runtime` folders next to it.
 
 ### Run from source
 
