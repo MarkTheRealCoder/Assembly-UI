@@ -1,4 +1,3 @@
-from typing import Type
 
 from PyQt5.QtCore import QObject
 from PyQt5.QtWidgets import QApplication
@@ -81,8 +80,6 @@ class EventRegister:
         if hasattr(obj, "event"):
 
             if hasattr(obj, "on"+ev.__name__):
-                std = obj.event
-
                 def on(self, e):
                     if e == ev:
                         try:
@@ -126,21 +123,3 @@ class EventRegister:
         for ref in refs:
             event.on(ref)
             app.sendEvent(ref, event)
-
-    @staticmethod
-    def post(event: Type[Event], *args, arg: str = "*", **keys):
-        """
-        Post an event to all registered objects
-        :param event: The event class to create the event to be posted
-        :param args: arguments to be passed to the event class __init__
-        :param arg: event\' subclass
-        :return:
-        """
-        if not isinstance(event, type):
-            raise TypeError("Event must be a class")
-        app = QApplication.instance()
-        refs = EventRegister.get(event, arg, **keys)
-        for ref in refs:
-            e = event(*args)
-            e.on(ref)
-            app.postEvent(ref, e)

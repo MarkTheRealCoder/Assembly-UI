@@ -2,7 +2,7 @@ from PyQt5.Qsci import QsciScintilla, QsciCommandSet, QsciCommand
 import re
 
 from PyQt5.QtCore import Qt, QPoint, QTimer
-from PyQt5.QtGui import QColor, QFont, QKeySequence
+from PyQt5.QtGui import QColor, QKeySequence
 from PyQt5.QtWidgets import QWidget, QSizePolicy, QToolTip
 
 from source.comms import Database
@@ -141,16 +141,6 @@ class EditorLogic(EditorGraphics):
         add_command(QsciCommand.SelectionCopy, Qt.CTRL + Qt.Key_C)
         add_command(QsciCommand.MoveSelectedLinesUp, Qt.SHIFT + Qt.CTRL + Qt.Key_Up)
         add_command(QsciCommand.MoveSelectedLinesDown, Qt.SHIFT + Qt.CTRL + Qt.Key_Down)
-
-    def updateLexer(self, ext: str = None):
-        """Replace the lexer with the one that matches the file extension"""
-        if ext:
-            self.ext = ext
-        self.setupLexer(self.ext)
-
-    def set_font(self):
-        """Set editor font from database"""
-        self.setFont(QFont(Database.FONT.getValue()))
     
     def _setupExecutionMarker(self):
         """Configure the markers of the line that the debugger runs next"""

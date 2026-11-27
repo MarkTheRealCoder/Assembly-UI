@@ -80,8 +80,6 @@ class TerminalLogic(TerminalGraphics):
 
         self._search_matches: list[tuple[int, int]] = []  # (start, end) positions
         self._current_match_index: int = -1
-        self._last_search_prompt: str = ""
-        self._last_search_regex: bool = False
         self._base_font = None
         self._input_callback = None
         self._output_open: bool = False
@@ -397,8 +395,6 @@ class TerminalLogic(TerminalGraphics):
         """Search for text in terminal content. Returns number of matches."""
         self._search_matches.clear()
         self._current_match_index = -1
-        self._last_search_prompt = prompt
-        self._last_search_regex = use_regex
         
         if not prompt:
             self._clearHighlights()

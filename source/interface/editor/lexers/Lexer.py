@@ -1,5 +1,5 @@
 from PyQt5.Qsci import QsciLexerCustom, QsciScintilla
-from PyQt5.QtGui import QColor, QFont
+from PyQt5.QtGui import QColor
 
 from source.filesystem.documents import FT
 from source.interface.assets import editorFont
@@ -55,20 +55,3 @@ class DefaultLexer(QsciLexerCustom):
 
     def language(self):
         return "Text"
-
-
-# Kept for backward compatibility
-class Lexer(DefaultLexer):
-    """
-    Legacy Lexer class for backward compatibility
-    Behaves like DefaultLexer but reports itself as an assembly lexer
-    """
-    
-    def __init__(self, parent: QsciScintilla = None):
-        super().__init__(parent)
-
-    def description(self, style):
-        return "Assembly language lexer for Assembly-Stdio"
-
-    def language(self):
-        return "Assembly"

@@ -129,33 +129,9 @@ class ContextWindowLogic(ContextWindowGraphics):
         _path_members = node_path.split(".")
         return ContextWindowLogic.recursive_node_path(self, _path_members, node_value, _path_members[0], order)
 
-    def clearNodes(self):
-        """ Deletes all nodes without animation. """
-        self._nodes.clear()
-        current_layout: QVBoxLayout = self.getInnerLayout()
-        while current_layout.count() > 0:
-            item = current_layout.takeAt(0)
-            widget = item.widget()
-            if widget is not None:
-                widget.deleteLater()
-
     def removeNode(self, node_path: str):
         """ Removes the node at a dotted path with the removal animation. """
         ContextWindowLogic.removeNodeRecursive(self, node_path.split("."))
-
-    def popLastNode(self, container=None) -> bool:
-        """ Removes the deepest last node. Returns False if the container is empty. """
-        container = self if container is None else container
-        nodes = container.getNodes()
-        if not nodes:
-            return False
-        key = next(reversed(nodes))
-        widget = nodes[key]
-        if isinstance(widget, SingleMemoryChunk) or not self.popLastNode(widget):
-            del nodes[key]
-            widget.hide()
-            widget.deleteLater()
-        return True
 
 
 class ContextWindow(ContextWindowLogic):

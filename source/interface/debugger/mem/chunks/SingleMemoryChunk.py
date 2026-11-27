@@ -99,9 +99,6 @@ class SingleMemoryChunkLogic(SingleMemoryChunkGraphics):
         button.toggled.connect(self.showCharacter)
         self.___updateCharacterButton()
 
-    def getKey(self) -> str:
-        return self._key
-
     def getValue(self) -> str or int:
         return self._value
 

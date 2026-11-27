@@ -7,3 +7,5 @@ runtime/
 .idea/*
 *.ini
 __pycache__/
+package/
+release/

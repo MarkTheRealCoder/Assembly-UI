@@ -15,10 +15,6 @@ class Desktop:
         return None
 
     @staticmethod
-    def getDesktopSize() -> QSize:
-        return Desktop.DESKTOP_SIZE
-
-    @staticmethod
     def setDesktopSize(size: QSize):
         if isinstance(size, QSize):
             Desktop.DESKTOP_SIZE = size

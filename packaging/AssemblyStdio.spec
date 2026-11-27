@@ -1,19 +1,23 @@
 # -*- mode: python ; coding: utf-8 -*-
 """
-PyInstaller spec for the folder build of Assembly Stdio.
+PyInstaller spec for the folder build of Assembly Stdio, on Windows, Linux and macOS.
 
 Run from the project folder:
     pyinstaller --noconfirm --clean packaging/AssemblyStdio.spec
 
-The result is dist/AssemblyStdio/. The build workflow then adds runtime/ (the Java
-runtime made with jlink) and licenses/ next to AssemblyStdio.exe.
+The result is dist/AssemblyStdio/ on Windows and Linux, and dist/AssemblyStdio.app on macOS.
+packaging/assemble.py then adds runtime/ (the Java runtime made with jlink) and licenses/.
 """
 import os
+import sys
 
 from PyInstaller.utils.hooks import collect_data_files
 
 ROOT = os.path.abspath(os.path.join(SPECPATH, os.pardir))
-ICON = os.path.join(ROOT, "build", "AssemblyStdio.ico")
+VERSION = os.environ.get("APP_VERSION", "1.0.0")
+MACOS = sys.platform == "darwin"
+# packaging/make_icon.py writes the icon of the platform: .ico for Windows, .icns for macOS.
+ICON = os.path.join(ROOT, "build", "AssemblyStdio.icns" if MACOS else "AssemblyStdio.ico")
 
 # find_path() looks for the files under _MEIPASS/resources, so the folder keeps its name.
 # It also contains interpreter.jar, in resources/antlr_lexers/.
@@ -35,6 +39,7 @@ a = Analysis(
 
 # QtWebEngine needs QtQml and QtQuick, and their PyInstaller hooks also collect every QML plugin and the
 # Qt libraries they use (Quick 3D, Multimedia, Location, Bluetooth...). The app uses no QML, so they are dropped.
+# On macOS the Qt libraries are frameworks, whose names do not match these prefixes: only the QML folder goes.
 UNUSED_QT = (
     "Qt5Bluetooth", "Qt5Location", "Qt5Multimedia", "Qt5Nfc", "Qt5Quick3D", "Qt5QuickControls2",
     "Qt5QuickParticles", "Qt5QuickShapes", "Qt5QuickTemplates2", "Qt5QuickTest", "Qt5RemoteObjects",
@@ -73,3 +78,17 @@ coll = COLLECT(
     upx=False,
     name="AssemblyStdio",
 )
+
+if MACOS:
+    app = BUNDLE(
+        coll,
+        name="AssemblyStdio.app",
+        icon=ICON if os.path.isfile(ICON) else None,
+        bundle_identifier="dev.assemblystdio.AssemblyStdio",
+        version=VERSION,
+        info_plist={
+            "CFBundleDisplayName": "Assembly Stdio",
+            "CFBundleName": "Assembly Stdio",
+            "NSHighResolutionCapable": True,
+        },
+    )

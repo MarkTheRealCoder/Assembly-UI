@@ -52,9 +52,6 @@ class CompoundMemoryChunkLogic(CompoundMemoryChunkGraphics):
         self._key = name
         self._nodes: dict = {}
 
-    def getKey(self) -> str:
-        return self._key
-
     def getNodes(self) -> dict:
         """ Returns the child nodes indexed by key. """
         return self._nodes

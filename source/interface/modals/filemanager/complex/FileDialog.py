@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QFrame, QSizePolicy, QVBoxLayout, QHBoxLayout
 
 from source.filesystem import create_dir, open_dir, resolve_app_path, to_ui_path
 from source.filesystem.documents import Document
-from source.interface import createLayout, Settings
+from source.interface import createLayout
 from source.interface.modals import Dialog, Popup
 from source.interface.modals.filemanager.complex.Button import Button
 from source.interface.modals.filemanager.complex.strings import ExtensionBox, FileBox, PathBox
